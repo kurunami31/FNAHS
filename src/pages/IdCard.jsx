@@ -105,6 +105,7 @@ export default function IdCard() {
               VALID<br />2026–2027
             </div>
           </div>
+          <div className="id-strip">Official Student Identity · FNAHS</div>
           <div className="id-mid">
             <div className="id-mid-row">
               <div className="id-photo">
@@ -114,28 +115,37 @@ export default function IdCard() {
                 <div className="id-qr-box">
                   <QRCodeSVG value={qrValue} size={120} level="M" />
                 </div>
-                <div className="id-qr-note">scan at events</div>
+                <div className="id-qr-note">Scan me</div>
               </div>
             </div>
             <div className="id-names">
+              <div className="id-label">Name</div>
               {firstName !== lastName && <div className="id-first">{firstName}</div>}
               <div className="id-last">{lastName}</div>
             </div>
             <div className="id-rows">
-              {user?.program && <div className="id-row">PROGRAM&nbsp;&nbsp;<b>{user.program}</b></div>}
-              {user?.year_level && <div className="id-row">YEAR&nbsp;&nbsp;<b>{user.year_level}</b></div>}
-              {user?.section && <div className="id-row">SECTION&nbsp;&nbsp;<b>{user.section}</b></div>}
+              <div className="id-label">Details</div>
+              {user?.program && (
+                <div className="id-row"><span>Program</span><b>{user.program}</b></div>
+              )}
+              {user?.year_level && (
+                <div className="id-row"><span>Year</span><b>{user.year_level}</b></div>
+              )}
+              {user?.section && (
+                <div className="id-row"><span>Section</span><b>{user.section}</b></div>
+              )}
               {user?.role !== 'student' && (
-                <div className="id-row">ROLE&nbsp;&nbsp;<b>{roleLabel(user?.role)}</b></div>
+                <div className="id-row"><span>Role</span><b>{roleLabel(user?.role)}</b></div>
               )}
               {!!user?.positions?.length && (
-                <div className="id-row">POSITION&nbsp;&nbsp;<b>{user.positions.map(positionLabel).join(' · ')}</b></div>
+                <div className="id-row"><span>Position</span><b>{user.positions.map(positionLabel).join(' · ')}</b></div>
               )}
+              <div className="id-row"><span>ID</span><b>{serial}</b></div>
             </div>
           </div>
           <div className="id-foot">
-            <div className="id-serial">ID {serial}</div>
-            <div className="id-stamp">FNAHS</div>
+            <div className="id-uni">Davao Oriental State University</div>
+            <div className="id-orgline">FNAHS · Nursing &amp; Allied Health</div>
           </div>
           <div className="id-ecg" aria-hidden="true" />
         </div>

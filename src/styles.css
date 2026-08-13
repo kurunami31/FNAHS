@@ -1989,3 +1989,22 @@ html[data-theme='dark'] .sec-head::after {
   .id-qr-box { width: 108px; height: 108px; }
   .id-last { font-size: 1.1rem; }
 }
+
+/* ID card — bsitcodex-inspired refinements (strip, labels, portrait photo, foot lines) */
+.id-card { background: linear-gradient(170deg, #fffdf6 0%, #fdf9ef 55%, #f6ecce 100%); border: 1.5px solid var(--id-line); }
+html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0%, #0c0c0c 100%); }
+.id-strip { background: linear-gradient(90deg, var(--gold), #a06d00); color: #fff8e6; font-family: var(--f-ocr); font-size: 0.58rem; letter-spacing: 0.26em; text-transform: uppercase; text-align: center; padding: 5px 0 4px; box-shadow: 0 1px rgba(120, 80, 0, 0.25); }
+.id-photo { border: 2px solid var(--gold); border-radius: 10px; aspect-ratio: 4 / 5; height: 140px; }
+.id-qr-box { border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+.id-qr-note { letter-spacing: 0.22em; }
+.id-label { font-family: var(--f-ocr); font-size: 0.48rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--id-mut); margin-bottom: 3px; }
+.id-rows { border-top: none; margin-top: 6px; }
+.id-row { justify-content: space-between; gap: 10px; }
+.id-row b { text-align: right; }
+.id-uni, .id-orgline { font-family: var(--f-ocr); font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--id-mut); }
+.id-orgline { color: var(--gold); text-align: right; }
+
+@media (max-width: 560px) {
+  .id-photo { height: 118px; }
+  .id-strip { font-size: 0.54rem; letter-spacing: 0.2em; }
+}
