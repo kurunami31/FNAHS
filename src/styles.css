@@ -181,7 +181,7 @@ html[data-theme='dark'] .topbar { background: rgba(0, 0, 0, 0.86); }
   padding: 4px 6px 18px;
   border-bottom: 1px solid var(--line);
 }
-.sidebar-brand img { width: 40px; height: 40px; border-radius: var(--r-sm); object-fit: cover; }
+.sidebar-brand img { width: 40px; height: 40px; border-radius: var(--r-sm); object-fit: contain; object-position: center; background: var(--paper); }
 .sidebar-brand .brand-name {
   font-family: var(--f-id);
   font-size: 1.15rem;
@@ -342,7 +342,7 @@ html[data-theme='dark'] .topbar { background: rgba(0, 0, 0, 0.86); }
 .welcome-desc { color: var(--ink-soft); font-size: 1.02rem; line-height: 1.65; max-width: 520px; margin: 0 0 26px; }
 .welcome-desc b { color: var(--ink); }
 .welcome-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-.welcome-mascot { flex: none; width: 200px; height: 200px; border-radius: var(--r-lg); object-fit: cover; border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--line-strong)); box-shadow: var(--sh-glow); }
+.welcome-mascot { flex: none; width: 200px; height: 200px; border-radius: var(--r-lg); object-fit: contain; object-position: center; background: var(--paper); border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--line-strong)); box-shadow: var(--sh-glow); }
 .welcome-stats { display: flex; gap: 26px; margin-top: 30px; flex-wrap: wrap; }
 .stat b { font-family: var(--f-id); font-size: 1.3rem; display: block; color: var(--ink); }
 .stat span { font-family: var(--f-ocr); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
@@ -619,7 +619,7 @@ html[data-theme='dark'] .topbar { background: rgba(0, 0, 0, 0.86); }
 }
 .id-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(43, 36, 16, 0.06); pointer-events: none; }
 .id-top { position: relative; display: flex; align-items: center; gap: 10px; padding: 14px 20px 10px; }
-.id-top img { width: 42px; height: 42px; border-radius: var(--r-sm); object-fit: cover; box-shadow: var(--sh-sm); }
+.id-top img { width: 42px; height: 42px; border-radius: var(--r-sm); object-fit: contain; object-position: center; background: var(--paper); box-shadow: var(--sh-sm); }
 .id-top .id-org { font-family: var(--f-id); font-size: 0.9rem; color: #ffffff; line-height: 1.15; text-shadow: 0 1px 2px rgba(43, 36, 16, 0.25); }
 .id-top .id-org em { font-style: normal; color: #ffe9a8; }
 .id-top .id-tag { font-family: var(--f-ocr); font-size: 0.55rem; letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.85); text-transform: uppercase; }
@@ -647,7 +647,7 @@ html[data-theme='dark'] .topbar { background: rgba(0, 0, 0, 0.86); }
   z-index: 2;
 }
 .auth-card .auth-logo { display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 18px; }
-.auth-card .auth-logo img { width: 52px; height: 52px; border-radius: var(--r-md); object-fit: cover; }
+.auth-card .auth-logo img { width: 52px; height: 52px; border-radius: var(--r-md); object-fit: contain; object-position: center; background: var(--paper); }
 .auth-card h1 { font-family: var(--f-id); font-size: 1.5rem; text-align: center; margin: 0 0 4px; }
 .auth-card h1 em { font-style: normal; color: var(--accent); }
 .auth-card .auth-sub { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 0 0 24px; }
@@ -847,7 +847,7 @@ html[data-theme='dark'] .topbar { background: rgba(0, 0, 0, 0.86); }
   .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; box-shadow: var(--sh-lg); }
   .topbar { left: 0; }
   .topbar .brand-mobile { display: flex; align-items: center; gap: 8px; font-family: var(--f-id); font-size: 1.05rem; }
-  .topbar .brand-mobile img { width: 32px; height: 32px; border-radius: 6px; object-fit: cover; }
+  .topbar .brand-mobile img { width: 32px; height: 32px; border-radius: 6px; object-fit: contain; object-position: center; background: var(--paper); }
   .icon-btn--menu { display: inline-flex; }
   .main { margin-left: 0; padding: calc(var(--topbar-h) + 20px) 16px 60px; }
   .welcome { flex-direction: column; text-align: center; padding: 34px 22px; }
