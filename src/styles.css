@@ -1512,7 +1512,15 @@ html[data-theme='dark'] .id-card {
   cursor: pointer;
 }
 .privacy-agree span { font-size: 0.9rem; line-height: 1.65; color: var(--ink-soft); }
-.privacy-actions { display: flex; gap: 12px; justify-content: flex-end; }
+.privacy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+}
+.privacy-actions .privacy-btn + .privacy-btn { margin-left: 12px; } /* gap fallback for older browsers */
+.privacy-actions .privacy-btn { position: relative; white-space: nowrap; }
 .privacy-btn {
   display: inline-flex;
   align-items: center;
@@ -1542,8 +1550,8 @@ html[data-theme='dark'] .id-card {
 @media (max-width: 560px) {
   .privacy-card { padding: 26px 20px 22px; }
   .privacy-card h1 { font-size: 1.5rem; }
-  .privacy-actions { flex-direction: column-reverse; }
-  .privacy-actions .privacy-btn { justify-content: center; width: 100%; }
+  .privacy-actions { flex-direction: column-reverse; align-items: stretch; }
+  .privacy-actions .privacy-btn { justify-content: center; width: 100%; margin-left: 0 !important; }
 }
 
 .dir-positions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
