@@ -345,7 +345,8 @@ img { max-width: 100%; }
     text-transform: uppercase;
     transition: color 0.18s ease;
   }
-  .tab svg { width: 22px; height: 22px; }
+.tab svg { width: 22px; height: 22px; }
+  .tab .tab-avatar { width: 26px; height: 26px; font-size: 0.6rem; }
   .tab--on { color: var(--accent); }
   .tab--on::before {
     content: '';
@@ -1006,6 +1007,7 @@ html[data-theme='dark'] .id-card {
 @media (max-width: 860px) {
   .staff-grid { grid-template-columns: 1fr; }
 }
+.tally-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .spin { animation: fnahs-spin 0.9s linear infinite; }
 @keyframes fnahs-spin { to { transform: rotate(360deg); } }
 

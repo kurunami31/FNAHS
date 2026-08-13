@@ -218,10 +218,14 @@ create policy "events are readable by members"
   on public.events for select
   using (auth.role() = 'authenticated');
 
+-- legacy policy from pre-hardening runs — anon must never read events
+drop policy if exists "events are publicly readable" on public.events;
+
 drop policy if exists "members can create events" on public.events;
-create policy "members can create events"
+drop policy if exists "staff can create events" on public.events;
+create policy "staff can create events"
   on public.events for insert
-  with check (auth.uid() = created_by);
+  with check ((select role from public.profiles where id = auth.uid()) in ('staff', 'moderator', 'superadmin'));
 
 drop policy if exists "staff can manage events" on public.events;
 create policy "staff can manage events"

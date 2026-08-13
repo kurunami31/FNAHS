@@ -5,12 +5,16 @@ import { api } from '../lib/api'
 import { fmtDateTime, monthDay } from '../lib/format'
 import EventModal from '../components/EventModal'
 
+const EVENT_EDITORS = ['staff', 'moderator', 'superadmin']
+
 export default function Events() {
   const { user, toast } = useApp()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(false)
   const [selected, setSelected] = useState(null)
+
+  const canCreate = EVENT_EDITORS.includes(user?.role)
 
   const load = useCallback(async () => {
     try {
@@ -55,9 +59,11 @@ export default function Events() {
       <div className="events-head">
         <h1 className="page-title">EVENTS</h1>
         <p className="page-sub">Org events — scan your ID QR at the door to log attendance.</p>
-        <button className="btn btn--primary" onClick={() => setModal(true)}>
-          <Plus size={16} /> Create event
-        </button>
+        {canCreate && (
+          <button className="btn btn--primary" onClick={() => setModal(true)}>
+            <Plus size={16} /> Create event
+          </button>
+        )}
       </div>
 
       {loading && <div className="empty-state"><div className="typing" style={{ justifyContent: 'center' }}><i /><i /><i /></div></div>}

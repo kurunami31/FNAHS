@@ -10,7 +10,7 @@ export default function EventModal({ event, onClose, onChanged }) {
   const [scanned, setScanned] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  const isStaff = ['staff', 'superadmin'].includes(user?.role)
+  const isStaff = ['staff', 'moderator', 'superadmin'].includes(user?.role)
 
   useEffect(() => {
     api.getMembers().then(setMembers).catch(() => {})

@@ -173,12 +173,24 @@ export default function Layout() {
             <span>{label}</span>
           </NavLink>
         ))}
+        {isStaff && (
+          <NavLink to="/app/staff" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+            <ShieldCheck size={21} />
+            <span>Staff</span>
+          </NavLink>
+        )}
         {isAdmin && (
           <NavLink to="/app/admin" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
             <Settings2 size={21} />
             <span>Admin</span>
           </NavLink>
         )}
+        <button className="tab" onClick={() => setSheetOpen(true)} aria-label="Account settings">
+          <span className="avatar tab-avatar">
+            {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
+          </span>
+          <span>Me</span>
+        </button>
       </nav>
 
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}

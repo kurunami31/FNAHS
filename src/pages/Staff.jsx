@@ -5,6 +5,8 @@ import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
 
+const ATTENDANCE_ROLES = ['staff', 'moderator', 'superadmin']
+
 export default function Staff() {
   const { user, toast } = useApp()
   const [events, setEvents] = useState([])
@@ -112,14 +114,14 @@ export default function Staff() {
     }
   }
 
-  const isStaff = ['staff', 'superadmin'].includes(user?.role)
+  const isStaff = ATTENDANCE_ROLES.includes(user?.role)
 
   if (!isStaff) {
     return (
       <div className="empty-state">
         <ShieldCheck size={44} />
         <h3>Staff tools</h3>
-        <p>This page is reserved for FNAHS staff and officers.</p>
+        <p>This page is reserved for FNAHS staff, moderators, and officers.</p>
       </div>
     )
   }
@@ -129,7 +131,7 @@ export default function Staff() {
       <h1 className="page-title">
         ATTENDANCE <span className="page-kicker">staff tools</span>
       </h1>
-      <p className="page-sub">Scan member ID QR codes at the door to log event attendance.</p>
+      <p className="page-sub">Pick the event on duty, start the scanner, and the door log fills in live.</p>
 
       <section className="panel">
         <div className="panel-head">
@@ -144,95 +146,88 @@ export default function Staff() {
             ))}
           </select>
         </div>
-      </section>
-
-      <section className="panel">
-        <div className="panel-head">
-          <h2 className="panel-title"><Users size={16} /> Attendance tallies</h2>
-        </div>
-        {tallies.length === 0 ? (
-          <p className="panel-muted">No scans logged yet — start the scanner to build the first tally.</p>
-        ) : (
-          <div className="mm-chips">
+        {tallies.length > 0 && (
+          <div className="tally-strip">
             {tallies.map((t) => (
-              <span key={t.event_id} className="chip chip--ok"><b style={{ marginRight: 6 }}>{t.count}</b> {t.title}</span>
+              <span key={t.event_id} className={`chip${t.event_id === eventId ? ' chip--ok' : ''}`}>
+                <b style={{ marginRight: 5 }}>{t.count}</b> {t.title}
+              </span>
             ))}
           </div>
         )}
       </section>
 
-      <div className="staff-grid">
-        <section className="panel">
-          <div className="panel-head">
-            <h2 className="panel-title"><QrCode size={16} /> Scanner</h2>
-          </div>
-          <div
-            className="scan-box"
-            id="fnahs-scan-box"
-            ref={scanBoxRef}
-            style={!scanning ? { background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}}
-          >
-            {!scanning && (
-              <span style={{ color: 'var(--muted)', fontSize: '0.85rem', textAlign: 'center', padding: 20 }}>
-                Camera off<br /><br />Press start to scan IDs
-              </span>
-            )}
-            {scanning && <div className="scan-overlay" />}
-          </div>
-          <div style={{ marginTop: 14 }}>
-            {!scanning ? (
-              <button className="btn btn--primary btn--block" onClick={startScan}>
-                <Camera size={16} /> Start scanner
-              </button>
-            ) : (
-              <button className="btn btn--danger btn--block" onClick={stopScan}>
-                <CameraOff size={16} /> Stop scanner
-              </button>
-            )}
-          </div>
-          {last && (
-            <div className="form-ok" style={{ marginTop: 14, marginBottom: 0 }}>
-              Last scan: <b>{last.id.slice(0, 8)}</b> · {timeAgo(last.at)}
-            </div>
+      <section className="panel">
+        <div className="panel-head">
+          <h2 className="panel-title"><QrCode size={16} /> Scanner</h2>
+        </div>
+        <div
+          className="scan-box"
+          id="fnahs-scan-box"
+          ref={scanBoxRef}
+          style={!scanning ? { background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}}
+        >
+          {!scanning && (
+            <span style={{ color: 'var(--muted)', fontSize: '0.85rem', textAlign: 'center', padding: 20 }}>
+              Camera off<br /><br />Press start to scan IDs
+            </span>
           )}
-        </section>
-
-        <section className="panel">
-          <div className="panel-head">
-            <h2 className="panel-title"><Users size={16} /> Attendance log</h2>
-          </div>
-          {attendance.length === 0 ? (
-            <p className="panel-muted">No scans recorded for this event yet.</p>
+          {scanning && <div className="scan-overlay" />}
+        </div>
+        <div style={{ marginTop: 14 }}>
+          {!scanning ? (
+            <button className="btn btn--primary btn--block" onClick={startScan}>
+              <Camera size={16} /> Start scanner
+            </button>
           ) : (
-            <div className="ledger">
-              {attendance.map((a) => (
-                <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
-                  <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
-                    {(a.profiles?.full_name || '?')
-                      .split(' ')
-                      .map((w) => w[0])
-                      .slice(0, 2)
-                      .join('')
-                      .toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
-                      {a.profiles?.full_name || a.user_id.slice(0, 10)}
-                    </div>
-                    <div className="ledger-meta">
-                      {a.profiles?.program
-                        ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}`
-                        : ''}{' '}
-                      · scanned {timeAgo(a.scanned_at)}
-                    </div>
-                  </div>
-                  <span className="badge badge--ok">present</span>
-                </div>
-              ))}
-            </div>
+            <button className="btn btn--danger btn--block" onClick={stopScan}>
+              <CameraOff size={16} /> Stop scanner
+            </button>
           )}
-        </section>
-      </div>
+        </div>
+        {last && (
+          <div className="form-ok" style={{ marginTop: 14, marginBottom: 0 }}>
+            Last scan: <b>{last.id.slice(0, 8)}</b> · {timeAgo(last.at)}
+          </div>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2 className="panel-title"><Users size={16} /> Attendance log</h2>
+          {attendance.length > 0 && <span className="chip chip--ok">{attendance.length} present</span>}
+        </div>
+        {attendance.length === 0 ? (
+          <p className="panel-muted">No scans recorded for this event yet.</p>
+        ) : (
+          <div className="ledger">
+            {attendance.map((a) => (
+              <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
+                <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                  {(a.profiles?.full_name || '?')
+                    .split(' ')
+                    .map((w) => w[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
+                    {a.profiles?.full_name || a.user_id.slice(0, 10)}
+                  </div>
+                  <div className="ledger-meta">
+                    {a.profiles?.program
+                      ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}`
+                      : ''}{' '}
+                    · scanned {timeAgo(a.scanned_at)}
+                  </div>
+                </div>
+                <span className="badge badge--ok">present</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
