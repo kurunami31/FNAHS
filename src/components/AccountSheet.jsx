@@ -51,8 +51,8 @@ export default function AccountSheet({ onClose, onLogout }) {
 
   const onNameChange = (v) => {
     setForm((f2) => ({ ...f2, full_name: v }))
-    if (user?.role === 'superadmin') {
-      // Super admin keeps a plain name field — changes save automatically.
+    // Staff/leaders keep a plain name field — changes save automatically.
+      if (user?.role !== 'student') {
       clearTimeout(saveTimer.current)
       saveTimer.current = setTimeout(() => {
         if (v.trim()) save()
@@ -81,7 +81,7 @@ export default function AccountSheet({ onClose, onLogout }) {
   return (
     <div className="sheet" role="dialog" aria-label="Account settings">
       <div className="sheet-head">
-        {user?.role === 'superadmin' ? (
+        {user?.role !== 'student' ? (
           <div className="avatar avatar--ring">
             {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
           </div>
@@ -94,7 +94,7 @@ export default function AccountSheet({ onClose, onLogout }) {
           <h3>{user?.full_name || 'Member'}</h3>
           <span>
             {user?.role || 'student'}
-            {user?.role === 'superadmin' ? '' : ` · ${user?.program || 'no program'}`}
+            {user?.role !== 'student' ? '' : ` · ${user?.program || 'no program'}`}
           </span>
         </div>
         <button className="icon-btn" onClick={onClose} aria-label="Close settings">
@@ -104,7 +104,7 @@ export default function AccountSheet({ onClose, onLogout }) {
 
       <div className="sheet-sec">
         <h4>Profile</h4>
-        {user?.role !== 'superadmin' && (
+        {user?.role !== 'student' && (
           <div className="mm-pic">
             <button
               className="avatar avatar--ring avatar-btn"
@@ -131,9 +131,9 @@ export default function AccountSheet({ onClose, onLogout }) {
         <div className="field">
           <label>Full name</label>
           <input value={form.full_name || ''} onChange={(e) => onNameChange(e.target.value)} autoComplete="name" />
-          {user?.role === 'superadmin' && <div className="mm-pic-hint">Changes are saved automatically.</div>}
+          {user?.role !== 'student' && <div className="mm-pic-hint">Changes are saved automatically.</div>}
         </div>
-        {user?.role !== 'superadmin' && (
+        {user?.role !== 'student' && (
           <>
             <div className="field">
               <label>Program</label>
@@ -153,7 +153,7 @@ export default function AccountSheet({ onClose, onLogout }) {
             </div>
           </>
         )}
-        {user?.role !== 'superadmin' && (
+        {user?.role !== 'student' && (
           <button className="btn btn--primary btn--block" onClick={save} disabled={saving}>
             {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save profile
           </button>
