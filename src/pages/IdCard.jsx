@@ -22,6 +22,8 @@ export default function IdCard() {
 
   const isStaff = can(user, 'feed.moderate') || can(user, 'events.manage') || can(user, 'attendance.scan')
   const name = user?.full_name || 'Student Member'
+  const [firstName, ...restNames] = name.trim().split(/\s+/)
+  const lastName = restNames.join(' ') || firstName
   const qrValue = JSON.stringify({ t: 'fnahs-id', id: user?.id || 'demo', n: name, v: 1 })
   const serial =
     (user?.id || 'demo')
@@ -110,24 +112,25 @@ export default function IdCard() {
               </div>
               <div className="id-qr-block">
                 <div className="id-qr-box">
-                  <QRCodeSVG value={qrValue} size={96} level="M" />
+                  <QRCodeSVG value={qrValue} size={120} level="M" />
                 </div>
                 <div className="id-qr-note">scan at events</div>
               </div>
             </div>
-            <div className="id-details">
-              <div className="id-name">{name}</div>
-              <div className="id-rows">
-                {user?.program && <div className="id-row">PROGRAM&nbsp;&nbsp;<b>{user.program}</b></div>}
-                {user?.year_level && <div className="id-row">YEAR&nbsp;&nbsp;<b>{user.year_level}</b></div>}
-                {user?.section && <div className="id-row">SECTION&nbsp;&nbsp;<b>{user.section}</b></div>}
-                {user?.role !== 'student' && (
-                  <div className="id-row">ROLE&nbsp;&nbsp;<b>{roleLabel(user?.role)}</b></div>
-                )}
-                {!!user?.positions?.length && (
-                  <div className="id-row">POSITION&nbsp;&nbsp;<b>{user.positions.map(positionLabel).join(' · ')}</b></div>
-                )}
-              </div>
+            <div className="id-names">
+              {firstName !== lastName && <div className="id-first">{firstName}</div>}
+              <div className="id-last">{lastName}</div>
+            </div>
+            <div className="id-rows">
+              {user?.program && <div className="id-row">PROGRAM&nbsp;&nbsp;<b>{user.program}</b></div>}
+              {user?.year_level && <div className="id-row">YEAR&nbsp;&nbsp;<b>{user.year_level}</b></div>}
+              {user?.section && <div className="id-row">SECTION&nbsp;&nbsp;<b>{user.section}</b></div>}
+              {user?.role !== 'student' && (
+                <div className="id-row">ROLE&nbsp;&nbsp;<b>{roleLabel(user?.role)}</b></div>
+              )}
+              {!!user?.positions?.length && (
+                <div className="id-row">POSITION&nbsp;&nbsp;<b>{user.positions.map(positionLabel).join(' · ')}</b></div>
+              )}
             </div>
           </div>
           <div className="id-foot">
