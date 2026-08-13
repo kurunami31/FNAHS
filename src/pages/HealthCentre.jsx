@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HeartPulse, RefreshCw, ExternalLink } from 'lucide-react'
+import Ecg from '../components/Ecg'
 import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
 
@@ -41,6 +42,7 @@ export default function HealthCentre() {
         WHO HEALTH CENTRE <span className="page-kicker">global health news</span>
       </h1>
       <p className="page-sub">Curated health headlines from around the world, via the APITube News API.</p>
+      <Ecg className="hc-ecg" />
 
       <div className="hc-tools">
         <span className="hc-live" title="Live feed">

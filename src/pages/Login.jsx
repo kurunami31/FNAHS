@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, LogIn, Info } from 'lucide-react'
+import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
 
 export default function Login() {
@@ -39,6 +40,7 @@ export default function Login() {
             <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>community platform</div>
           </div>
         </div>
+        <Ecg className="auth-ecg" />
         <h1 className="auth-title">Log <em>in</em></h1>
         <p className="auth-sub">Welcome back to the ward.</p>
 

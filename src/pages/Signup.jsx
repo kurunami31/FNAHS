@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, UserPlus, Info } from 'lucide-react'
+import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
 
 export default function Signup() {
@@ -49,6 +50,7 @@ export default function Signup() {
             <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>community platform</div>
           </div>
         </div>
+        <Ecg className="auth-ecg" />
         <h1 className="auth-title">Join <em>FNAHS</em></h1>
         <p className="auth-sub">One last step — then you're in.</p>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Stethoscope, CalendarDays } from 'lucide-react'
+import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
 import { seedFeeds, ORG_TAGLINE, PROGRAMS } from '../lib/mock'
@@ -54,7 +55,8 @@ export default function Home() {
         <h1 className="hero-title d3">FNAHS</h1>
         <div className="hero-fac d3">community platform · est. 2026</div>
         <p className="hero-tagline d4">{ORG_TAGLINE}</p>
-        <div className="hero-actions d5">
+        <Ecg className="hero-ecg d5" />
+        <div className="hero-actions d6">
           {user ? (
             <>
               <button className="btn btn--primary" onClick={() => navigate('/app/feed')}>
@@ -75,7 +77,7 @@ export default function Home() {
             </>
           )}
         </div>
-        <div className="vitals d6">
+        <div className="vitals d7">
           {stats.map((s) => (
             <div key={s.label} className="vital">
               <b>{s.value}</b>

@@ -131,6 +131,7 @@ export default function IdCard() {
               <div className="id-stamp">FNAHS</div>
             </div>
           </div>
+          <div className="id-ecg" aria-hidden="true" />
         </div>
 
         <div className="id-actions">
