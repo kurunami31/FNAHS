@@ -81,7 +81,7 @@ export default function Directory() {
               <div className="member-av">{m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}</div>
               <div style={{ minWidth: 0 }}>
                 <div className="member-name">{m.full_name}</div>
-                <div className="member-meta">{m.program || 'Student'} · YR {m.year_level || '—'}</div>
+                <div className="member-meta">{m.program || 'Student'} · YR {m.year_level || '—'}{m.section ? ` · SEC ${m.section}` : ''}</div>
                 {!!m.positions?.length && (
                   <div className="dir-positions">
                     {m.positions.map((p) => (

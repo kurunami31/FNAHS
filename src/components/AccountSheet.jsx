@@ -16,7 +16,7 @@ export default function AccountSheet({ onClose, onLogout }) {
   useEffect(() => () => clearTimeout(saveTimer.current), [])
 
   useEffect(() => {
-    if (user) setForm({ full_name: user.full_name || '', program: user.program || '', year_level: user.year_level || '', avatar_url: user.avatar_url || '' })
+    if (user) setForm({ full_name: user.full_name || '', program: user.program || '', year_level: user.year_level || '', section: user.section || '', avatar_url: user.avatar_url || '' })
   }, [user])
 
   const onPick = (e) => {
@@ -67,7 +67,7 @@ export default function AccountSheet({ onClose, onLogout }) {
     }
     setSaving(true)
     try {
-      const updated = await api.upsertProfile({ id: user.id, full_name: form.full_name.trim(), program: form.program, year_level: form.year_level, avatar_url: form.avatar_url || null })
+      const updated = await api.upsertProfile({ id: user.id, full_name: form.full_name.trim(), program: form.program, year_level: form.year_level, section: form.section, avatar_url: form.avatar_url || null })
       if (updated) setUser({ ...user, ...updated })
       toast('Profile saved')
     } catch (e) {
@@ -148,6 +148,15 @@ export default function AccountSheet({ onClose, onLogout }) {
               <select value={form.year_level || ''} onChange={(e) => setForm({ ...form, year_level: e.target.value })}>
                 {['1', '2', '3', '4'].map((y) => (
                   <option key={y} value={y}>Year {y}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Section</label>
+              <select value={form.section || ''} onChange={(e) => setForm({ ...form, section: e.target.value })}>
+                <option value="">Select section…</option>
+                {['A', 'B', 'C', 'D'].map((s) => (
+                  <option key={s} value={s}>Section {s}</option>
                 ))}
               </select>
             </div>

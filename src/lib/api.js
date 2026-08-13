@@ -377,7 +377,7 @@ export const api = {
     ? async (id) => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .eq('id', id)
           .maybeSingle()
         if (error) {
@@ -394,13 +394,14 @@ export const api = {
           full_name: sanitizeText(p.full_name, 120),
           program: sanitizeText(p.program, 120),
           year_level: sanitizeText(p.year_level, 20),
+          section: sanitizeText(p.section, 20),
           avatar_url: sanitizeUrl(p.avatar_url),
         }
         if (p.id) patch.id = p.id
         const { data, error } = await supabase
           .from('profiles')
           .upsert(patch, { onConflict: 'id' })
-          .select('id, full_name, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
         return data

@@ -24,6 +24,9 @@ alter table public.profiles add column if not exists positions text[] not null d
 -- privacy notice acceptance (set by the consent gate after first login)
 alter table public.profiles add column if not exists privacy_policy_accepted_at timestamptz;
 
+-- student class section (A/B/C/D…) — edited by students on their own profile
+alter table public.profiles add column if not exists section text;
+
 do $$
 begin
   if not exists (select 1 from pg_constraint where conname = 'profiles_positions_check') then
