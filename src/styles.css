@@ -1959,3 +1959,17 @@ html[data-theme='dark'] .sec-head::after {
   .id-card { min-height: 0; }
   .id-qr-box { width: 108px; height: 108px; padding: 6px; }
 }
+
+/* ID card — photo + QR side by side, details full-width below */
+.id-mid { flex-direction: column; gap: 14px; }
+.id-mid-row { display: flex; align-items: center; justify-content: center; gap: 22px; }
+.id-photo { width: 108px; height: 108px; }
+.id-qr-block { display: flex; flex-direction: column; align-items: center; }
+.id-details { width: 100%; justify-content: flex-start; }
+.id-name { font-size: 1.22rem; }
+.id-foot { align-items: center; }
+
+@media (max-width: 560px) {
+  .id-photo { width: 94px; height: 94px; }
+  .id-mid-row { gap: 16px; }
+}

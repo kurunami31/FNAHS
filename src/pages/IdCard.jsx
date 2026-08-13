@@ -104,8 +104,16 @@ export default function IdCard() {
             </div>
           </div>
           <div className="id-mid">
-            <div className="id-photo">
-              {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : <span className="ph-initials">{initials(name)}</span>}
+            <div className="id-mid-row">
+              <div className="id-photo">
+                {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : <span className="ph-initials">{initials(name)}</span>}
+              </div>
+              <div className="id-qr-block">
+                <div className="id-qr-box">
+                  <QRCodeSVG value={qrValue} size={96} level="M" />
+                </div>
+                <div className="id-qr-note">scan at events</div>
+              </div>
             </div>
             <div className="id-details">
               <div className="id-name">{name}</div>
@@ -123,16 +131,8 @@ export default function IdCard() {
             </div>
           </div>
           <div className="id-foot">
-            <div>
-              <div className="id-qr-box">
-                <QRCodeSVG value={qrValue} size={96} level="M" />
-              </div>
-              <div className="id-qr-note">scan at events</div>
-            </div>
-            <div className="id-foot-right">
-              <div className="id-serial">ID {serial}</div>
-              <div className="id-stamp">FNAHS</div>
-            </div>
+            <div className="id-serial">ID {serial}</div>
+            <div className="id-stamp">FNAHS</div>
           </div>
           <div className="id-ecg" aria-hidden="true" />
         </div>
