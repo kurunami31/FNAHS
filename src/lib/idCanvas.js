@@ -63,15 +63,27 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   ctx.lineWidth = 4
   ctx.stroke()
 
+  try {
+    const wm = await loadImage('/FNAHS.png')
+    const wmH = 300
+    const wmW = Math.round(wmH * (wm.width / wm.height))
+    ctx.save()
+    ctx.globalAlpha = 0.1
+    ctx.drawImage(wm, (W - wmW) / 2, (H - wmH) / 2, wmW, wmH)
+    ctx.restore()
+  } catch {
+    /* watermark optional */
+  }
+
   const l = W - 28
 
   let sealOk = false
   try {
     const seal = await loadImage('/FNAHS.png')
     ctx.save()
-    rr(ctx, 28, 28, 64, 64, 14)
+    rr(ctx, 28, 28, 76, 76, 16)
     ctx.clip()
-    ctx.drawImage(seal, 28, 28, 64, 64)
+    ctx.drawImage(seal, 28, 28, 76, 76)
     ctx.restore()
     sealOk = true
   } catch {
@@ -79,22 +91,22 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   }
   if (!sealOk) {
     ctx.fillStyle = GOLD
-    rr(ctx, 28, 28, 64, 64, 14)
+    rr(ctx, 28, 28, 76, 76, 16)
     ctx.fill()
     ctx.fillStyle = '#fffdf6'
     ctx.font = `700 30px ${FACE}`
     ctx.textAlign = 'center'
-    ctx.fillText('F', 60, 72)
+    ctx.fillText('F', 66, 76)
     ctx.textAlign = 'left'
   }
 
   ctx.textAlign = 'right'
   ctx.fillStyle = GOLD_D
   ctx.font = `700 26px ${OCR}`
-  ctx.fillText('FNAHS', l, 54)
+  ctx.fillText('FNAHS', l, 62)
   ctx.fillStyle = MUT
   ctx.font = `12px ${OCR}`
-  ctx.fillText('FACULTY OF NURSING & ALLIED HEALTH SCIENCES', l, 78)
+  ctx.fillText('FACULTY OF NURSING & ALLIED HEALTH SCIENCES', l, 86)
   ctx.textAlign = 'left'
 
   const sy = 112

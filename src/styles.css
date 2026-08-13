@@ -2012,3 +2012,16 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 /* ID card — canvas-rendered preview (bsitcodex-style artifact) */
 .id-preview { width: min(430px, 100%); height: auto; border-radius: var(--r-lg); box-shadow: var(--sh-lg); display: block; margin: 0 auto; background: #fff; }
 .id-card-loading { width: min(430px, 100%); aspect-ratio: 856 / 540; border-radius: var(--r-lg); border: 1.5px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: var(--f-ocr); font-size: 0.8rem; letter-spacing: 0.1em; text-align: center; margin: 0 auto; background: var(--paper); }
+
+/* FNAHS logo — bigger everywhere so the org marks are clearly seen */
+.seal { width: 64px; height: 64px; padding: 5px; }
+.brand-mobile img { width: 38px; height: 38px; }
+.hero-seal { width: 124px; height: 124px; }
+.auth-logo img { height: 184px; }
+
+@media (max-width: 560px) {
+  .hero-seal { width: 100px; height: 100px; }
+  .seal { width: 56px; height: 56px; }
+  .auth-logo img { height: 150px; }
+  .brand-mobile img { width: 34px; height: 34px; }
+}
