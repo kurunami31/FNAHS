@@ -1,16 +1,18 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { CheckCircle2, AlertCircle, Info } from 'lucide-react'
 import { useApp } from './context/AppContext'
 import Layout from './components/Layout'
 import ChatWidget from './components/ChatWidget'
-import Home from './pages/Home'
-import Feed from './pages/Feed'
-import Events from './pages/Events'
-import IdCard from './pages/IdCard'
-import Settings from './pages/Settings'
-import Staff from './pages/Staff'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
-import { CheckCircle2, AlertCircle, Info } from 'lucide-react'
+
+const Home = lazy(() => import('./pages/Home'))
+const Feed = lazy(() => import('./pages/Feed'))
+const Events = lazy(() => import('./pages/Events'))
+const Directory = lazy(() => import('./pages/Directory'))
+const IdCard = lazy(() => import('./pages/IdCard'))
+const Staff = lazy(() => import('./pages/Staff'))
+const Login = lazy(() => import('./pages/Login'))
+const Signup = lazy(() => import('./pages/Signup'))
 
 export default function App() {
   const { user, toasts } = useApp()
@@ -28,12 +30,12 @@ export default function App() {
             </RequireAuth>
           }
         >
-          <Route index element={<Home />} />
-          <Route path="feed" element={<Feed />} />
-          <Route path="events" element={<Events />} />
-          <Route path="idcard" element={<IdCard />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="staff" element={<Staff />} />
+          <Route index element={<Page><Home /></Page>} />
+          <Route path="feed" element={<Page><Feed /></Page>} />
+          <Route path="events" element={<Page><Events /></Page>} />
+          <Route path="directory" element={<Page><Directory /></Page>} />
+          <Route path="idcard" element={<Page><IdCard /></Page>} />
+          <Route path="staff" element={<Page><Staff /></Page>} />
         </Route>
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>
@@ -51,6 +53,22 @@ export default function App() {
         ))}
       </div>
     </>
+  )
+}
+
+function Page({ children }) {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ padding: '70px 0', display: 'flex', justifyContent: 'center' }}>
+          <div className="typing">
+            <i /><i /><i />
+          </div>
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
   )
 }
 

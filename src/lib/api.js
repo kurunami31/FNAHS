@@ -320,6 +320,18 @@ export const api = {
         return posts.map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
       },
 
+  /* directory */
+  getMembers: SUPABASE_ENABLED
+    ? async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, program, year_level, avatar_url, role')
+          .order('full_name')
+        if (error) throw error
+        return data || []
+      }
+    : () => Object.values(db.profiles),
+
   createPost: SUPABASE_ENABLED
     ? async ({ content, image_url }) => {
         const { data, error } = await supabase
@@ -418,6 +430,51 @@ export const api = {
         if (error) throw error
       }
     : demoMarkAttendance,
+
+  /* my attendance history */
+  getMyAttendance: SUPABASE_ENABLED
+    ? async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return []
+        const { data, error } = await supabase
+          .from('attendance')
+          .select('event_id, scanned_at, events(title, starts_at, location)')
+          .eq('user_id', user.id)
+          .order('scanned_at', { ascending: false })
+        if (error) throw error
+        return (data || []).map((r) => ({ event_id: r.event_id, scanned_at: r.scanned_at, ...(r.events || {}) }))
+      }
+    : async () => {
+        const me = demoCurrentUserId() || DEMO_USER_ID
+        const rows = []
+        for (const [event_id, m] of Object.entries(db.attendance || {})) {
+          for (const [user_id, scanned_at] of Object.entries(m || {})) {
+            if (user_id === me) {
+              const ev = db.events.find((e) => e.id === event_id)
+              rows.push({ event_id, scanned_at, title: ev?.title || 'Event', starts_at: ev?.starts_at, location: ev?.location })
+            }
+          }
+        }
+        return rows.sort((a, b) => new Date(b.scanned_at) - new Date(a.scanned_at))
+      },
+
+  /* attendance tallies per event */
+  getAttendanceSummary: SUPABASE_ENABLED
+    ? async () => {
+        const { data, error } = await supabase.from('attendance').select('event_id, events(title)')
+        if (error) throw error
+        const counts = {}
+        const titles = {}
+        for (const r of data || []) {
+          counts[r.event_id] = (counts[r.event_id] || 0) + 1
+          titles[r.event_id] = r.events?.title
+        }
+        return Object.entries(counts).map(([event_id, count]) => ({ event_id, count, title: titles[event_id] || 'Event' }))
+      }
+    : async () =>
+        db.events
+          .map((e) => ({ event_id: e.id, count: Object.keys(db.attendance[e.id] || {}).length, title: e.title }))
+          .filter((t) => t.count > 0),
 
   getFeeds,
   aiChat,

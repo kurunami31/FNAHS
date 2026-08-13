@@ -3,16 +3,20 @@ import { CalendarDays, MapPin, Clock, Plus, Check, X, Users } from 'lucide-react
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
 import { fmtDateTime, monthDay } from '../lib/format'
+import EventModal from '../components/EventModal'
 
 export default function Events() {
   const { user, toast } = useApp()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(false)
+  const [selected, setSelected] = useState(null)
 
   const load = useCallback(async () => {
     try {
-      setEvents(await api.getEvents())
+      const evs = await api.getEvents()
+      setEvents(evs)
+      setSelected((s) => (s ? evs.find((e) => e.id === s.id) || null : s))
     } catch (e) {
       console.error(e)
       toast('Could not load events', 'err')
@@ -72,12 +76,12 @@ export default function Events() {
         const mine = e.rsvps?.[user?.id]
         const going = Object.values(e.rsvps || {}).filter((s) => s === 'going').length
         return (
-          <div className="event-card" key={e.id}>
-            <div className="event-date">
+          <div className="event-ticket" key={e.id} onClick={() => setSelected(e)}>
+            <div className="event-stub">
               <b>{monthDay(e.starts_at).day}</b>
               <span>{monthDay(e.starts_at).month}</span>
             </div>
-            <div className="event-main">
+            <div className="event-body">
               <h3>{e.title}</h3>
               <div className="ev-meta">
                 <span><Clock size={14} /> {fmtDateTime(e.starts_at)}</span>
@@ -88,11 +92,23 @@ export default function Events() {
             </div>
             <div className="event-side">
               {mine === 'going' ? (
-                <button className="btn btn--ghost btn--sm" onClick={() => onRsvp(e.id, 'none')}>
+                <button
+                  className="btn btn--ghost btn--sm"
+                  onClick={(ev) => {
+                    ev.stopPropagation()
+                    onRsvp(e.id, 'none')
+                  }}
+                >
                   <X size={14} /> Cancel RSVP
                 </button>
               ) : (
-                <button className="btn btn--primary btn--sm" onClick={() => onRsvp(e.id, 'going')}>
+                <button
+                  className="btn btn--primary btn--sm"
+                  onClick={(ev) => {
+                    ev.stopPropagation()
+                    onRsvp(e.id, 'going')
+                  }}
+                >
                   <Check size={14} /> Mark as going
                 </button>
               )}
@@ -103,6 +119,7 @@ export default function Events() {
       })}
 
       {modal && <CreateEventModal onClose={() => setModal(false)} onCreate={created} />}
+      {selected && <EventModal event={selected} onClose={() => setSelected(null)} onChanged={load} />}
     </div>
   )
 }

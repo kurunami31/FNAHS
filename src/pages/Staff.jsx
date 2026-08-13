@@ -13,7 +13,20 @@ export default function Staff() {
   const [scanning, setScanning] = useState(false)
   const [scanner, setScanner] = useState(null)
   const [last, setLast] = useState(null)
+  const [tallies, setTallies] = useState([])
   const scanBoxRef = useRef(null)
+
+  const loadTallies = useCallback(async () => {
+    try {
+      setTallies(await api.getAttendanceSummary())
+    } catch (e) {
+      console.error(e)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadTallies()
+  }, [loadTallies])
 
   const loadEvents = useCallback(async () => {
     try {
@@ -113,12 +126,17 @@ export default function Staff() {
 
   return (
     <div>
-      <h1 className="page-title">ATTENDANCE</h1>
-      <p className="page-sub">Scan member ID QR codes to log event attendance.</p>
+      <h1 className="page-title">
+        ATTENDANCE <span className="page-kicker">staff tools</span>
+      </h1>
+      <p className="page-sub">Scan member ID QR codes at the door to log event attendance.</p>
 
-      <div className="card" style={{ marginBottom: 18 }}>
+      <section className="panel">
+        <div className="panel-head">
+          <h2 className="panel-title">Event on duty</h2>
+        </div>
         <div className="field" style={{ marginBottom: 0 }}>
-          <label>Event</label>
+          <label>Pick the active event</label>
           <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
             {events.length === 0 && <option value="">No events yet…</option>}
             {events.map((e) => (
@@ -126,14 +144,34 @@ export default function Staff() {
             ))}
           </select>
         </div>
-      </div>
+      </section>
 
-      <div className="learn-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-        <div className="card">
-          <h2 className="page-title" style={{ fontSize: '0.95rem', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <QrCode size={17} /> SCANNER
-          </h2>
-          <div className="scan-box" id="fnahs-scan-box" ref={scanBoxRef} style={!scanning ? { background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}}>
+      <section className="panel">
+        <div className="panel-head">
+          <h2 className="panel-title"><Users size={16} /> Attendance tallies</h2>
+        </div>
+        {tallies.length === 0 ? (
+          <p className="panel-muted">No scans logged yet — start the scanner to build the first tally.</p>
+        ) : (
+          <div className="mm-chips">
+            {tallies.map((t) => (
+              <span key={t.event_id} className="chip chip--ok"><b style={{ marginRight: 6 }}>{t.count}</b> {t.title}</span>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div className="staff-grid">
+        <section className="panel">
+          <div className="panel-head">
+            <h2 className="panel-title"><QrCode size={16} /> Scanner</h2>
+          </div>
+          <div
+            className="scan-box"
+            id="fnahs-scan-box"
+            ref={scanBoxRef}
+            style={!scanning ? { background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}}
+          >
             {!scanning && (
               <span style={{ color: 'var(--muted)', fontSize: '0.85rem', textAlign: 'center', padding: 20 }}>
                 Camera off<br /><br />Press start to scan IDs
@@ -141,7 +179,7 @@ export default function Staff() {
             )}
             {scanning && <div className="scan-overlay" />}
           </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+          <div style={{ marginTop: 14 }}>
             {!scanning ? (
               <button className="btn btn--primary btn--block" onClick={startScan}>
                 <Camera size={16} /> Start scanner
@@ -157,29 +195,43 @@ export default function Staff() {
               Last scan: <b>{last.id.slice(0, 8)}</b> · {timeAgo(last.at)}
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="card">
-          <h2 className="page-title" style={{ fontSize: '0.95rem', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Users size={17} /> ATTENDANCE LOG
-          </h2>
-          {attendance.length === 0 && (
-            <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>No scans recorded for this event yet.</p>
-          )}
-          {attendance.map((a) => (
-            <div className="comment" key={`${a.event_id}-${a.user_id}`}>
-              <div className="avatar" style={{ width: 30, height: 30, fontSize: 11 }}>
-                {(a.profiles?.full_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
-              </div>
-              <div className="c-body">
-                <span className="c-author">{a.profiles?.full_name || a.user_id.slice(0, 10)}</span>
-                {a.profiles?.program ? ` · ${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}` : ''}
-                <div className="c-time">scanned {timeAgo(a.scanned_at)}</div>
-              </div>
-              <span className="badge badge--ok">present</span>
+        <section className="panel">
+          <div className="panel-head">
+            <h2 className="panel-title"><Users size={16} /> Attendance log</h2>
+          </div>
+          {attendance.length === 0 ? (
+            <p className="panel-muted">No scans recorded for this event yet.</p>
+          ) : (
+            <div className="ledger">
+              {attendance.map((a) => (
+                <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
+                  <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                    {(a.profiles?.full_name || '?')
+                      .split(' ')
+                      .map((w) => w[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
+                      {a.profiles?.full_name || a.user_id.slice(0, 10)}
+                    </div>
+                    <div className="ledger-meta">
+                      {a.profiles?.program
+                        ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}`
+                        : ''}{' '}
+                      · scanned {timeAgo(a.scanned_at)}
+                    </div>
+                  </div>
+                  <span className="badge badge--ok">present</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </section>
       </div>
     </div>
   )

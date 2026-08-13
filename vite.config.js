@@ -7,8 +7,20 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['FNAHS.png', 'favicon.svg'],
+      includeAssets: ['FNAHS.png', 'favicon.svg', 'favicon.ico'],
       manifest: false,
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          qr: ['qrcode.react'],
+          image: ['html-to-image'],
+          scanner: ['html5-qrcode'],
+          icons: ['lucide-react'],
+        },
+      },
+    },
+  },
 })

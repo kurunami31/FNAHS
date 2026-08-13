@@ -6,13 +6,15 @@ A community platform for the **Faculty of Nursing and Allied Health Sciences**, 
 
 ## Features
 
-- **Home** — hero with the FNAHS logo and live health-content feeds
+- **Home** — seal hero with the FNAHS logo, live health-content feeds, and the next events on the rounds
 - **Feed** — org posts with likes, comments, image attachments, archive & delete, search
-- **Events** — upcoming org events with RSVP and event creation
+- **Events** — upcoming org events with RSVP and event creation; click any ticket for full details and the attendee list
+- **Directory** — searchable member directory of students and faculty, filterable by program; click any member for their profile (recent posts, events going)
 - **Florence** — the org's in-house AI assistant, named after Florence Nightingale, now a floating chat bubble available on every page (chat with streaming replies)
-- **My ID** — digital student ID card with a QR code, scannable at events
-- **Staff tools** — camera-based QR scanner to log event attendance
-- **Settings** — profile, program/year level, dark/light theme
+- **My ID** — digital student ID card with a QR code, scannable at events (exportable as an image), plus your attendance history
+- **Staff tools** — camera-based QR scanner to log event attendance, per-event tallies, and live scanned counts on event details
+- **Account sheet** — profile, program/year level, dark/light theme, sign out (slide-over from the avatar)
+- **Search** — Ctrl+K command search across posts and members
 - Gold & white light theme by default (the logo's two colors), pure-black night dark theme toggle, PWA-ready
 
 ## Run locally
@@ -43,6 +45,6 @@ npm run build      # production build
 
 ## Stack
 
-React 19 · Vite 6 · Supabase (auth, Postgres + RLS, Edge Functions) · lucide-react · qrcode.react · html5-qrcode · vite-plugin-pwa
+React 19 · Vite 6 · Supabase (auth, Postgres + RLS, Edge Functions) · lucide-react · qrcode.react · html5-qrcode · html-to-image · vite-plugin-pwa
 
-Fonts: Space Grotesk (display), Archivo Black (IDs), Share Tech Mono (mono), Inter (body).
+Fonts: Fraunces (display), Instrument Sans (body), Share Tech Mono (IDs).

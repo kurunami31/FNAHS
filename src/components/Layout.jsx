@@ -1,142 +1,150 @@
-import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Home, Newspaper, CalendarDays, CreditCard, Settings as SettingsIcon,
-  ShieldCheck, Search, Moon, Sun, Menu, LogOut,
+  Home as HomeIcon,
+  Newspaper,
+  CalendarDays,
+  Users,
+  CreditCard,
+  ShieldCheck,
+  Search,
+  Moon,
+  Sun,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { initials } from '../lib/format'
+import AccountSheet from './AccountSheet'
+import SearchOverlay from './SearchOverlay'
 
 const NAV = [
-  { to: '/app', label: 'Home', icon: Home, end: true },
+  { to: '/app', label: 'Home', icon: HomeIcon, end: true },
   { to: '/app/feed', label: 'Feed', icon: Newspaper },
   { to: '/app/events', label: 'Events', icon: CalendarDays },
+  { to: '/app/directory', label: 'Directory', icon: Users },
   { to: '/app/idcard', label: 'My ID', icon: CreditCard },
+]
+
+const SECTION = [
+  ['/app/feed', 'feed'],
+  ['/app/events', 'events'],
+  ['/app/directory', 'directory'],
+  ['/app/idcard', 'my id'],
+  ['/app/staff', 'staff tools'],
+  ['/app', 'home'],
 ]
 
 export default function Layout() {
   const { user, theme, setTheme, logout, toast } = useApp()
-  const [drawer, setDrawer] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const navigate = useNavigate()
+  const loc = useLocation()
 
-  const isStaff = user?.role === 'staff' || user?.role === 'superadmin'
+  const isStaff = ['staff', 'superadmin'].includes(user?.role)
+  const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || [, 'FNAHS'])[1]
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setSheetOpen(false)
+        setSearchOpen(false)
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSearchOpen((s) => !s)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const handleLogout = async () => {
+    setSheetOpen(false)
     await logout()
-    toast('Logged out. See you next duty!')
+    toast('Logged out — rest well, and see you next duty.')
     navigate('/login')
   }
 
   return (
     <div className="app-shell">
-      {drawer && <div className="drawer-backdrop" onClick={() => setDrawer(false)} />}
-      <aside className={`sidebar ${drawer ? 'sidebar--open' : ''}`}>
-        <div className="sidebar-brand">
-          <img src="/FNAHS.png" alt="FNAHS logo" />
-          <div>
-            <div className="brand-name">
-              FNAHS
-            </div>
-            <div className="brand-sub">community platform</div>
-          </div>
-        </div>
-
-        <nav className="sidebar-nav">
+      <aside className="seal-rail">
+        <NavLink to="/app" className="seal" aria-label="FNAHS home" title="FNAHS">
+          <img src="/FNAHS.png" alt="FNAHS seal" />
+        </NavLink>
+        <nav className="rail-nav" aria-label="Primary">
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
-              className={({ isActive }) => `nav-link ${isActive ? 'nav-link--on' : ''}`}
-              onClick={() => setDrawer(false)}
+              className={({ isActive }) => `rail-link${isActive ? ' rail-link--on' : ''}`}
+              aria-label={label}
+              title={label}
             >
-              <Icon size={19} />
-              {label}
+              <Icon size={21} strokeWidth={2} />
             </NavLink>
           ))}
-
           {isStaff && (
-            <>
-              <div className="nav-sep" />
-              <div className="nav-label">staff tools</div>
-              <NavLink
-                to="/app/staff"
-                className={({ isActive }) => `nav-link ${isActive ? 'nav-link--on' : ''}`}
-                onClick={() => setDrawer(false)}
-              >
-                <ShieldCheck size={19} />
-                Attendance
-              </NavLink>
-            </>
+            <NavLink
+              to="/app/staff"
+              className={({ isActive }) => `rail-link${isActive ? ' rail-link--on' : ''}`}
+              aria-label="Staff tools"
+              title="Staff tools"
+            >
+              <ShieldCheck size={21} strokeWidth={2} />
+            </NavLink>
           )}
-
-          <div className="nav-sep" />
-          <div className="nav-label">account</div>
-          <NavLink
-            to="/app/settings"
-            className={({ isActive }) => `nav-link ${isActive ? 'nav-link--on' : ''}`}
-            onClick={() => setDrawer(false)}
-          >
-            <SettingsIcon size={19} />
-            Settings
-          </NavLink>
         </nav>
-
-        <div className="sidebar-footer">
-          <div className="user-chip" onClick={() => navigate('/app/settings')}>
-            <div className="avatar">
-              {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div className="u-name">{user?.full_name || 'Student'}</div>
-              <div className="u-role">{user?.role || 'student'}</div>
-            </div>
-          </div>
-          <button className="icon-btn" title="Log out" onClick={handleLogout}>
-            <LogOut size={18} />
+        <div className="rail-foot">
+          <button
+            className="rail-avatar"
+            onClick={() => setSheetOpen(true)}
+            aria-label="Account settings"
+            title="Account"
+          >
+            {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
           </button>
         </div>
       </aside>
 
       <header className="topbar">
-        <button className="icon-btn icon-btn--menu" onClick={() => setDrawer(true)} aria-label="Open menu">
-          <Menu size={20} />
-        </button>
-        <div className="brand-mobile">
+        <NavLink to="/app" className="brand-mobile" aria-label="FNAHS home">
           <img src="/FNAHS.png" alt="" />
-          FNAHS
+          <span>FNAHS</span>
+        </NavLink>
+        <div className="top-ctx">
+          FNAHS <b>/</b> {section}
         </div>
-        <SearchBar />
-        <button className="icon-btn" title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme()}>
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        <div className="spacer" />
+        <button className="icon-btn" onClick={() => setSearchOpen(true)} aria-label="Search" title="Search (Ctrl+K)">
+          <Search size={19} />
+        </button>
+        <button className="icon-btn" onClick={() => setTheme()} aria-label="Toggle theme" title="Toggle theme">
+          {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
         </button>
       </header>
 
       <main className="main">
         <Outlet />
       </main>
-    </div>
-  )
-}
 
-function SearchBar() {
-  const [q, setQ] = useState('')
-  const navigate = useNavigate()
-  const submit = (e) => {
-    e.preventDefault()
-    if (!q.trim()) return
-    navigate(`/app/feed?q=${encodeURIComponent(q.trim())}`)
-    setQ('')
-  }
-  return (
-    <form className="search-box" onSubmit={submit}>
-      <Search size={16} />
-      <input
-        placeholder="Search the feed…"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        aria-label="Search the feed"
-      />
-    </form>
+      <nav className="tabbar" aria-label="Primary">
+        {NAV.map(({ to, label, icon: Icon, end }) => (
+          <NavLink key={to} to={to} end={end} className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+            <Icon size={21} />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
+
+      {sheetOpen && (
+        <>
+          <div className="sheet-backdrop" onClick={() => setSheetOpen(false)} aria-hidden="true" />
+          <AccountSheet onClose={() => setSheetOpen(false)} onLogout={handleLogout} />
+        </>
+      )}
+    </div>
   )
 }

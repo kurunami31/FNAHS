@@ -1,130 +1,160 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { HeartPulse, Lightbulb, CalendarDays, ArrowRight, ExternalLink, Stethoscope } from 'lucide-react'
+import { ArrowRight, Stethoscope, CalendarDays } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
-import { ORG_TAGLINE, seedFeeds } from '../lib/mock'
+import { seedFeeds, ORG_TAGLINE, PROGRAMS } from '../lib/mock'
 import { timeAgo } from '../lib/format'
+import EventModal from '../components/EventModal'
 
 export default function Home() {
   const { user } = useApp()
   const navigate = useNavigate()
   const [feeds, setFeeds] = useState(() => ({ health: seedFeeds().health, tips: seedFeeds().tips }))
   const [events, setEvents] = useState([])
+  const [selected, setSelected] = useState(null)
+  const [memberCount, setMemberCount] = useState(0)
+
+  const reloadRounds = async () => {
+    try {
+      const evs = await api.getEvents()
+      const upcoming = evs.filter((e) => new Date(e.ends_at) > Date.now()).slice(0, 3)
+      setEvents(upcoming)
+      setSelected((s) => (s ? evs.find((e) => e.id === s.id) || null : s))
+    } catch {
+      /* ignore */
+    }
+  }
 
   useEffect(() => {
     api.getFeeds().then(setFeeds).catch(() => {})
+    reloadRounds()
     api
-      .getEvents()
-      .then((evs) => setEvents(evs.filter((e) => new Date(e.ends_at) > Date.now()).slice(0, 3)))
+      .getMembers()
+      .then((m) => setMemberCount(m.length))
       .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const stats = [
-    { value: '1K+', label: 'students' },
-    { value: '6', label: 'programs' },
+    { value: memberCount ? memberCount.toLocaleString() : '1K+', label: memberCount ? 'members' : 'students' },
+    { value: `${PROGRAMS.length}+`, label: 'programs' },
     { value: '40+', label: 'events / yr' },
-    { value: '24/7', label: 'AI assistant' },
+    { value: '24/7', label: 'ai assistant' },
   ]
 
   return (
     <div>
-      <section className="welcome">
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <span className="welcome-tag cursor-blink">welcome to the community platform of</span>
-          <h1 className="welcome-title">FNAHS</h1>
-          <p className="welcome-desc">{ORG_TAGLINE}</p>
-          <div className="welcome-actions">
-            {user ? (
-              <>
-                <button className="btn btn--primary" onClick={() => navigate('/app/feed')}>
-                  Open the feed <ArrowRight size={16} />
-                </button>
-                <button className="btn btn--ghost" onClick={() => window.dispatchEvent(new Event('florence:open'))}>
-                  <Stethoscope size={16} /> Talk to Florence
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/signup" className="btn btn--primary">
-                  Join FNAHS <ArrowRight size={16} />
-                </Link>
-                <Link to="/login" className="btn btn--ghost">
-                  Log in
-                </Link>
-              </>
-            )}
-          </div>
-          <div className="welcome-stats">
-            {stats.map((s) => (
-              <div className="stat" key={s.label}>
-                <b>{s.value}</b>
-                <span>{s.label}</span>
-              </div>
-            ))}
-          </div>
+      <section className="seal-hero rise">
+        <div className="hero-seal d1">
+          <img src="/FNAHS.png" alt="FNAHS seal" />
         </div>
-        <img className="welcome-mascot" src="/FNAHS.png" alt="FNAHS mascot" />
+        <div className="hero-eyebrow d2">faculty of nursing &amp; allied health sciences</div>
+        <h1 className="hero-title d3">FNAHS</h1>
+        <div className="hero-fac d3">community platform · est. 2026</div>
+        <p className="hero-tagline d4">{ORG_TAGLINE}</p>
+        <div className="hero-actions d5">
+          {user ? (
+            <>
+              <button className="btn btn--primary" onClick={() => navigate('/app/feed')}>
+                Open the feed <ArrowRight size={16} />
+              </button>
+              <button className="btn btn--ghost" onClick={() => window.dispatchEvent(new Event('florence:open'))}>
+                <Stethoscope size={16} /> Talk to Florence
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn btn--primary" onClick={() => navigate('/login')}>
+                Sign in <ArrowRight size={16} />
+              </button>
+              <button className="btn btn--ghost" onClick={() => navigate('/signup')}>
+                Join the faculty
+              </button>
+            </>
+          )}
+        </div>
+        <div className="vitals d6">
+          {stats.map((s) => (
+            <div key={s.label} className="vital">
+              <b>{s.value}</b>
+              <span>{s.label}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <h2 className="page-title" style={{ marginTop: 34 }}>RESOURCES</h2>
-      <p className="page-sub">Live feeds to keep you sharp — updated in real time.</p>
-
-      <div className="learn-grid">
-        <LearnCard
-          kind="health"
-          title={<><HeartPulse size={17} style={{ color: 'var(--accent)' }} /> Health News</>}
-          desc="Global health headlines — from WHO and the public-health desk."
-          items={feeds.health}
-          href="https://www.who.int/news"
-        />
-        <LearnCard
-          kind="tips"
-          title={<><Lightbulb size={17} style={{ color: 'var(--accent-2)' }} /> Health Tips</>}
-          desc="Bite-sized clinical and wellness tips for every duty."
-          items={feeds.tips}
-        />
-        <LearnCard
-          kind="org"
-          title={<><CalendarDays size={17} style={{ color: 'var(--accent-2)' }} /> Org events</>}
-          desc="Next up on the FNAHS calendar — don't miss the scan."
-          items={events.map((e) => ({
-            id: e.id,
-            title: e.title,
-            meta: timeAgo(e.starts_at),
-            to: '/app/events',
-          }))}
-          href="/app/events"
-        />
-      </div>
-    </div>
-  )
-}
-
-function LearnCard({ kind, title, desc, items, href }) {
-  return (
-    <div className={`learn-card learn-card--${kind}`}>
-      <div className="learn-head">
-        <h3>{title}</h3>
-        {href && (
-          <a href={href} target="_blank" rel="noreferrer" className="icon-btn" aria-label="Open feed">
-            <ExternalLink size={15} />
-          </a>
-        )}
-      </div>
-      <p>{desc}</p>
-      {items.length === 0 && <p style={{ marginTop: 8 }}>Loading feed…</p>}
-      {items.map((it) => (
-        <div className="learn-item" key={it.id}>
-          <div className="li-title">
-            <a href={it.href || href} target={it.href ? '_blank' : undefined} rel="noreferrer">
-              {it.title}
-            </a>
+      <div className="home-cols">
+        <section className="sec" aria-labelledby="h-briefs">
+          <div className="sec-head">
+            <h2 id="h-briefs">Clinical Briefs</h2>
+            <span className="sec-kicker">health feed</span>
+            <Link to="/app/feed" className="sec-more">view feed <ArrowRight size={13} /></Link>
           </div>
-          <div className="li-meta">{it.meta}</div>
+          <div className="brief-list">
+            {feeds.health.slice(0, 5).map((f) => (
+              <article key={f.id} className="brief">
+                {f.url ? (
+                  <p className="brief-title"><a href={f.url} target="_blank" rel="noreferrer">{f.title}</a></p>
+                ) : (
+                  <p className="brief-title">{f.title}</p>
+                )}
+                <div className="brief-meta">{f.source} · {timeAgo(f.created_at)}</div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="sec" aria-labelledby="h-tips">
+          <div className="sec-head">
+            <h2 id="h-tips">Practice Notes</h2>
+            <span className="sec-kicker">tips</span>
+          </div>
+          <div className="brief-list">
+            {feeds.tips.slice(0, 5).map((f) => (
+              <article key={f.id} className="brief brief--tip">
+                <p className="brief-title">{f.title}</p>
+                <div className="brief-meta">{f.source} · {timeAgo(f.created_at)}</div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="sec" aria-labelledby="h-rounds">
+        <div className="sec-head">
+          <h2 id="h-rounds">On the Rounds</h2>
+          <span className="sec-kicker">upcoming events</span>
+          <Link to="/app/events" className="sec-more">all events <ArrowRight size={13} /></Link>
         </div>
-      ))}
+        {events.length === 0 ? (
+          <div className="empty-state">
+            <CalendarDays size={36} />
+            <h3>Nothing on the rounds</h3>
+            <p>New events will land here first.</p>
+          </div>
+        ) : (
+          <div className="ledger">
+            {events.map((e) => (
+              <button key={e.id} className="round-row" onClick={() => setSelected(e)}>
+                <div className="round-date">
+                  <b>{new Date(e.starts_at).getDate()}</b>
+                  <span>{new Date(e.starts_at).toLocaleString('en-US', { month: 'short' }).toUpperCase()}</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 600 }}>{e.title}</h4>
+                  <div className="ev-meta" style={{ margin: '6px 0 0' }}>
+                    <span>📍 {e.location}</span>
+                    <span>🕐 {new Date(e.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {selected && <EventModal event={selected} onClose={() => setSelected(null)} onChanged={reloadRounds} />}
     </div>
   )
 }
-
