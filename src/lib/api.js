@@ -403,10 +403,13 @@ export const api = {
           section: sanitizeText(p.section, 20),
           avatar_url: sanitizeUrl(p.avatar_url),
         }
-        if (p.id) patch.id = p.id
+        // The profile row always exists (created at signup), and RLS has no
+        // INSERT policy — so upsert would be denied. A plain UPDATE is the
+        // correct operation here and matches the self-edit policy.
         const { data, error } = await supabase
           .from('profiles')
-          .upsert(patch, { onConflict: 'id' })
+          .update(patch)
+          .eq('id', p.id)
           .select('id, full_name, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error

@@ -5,6 +5,7 @@ import { roleLabel, positionLabel } from '../rbac'
 import { api } from '../lib/api'
 import { initials } from '../lib/format'
 import { PROGRAMS, ORG_FULL } from '../lib/mock'
+import { BUILD_ID } from '../lib/build'
 
 export default function AccountSheet({ onClose, onLogout }) {
   const { user, setUser, toast } = useApp()
@@ -75,7 +76,7 @@ export default function AccountSheet({ onClose, onLogout }) {
       toast('Profile saved')
     } catch (e) {
       console.error(e)
-      toast('Could not save the profile', 'err')
+      toast(`Could not save the profile${e?.message ? ` — ${e.message}` : ''}`, 'err')
     } finally {
       setSaving(false)
     }
@@ -206,6 +207,7 @@ export default function AccountSheet({ onClose, onLogout }) {
         <button className="btn btn--ghost btn--block" onClick={onLogout} style={{ marginTop: 16 }}>
           <LogOut size={15} /> Sign out
         </button>
+        <div className="mm-pic-hint" style={{ textAlign: 'center', marginTop: 14 }}>build {BUILD_ID}</div>
       </div>
     </div>
   )
