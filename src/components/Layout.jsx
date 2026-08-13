@@ -9,6 +9,8 @@ import {
   ShieldCheck,
   Settings2,
   Search,
+  Moon,
+  Sun,
   AlertTriangle,
   X,
 } from 'lucide-react'
@@ -39,7 +41,7 @@ const SECTION = [
 const ADMIN_ROLES = ['superadmin', 'staff', 'moderator']
 
 export default function Layout() {
-  const { user, logout, toast } = useApp()
+  const { user, theme, setTheme, logout, toast } = useApp()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const navigate = useNavigate()
@@ -154,6 +156,9 @@ export default function Layout() {
         <div className="spacer" />
         <button className="icon-btn" onClick={() => setSearchOpen(true)} aria-label="Search" title="Search (Ctrl+K)">
           <Search size={19} />
+        </button>
+        <button className="icon-btn" onClick={() => setTheme()} aria-label="Toggle theme" title="Toggle theme">
+          {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
         </button>
       </header>
 

@@ -4,14 +4,19 @@ import { ORG_FULL } from '../lib/mock'
 
 const AppContext = createContext(null)
 
+const THEME_KEY = 'fnahs-theme'
+
 export function AppProvider({ children }) {
+  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || 'light')
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [toasts, setToasts] = useState([])
 
   useEffect(() => {
-    localStorage.removeItem('fnahs-theme')
-  }, [])
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem(THEME_KEY, theme)
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#000000' : '#faf7ee')
+  }, [theme])
 
   useEffect(() => {
     let alive = true
@@ -59,6 +64,8 @@ export function AppProvider({ children }) {
 
   const value = useMemo(
     () => ({
+      theme,
+      setTheme: () => setTheme((t) => (t === 'dark' ? 'light' : 'dark')),
       user,
       setUser,
       authLoading,
@@ -71,7 +78,7 @@ export function AppProvider({ children }) {
       isDemo: !api.isSupabase,
       orgFull: ORG_FULL,
     }),
-    [user, authLoading, toasts, toast, login, signup, logout, refreshUser]
+    [theme, user, authLoading, toasts, toast, login, signup, logout, refreshUser]
   )
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

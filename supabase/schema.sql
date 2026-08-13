@@ -105,12 +105,15 @@ create trigger guard_last_superadmin
 -- ---------- posts ----------
 create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles (id) on delete cascade,
+  user_id uuid not null default auth.uid() references public.profiles (id) on delete cascade,
   content text not null,
   image_url text,
   archived_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+-- idempotent defaults for databases created before auth.uid() defaults
+alter table public.posts alter column user_id set default auth.uid();
 
 alter table public.posts enable row level security;
 
@@ -144,10 +147,12 @@ create policy "authors or staff can delete posts"
 create table if not exists public.comments (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts (id) on delete cascade,
-  user_id uuid not null references public.profiles (id) on delete cascade,
+  user_id uuid not null default auth.uid() references public.profiles (id) on delete cascade,
   content text not null,
   created_at timestamptz not null default now()
 );
+
+alter table public.comments alter column user_id set default auth.uid();
 
 alter table public.comments enable row level security;
 

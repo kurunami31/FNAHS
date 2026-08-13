@@ -419,9 +419,11 @@ export const api = {
 
   createPost: SUPABASE_ENABLED
     ? async ({ content, image_url }) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in to post.')
         const { data, error } = await supabase
           .from('posts')
-          .insert({ content: sanitizeText(content, 2000), image_url: sanitizeUrl(image_url) })
+          .insert({ user_id: user.id, content: sanitizeText(content, 2000), image_url: sanitizeUrl(image_url) })
           .select()
           .single()
         if (error) throw error
@@ -442,9 +444,11 @@ export const api = {
 
   addComment: SUPABASE_ENABLED
     ? async (postId, content) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in to comment.')
         const { data, error } = await supabase
           .from('comments')
-          .insert({ post_id: postId, content: sanitizeText(content, 1000) })
+          .insert({ post_id: postId, user_id: user.id, content: sanitizeText(content, 1000) })
           .select()
           .single()
         if (error) throw error
