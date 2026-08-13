@@ -11,6 +11,9 @@ export default function AccountSheet({ onClose, onLogout }) {
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const fileRef = useRef(null)
+  const saveTimer = useRef(null)
+
+  useEffect(() => () => clearTimeout(saveTimer.current), [])
 
   useEffect(() => {
     if (user) setForm({ full_name: user.full_name || '', program: user.program || '', year_level: user.year_level || '', avatar_url: user.avatar_url || '' })
@@ -46,6 +49,17 @@ export default function AccountSheet({ onClose, onLogout }) {
     reader.readAsDataURL(f)
   }
 
+  const onNameChange = (v) => {
+    setForm((f2) => ({ ...f2, full_name: v }))
+    if (user?.role === 'superadmin') {
+      // Super admin keeps a plain name field — changes save automatically.
+      clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => {
+        if (v.trim()) save()
+      }, 800)
+    }
+  }
+
   const save = async () => {
     if (!form.full_name?.trim()) {
       toast('Name cannot be empty', 'err')
@@ -67,12 +81,21 @@ export default function AccountSheet({ onClose, onLogout }) {
   return (
     <div className="sheet" role="dialog" aria-label="Account settings">
       <div className="sheet-head">
-        <button className="avatar avatar--ring avatar-btn" onClick={() => fileRef.current?.click()} aria-label="Change photo">
-          {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
-        </button>
+        {user?.role === 'superadmin' ? (
+          <div className="avatar avatar--ring">
+            {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
+          </div>
+        ) : (
+          <button className="avatar avatar--ring avatar-btn" onClick={() => fileRef.current?.click()} aria-label="Change photo">
+            {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
+          </button>
+        )}
         <div className="who">
           <h3>{user?.full_name || 'Member'}</h3>
-          <span>{user?.role || 'student'} · {user?.program || 'no program'}</span>
+          <span>
+            {user?.role || 'student'}
+            {user?.role === 'superadmin' ? '' : ` · ${user?.program || 'no program'}`}
+          </span>
         </div>
         <button className="icon-btn" onClick={onClose} aria-label="Close settings">
           <X size={18} />
@@ -81,51 +104,60 @@ export default function AccountSheet({ onClose, onLogout }) {
 
       <div className="sheet-sec">
         <h4>Profile</h4>
-        <div className="mm-pic">
-          <button
-            className="avatar avatar--ring avatar-btn"
-            style={{ width: 56, height: 56, fontSize: 16, flex: 'none' }}
-            onClick={() => fileRef.current?.click()}
-            aria-label="Change photo"
-          >
-            {form.avatar_url ? <img src={form.avatar_url} alt="" /> : initials(form.full_name)}
-          </button>
-          <div>
-            <button className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
-              <Camera size={14} /> {form.avatar_url ? 'Change photo' : 'Add photo'}
+        {user?.role !== 'superadmin' && (
+          <div className="mm-pic">
+            <button
+              className="avatar avatar--ring avatar-btn"
+              style={{ width: 56, height: 56, fontSize: 16, flex: 'none' }}
+              onClick={() => fileRef.current?.click()}
+              aria-label="Change photo"
+            >
+              {form.avatar_url ? <img src={form.avatar_url} alt="" /> : initials(form.full_name)}
             </button>
-            {form.avatar_url && (
-              <button className="btn btn--link btn--sm" onClick={() => setForm((f2) => ({ ...f2, avatar_url: '' }))}>
-                Remove photo
+            <div>
+              <button className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
+                <Camera size={14} /> {form.avatar_url ? 'Change photo' : 'Add photo'}
               </button>
-            )}
-            <div className="mm-pic-hint">Squared JPG/PNG up to 512 KB — used on your ID card and in the directory.</div>
+              {form.avatar_url && (
+                <button className="btn btn--link btn--sm" onClick={() => setForm((f2) => ({ ...f2, avatar_url: '' }))}>
+                  Remove photo
+                </button>
+              )}
+              <div className="mm-pic-hint">Squared JPG/PNG up to 512 KB — used on your ID card and in the directory.</div>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPick} />
           </div>
-          <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPick} />
-        </div>
+        )}
         <div className="field">
           <label>Full name</label>
-          <input value={form.full_name || ''} onChange={(e) => setForm({ ...form, full_name: e.target.value })} autoComplete="name" />
+          <input value={form.full_name || ''} onChange={(e) => onNameChange(e.target.value)} autoComplete="name" />
+          {user?.role === 'superadmin' && <div className="mm-pic-hint">Changes are saved automatically.</div>}
         </div>
-        <div className="field">
-          <label>Program</label>
-          <select value={form.program || ''} onChange={(e) => setForm({ ...form, program: e.target.value })}>
-            {PROGRAMS.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label>Year level</label>
-          <select value={form.year_level || ''} onChange={(e) => setForm({ ...form, year_level: e.target.value })}>
-            {['1', '2', '3', '4'].map((y) => (
-              <option key={y} value={y}>Year {y}</option>
-            ))}
-          </select>
-        </div>
-        <button className="btn btn--primary btn--block" onClick={save} disabled={saving}>
-          {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save profile
-        </button>
+        {user?.role !== 'superadmin' && (
+          <>
+            <div className="field">
+              <label>Program</label>
+              <select value={form.program || ''} onChange={(e) => setForm({ ...form, program: e.target.value })}>
+                {PROGRAMS.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Year level</label>
+              <select value={form.year_level || ''} onChange={(e) => setForm({ ...form, year_level: e.target.value })}>
+                {['1', '2', '3', '4'].map((y) => (
+                  <option key={y} value={y}>Year {y}</option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
+        {user?.role !== 'superadmin' && (
+          <button className="btn btn--primary btn--block" onClick={save} disabled={saving}>
+            {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save profile
+          </button>
+        )}
       </div>
 
       <div className="sheet-sec">
