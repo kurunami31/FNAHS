@@ -1359,7 +1359,7 @@ html[data-theme='dark'] .id-card {
    ============================================================ */
 .auth-logo { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 16px; }
 .auth-logo img {
-  height: 96px;
+  height: 150px;
   width: auto;
   flex: none;
   object-fit: contain;
