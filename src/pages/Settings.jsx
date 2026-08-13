@@ -75,7 +75,7 @@ export default function Settings() {
           <div className="settings-row">
             <div className="sr-txt">
               <h4>{theme === 'dark' ? 'Dark mode' : 'Light mode'}</h4>
-              <p>Match the terminal aesthetic — or go bright.</p>
+              <p>Match the FNAHS green — or go bright.</p>
             </div>
             <label className="switch">
               <input type="checkbox" checked={theme === 'dark'} onChange={() => setTheme()} />

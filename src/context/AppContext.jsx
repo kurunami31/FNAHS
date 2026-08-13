@@ -4,7 +4,7 @@ import { ORG_FULL } from '../lib/mock'
 
 const AppContext = createContext(null)
 
-const THEME_KEY = 'fnahs-codex-theme'
+const THEME_KEY = 'fnahs-theme'
 
 export function AppProvider({ children }) {
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || 'light')

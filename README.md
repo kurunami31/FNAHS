@@ -2,7 +2,7 @@
 
 A community platform for the **Faculty of Nursing and Allied Health Sciences**, with a clean clinical design — rebranded with the FNAHS logo and a green/cyan/gold palette drawn directly from it (sampled from the logo's own pixels).
 
-> One terminal for the FNAHS squad — attend org events with a scan, keep up with students, learn from live feeds, and get help from Florence, the in-house AI assistant.
+> One community for the FNAHS squad — attend org events with a scan, keep up with students, learn from live feeds, and get help from Florence, the in-house AI assistant.
 
 ## Features
 
@@ -45,4 +45,4 @@ npm run build      # production build
 
 React 19 · Vite 6 · Supabase (auth, Postgres + RLS, Edge Functions) · lucide-react · qrcode.react · html5-qrcode · vite-plugin-pwa
 
-Fonts mirror the original's look: Press Start 2P (display), Archivo Black (IDs), Share Tech Mono (mono), Inter (body).
+Fonts: Space Grotesk (display), Archivo Black (IDs), Share Tech Mono (mono), Inter (body).

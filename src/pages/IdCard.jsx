@@ -48,7 +48,7 @@ export default function IdCard() {
 
           <div className="id-bottom">
             <div className="id-num">{String(user?.id || 'FN-2026-0000').toUpperCase().slice(0, 14)}</div>
-            <div className="id-stamp">◢ FNAHS · NURSING</div>
+            <div className="id-stamp">◢ FNAHS</div>
           </div>
         </div>
 

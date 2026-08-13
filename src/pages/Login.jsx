@@ -34,13 +34,13 @@ export default function Login() {
           <img src="/FNAHS.png" alt="FNAHS logo" />
           <div>
             <div style={{ fontFamily: 'var(--f-id)', fontSize: '1.3rem', lineHeight: 1.1 }}>
-              FNAHS<em style={{ color: 'var(--accent)' }}>·</em>NURSING
+              FNAHS
             </div>
             <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>community platform</div>
           </div>
         </div>
         <h1>Log <em>in</em></h1>
-        <p className="auth-sub">Welcome back to the terminal.</p>
+        <p className="auth-sub">Welcome back to the ward.</p>
 
         {isDemo && (
           <div className="form-ok" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

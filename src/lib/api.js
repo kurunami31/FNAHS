@@ -4,11 +4,11 @@ import { uid } from './format'
 
 /* ---------------- demo store (localStorage) ---------------- */
 
-const LS_KEY = 'fnahs-codex-db-v2'
+const LS_KEY = 'fnahs-db-v2'
 
 function loadDb() {
   try {
-    const raw = localStorage.getItem(LS_KEY)
+    const raw = localStorage.getItem(LS_KEY) || localStorage.getItem('fnahs-codex-db-v2')
     if (raw) {
       const db = JSON.parse(raw)
       // lazily merge missing seeds on schema bumps
@@ -40,15 +40,16 @@ const db = loadDb()
 /* ---------------- demo auth ---------------- */
 
 function demoLogin(id) {
-  localStorage.setItem('fnahs-codex-user', id)
+  localStorage.setItem('fnahs-user', id)
 }
 
 function demoLogout() {
+  localStorage.removeItem('fnahs-user')
   localStorage.removeItem('fnahs-codex-user')
 }
 
 function demoCurrentUserId() {
-  return localStorage.getItem('fnahs-codex-user') || null
+  return localStorage.getItem('fnahs-user') || localStorage.getItem('fnahs-codex-user') || null
 }
 
 /* ---------------- profile helpers ---------------- */

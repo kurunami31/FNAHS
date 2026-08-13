@@ -35,7 +35,7 @@ export default function Layout() {
           <img src="/FNAHS.png" alt="FNAHS logo" />
           <div>
             <div className="brand-name">
-              FNAHS<em>·</em>NURSING
+              FNAHS
             </div>
             <div className="brand-sub">community platform</div>
           </div>

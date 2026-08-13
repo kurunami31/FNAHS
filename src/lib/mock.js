@@ -3,7 +3,7 @@ import { uid } from './format'
 export const ORG_NAME = 'FNAHS'
 export const ORG_FULL = 'Faculty of Nursing and Allied Health Sciences'
 export const ORG_TAGLINE =
-  'One terminal for the FNAHS squad — attend org events with a scan, keep up with students, learn from live feeds, and get help from Florence, the in-house AI assistant. Built for nursing and allied health students, by students.'
+  'One community for the FNAHS squad — attend org events with a scan, keep up with students, learn from live feeds, and get help from Florence, the in-house AI assistant. Built for nursing and allied health students, by students.'
 
 export const PROGRAMS = [
   'BS Nursing',
