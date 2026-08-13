@@ -182,9 +182,9 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   rr(ctx, px, py, pw, ph, 16)
   ctx.stroke()
 
-  const qx = l - 170
+  const qx = l - 210
   const qy = py
-  const qs = 170
+  const qs = 210
   if (qr) {
     try {
       const qImg = await loadImage(qr)
