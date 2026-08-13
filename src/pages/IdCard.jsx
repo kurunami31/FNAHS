@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
-import { toPng } from 'html-to-image'
+import QRCode from 'qrcode'
 import { Download, ShieldCheck, Loader2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { can, roleLabel, positionLabel } from '../rbac'
+import { can } from '../rbac'
 import { api } from '../lib/api'
-import { initials, monthDay, timeAgo } from '../lib/format'
+import { monthDay, timeAgo } from '../lib/format'
+import { drawIdCanvas, ID_W, ID_H } from '../lib/idCanvas'
 
 export default function IdCard() {
   const { user, toast } = useApp()
-  const cardRef = useRef(null)
+  const canvasRef = useRef(null)
+  const [preview, setPreview] = useState(null)
+  const [err, setErr] = useState(null)
   const [saving, setSaving] = useState(false)
   const [history, setHistory] = useState([])
 
@@ -20,30 +22,68 @@ export default function IdCard() {
       .catch(() => {})
   }, [])
 
-  const isStaff = can(user, 'feed.moderate') || can(user, 'events.manage') || can(user, 'attendance.scan')
   const name = user?.full_name || 'Student Member'
-  const [firstName, ...restNames] = name.trim().split(/\s+/)
-  const lastName = restNames.join(' ') || firstName
   const qrValue = JSON.stringify({ t: 'fnahs-id', id: user?.id || 'demo', n: name, v: 1 })
-  const serial =
-    (user?.id || 'demo')
-      .toString()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, '')
-      .slice(0, 12)
-      .padEnd(12, '·') || 'DEMO·······'
+
+  const draw = async () => {
+    const c = document.createElement('canvas')
+    c.width = ID_W
+    c.height = ID_H
+    try {
+      const qr = await QRCode.toDataURL(qrValue, {
+        width: 480,
+        margin: 1,
+        color: { dark: '#2b2410', light: '#ffffff' },
+        errorCorrectionLevel: 'M',
+      })
+      await drawIdCanvas(c, { profile: user, avatarUrl: user?.avatar_url, qr })
+      canvasRef.current = c
+      setPreview(c.toDataURL('image/png'))
+      setErr(null)
+    } catch (e) {
+      console.error(e)
+      setErr('Could not render your ID. Pull to refresh and try again.')
+    }
+  }
+
+  const profileKey = JSON.stringify([
+    user?.id,
+    user?.full_name,
+    user?.avatar_url,
+    user?.program,
+    user?.year_level,
+    user?.section,
+    user?.role,
+    user?.positions,
+  ])
+
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      try {
+        await Promise.allSettled([
+          document.fonts.load('700 40px Fraunces'),
+          document.fonts.load('700 26px "Share Tech Mono"'),
+          document.fonts.load('700 14px "Share Tech Mono"'),
+        ])
+      } catch {
+        /* fonts optional */
+      }
+      if (alive) await draw()
+    })()
+    return () => {
+      alive = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileKey])
 
   const download = async () => {
-    const node = cardRef.current
-    if (!node || saving) return
+    const c = canvasRef.current
+    if (!c || saving) return
     setSaving(true)
     try {
-      try {
-        await document.fonts.ready
-      } catch {
-        /* ignore */
-      }
-      const blob = await (await fetch(await toPng(node, { pixelRatio: Math.min(window.devicePixelRatio || 1, 2) }))).blob()
+      const blob = await new Promise((res) => c.toBlob(res, 'image/png'))
+      if (!blob) throw new Error('Could not render the PNG.')
       const url = URL.createObjectURL(blob)
       const file = new File([blob], 'FNAHS-ID.png', { type: 'image/png' })
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '')
@@ -64,8 +104,8 @@ export default function IdCard() {
         try {
           await navigator.share({ files: [file], title: 'FNAHS ID', text: 'My FNAHS digital ID.' })
           setTimeout(() => URL.revokeObjectURL(url), 4000)
-        } catch (err) {
-          if (err.name !== 'AbortError') saveToDownloads()
+        } catch (shareErr) {
+          if (shareErr.name !== 'AbortError') saveToDownloads()
         }
       } else if (isIOS) {
         // iOS without file sharing: open the image so the user can long-press → Save Image.
@@ -83,6 +123,8 @@ export default function IdCard() {
     }
   }
 
+  const isStaff = can(user, 'feed.moderate') || can(user, 'events.manage') || can(user, 'attendance.scan')
+
   return (
     <div className="page-c">
       <h1 className="page-title">
@@ -91,72 +133,21 @@ export default function IdCard() {
       <p className="page-sub">One QR ID for every FNAHS event — scan at the door and attendance is logged on the fly.</p>
 
       <div className="id-stage">
-        <div className="id-card" ref={cardRef}>
-          <div className="id-sheen" />
-          <div className="id-head">
-            <div className="seal-mini">
-              <img src="/FNAHS.png" alt="" />
-            </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="id-org">FNAHS</div>
-              <div className="id-fac">Faculty of Nursing &amp; Allied Health Sciences</div>
-            </div>
-            <div className="id-valid">
-              VALID<br />2026–2027
-            </div>
-          </div>
-          <div className="id-strip">Official Student Identity · FNAHS</div>
-          <div className="id-mid">
-            <div className="id-mid-row">
-              <div className="id-photo">
-                {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : <span className="ph-initials">{initials(name)}</span>}
-              </div>
-              <div className="id-qr-block">
-                <div className="id-qr-box">
-                  <QRCodeSVG value={qrValue} size={120} level="M" />
-                </div>
-                <div className="id-qr-note">Scan me</div>
-              </div>
-            </div>
-            <div className="id-names">
-              <div className="id-label">Name</div>
-              {firstName !== lastName && <div className="id-first">{firstName}</div>}
-              <div className="id-last">{lastName}</div>
-            </div>
-            <div className="id-rows">
-              <div className="id-label">Details</div>
-              {user?.program && (
-                <div className="id-row"><span>Program</span><b>{user.program}</b></div>
-              )}
-              {user?.year_level && (
-                <div className="id-row"><span>Year</span><b>{user.year_level}</b></div>
-              )}
-              {user?.section && (
-                <div className="id-row"><span>Section</span><b>{user.section}</b></div>
-              )}
-              {user?.role !== 'student' && (
-                <div className="id-row"><span>Role</span><b>{roleLabel(user?.role)}</b></div>
-              )}
-              {!!user?.positions?.length && (
-                <div className="id-row"><span>Position</span><b>{user.positions.map(positionLabel).join(' · ')}</b></div>
-              )}
-              <div className="id-row"><span>ID</span><b>{serial}</b></div>
-            </div>
-          </div>
-          <div className="id-foot">
-            <div className="id-uni">Davao Oriental State University</div>
-            <div className="id-orgline">FNAHS · Nursing &amp; Allied Health</div>
-          </div>
-          <div className="id-ecg" aria-hidden="true" />
-        </div>
+        {preview ? (
+          <img src={preview} alt="Your FNAHS digital ID" className="id-preview" />
+        ) : (
+          <div className="id-card-loading">{err || 'Rendering your ID…'}</div>
+        )}
 
         <div className="id-actions">
-          <button className="btn btn--primary" onClick={download} disabled={saving}>
+          <button className="btn btn--primary" onClick={download} disabled={saving || !preview}>
             {saving ? <Loader2 size={16} className="spin" /> : <Download size={16} />} Save as image
           </button>
-          <span className="chip chip--ok">
-            <ShieldCheck size={14} /> Verified by org staff
-          </span>
+          {isStaff && (
+            <span className="chip chip--ok">
+              <ShieldCheck size={14} /> Verified by org staff
+            </span>
+          )}
         </div>
       </div>
 
