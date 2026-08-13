@@ -377,6 +377,7 @@ grant select, insert, update, delete on public.attendance to authenticated;
 -- RPCs: directory + admin are reachable by authenticated; bump_rate is service-role only
 grant execute on function public.get_directory() to authenticated;
 grant execute on function public.admin_get_users() to authenticated;
+grant execute on function public.bump_rate(text, int, int) to service_role;
 
 -- ============================================================
 -- First staff/superadmin account:
