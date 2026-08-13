@@ -1,6 +1,6 @@
 # FNAHS · Community Platform
 
-A community platform for the **Faculty of Nursing and Allied Health Sciences**, built in the style of [bsitcodex.vercel.app](https://bsitcodex.vercel.app) (CODEX · CODEBYTERS) — rebranded with the FNAHS logo and a blue/magenta palette drawn from it.
+A community platform for the **Faculty of Nursing and Allied Health Sciences**, with a terminal-style design inspired by student-org community platforms — rebranded with the FNAHS logo and a blue/magenta palette drawn from it.
 
 > One terminal for the FNAHS squad — attend org events with a scan, keep up with students, learn from live feeds, and get help from Florence, the in-house AI assistant.
 
