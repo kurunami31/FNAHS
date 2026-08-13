@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Flame, Github, HeartPulse, ArrowRight, ExternalLink, Stethoscope } from 'lucide-react'
+import { HeartPulse, Lightbulb, CalendarDays, ArrowRight, ExternalLink, Stethoscope } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
-import { ORG_TAGLINE } from '../lib/mock'
+import { ORG_TAGLINE, seedFeeds } from '../lib/mock'
 import { timeAgo } from '../lib/format'
 
 export default function Home() {
   const { user } = useApp()
   const navigate = useNavigate()
-  const [feeds, setFeeds] = useState({ hn: [], gh: [] })
+  const [feeds, setFeeds] = useState(() => ({ health: seedFeeds().health, tips: seedFeeds().tips }))
   const [events, setEvents] = useState([])
 
   useEffect(() => {
@@ -72,22 +72,21 @@ export default function Home() {
 
       <div className="learn-grid">
         <LearnCard
-          kind="hn"
-          title={<><Flame size={17} style={{ color: 'var(--hn)' }} /> Hacker News</>}
-          desc="Tech & science headlines that keep curious minds curious."
-          items={feeds.hn}
-          href="https://news.ycombinator.com"
+          kind="health"
+          title={<><HeartPulse size={17} style={{ color: 'var(--accent)' }} /> Health News</>}
+          desc="Global health headlines — from WHO and the public-health desk."
+          items={feeds.health}
+          href="https://www.who.int/news"
         />
         <LearnCard
-          kind="gh"
-          title={<><Github size={17} /> GitHub</>}
-          desc="Recent commits and releases from the org's open repos."
-          items={feeds.gh}
-          href="https://github.com"
+          kind="tips"
+          title={<><Lightbulb size={17} style={{ color: 'var(--accent-2)' }} /> Health Tips</>}
+          desc="Bite-sized clinical and wellness tips for every duty."
+          items={feeds.tips}
         />
         <LearnCard
           kind="org"
-          title={<><HeartPulse size={17} style={{ color: 'var(--accent-2)' }} /> Org events</>}
+          title={<><CalendarDays size={17} style={{ color: 'var(--accent-2)' }} /> Org events</>}
           desc="Next up on the FNAHS calendar — don't miss the scan."
           items={events.map((e) => ({
             id: e.id,
@@ -107,9 +106,11 @@ function LearnCard({ kind, title, desc, items, href }) {
     <div className={`learn-card learn-card--${kind}`}>
       <div className="learn-head">
         <h3>{title}</h3>
-        <a href={href} target="_blank" rel="noreferrer" className="icon-btn" aria-label="Open feed">
-          <ExternalLink size={15} />
-        </a>
+        {href && (
+          <a href={href} target="_blank" rel="noreferrer" className="icon-btn" aria-label="Open feed">
+            <ExternalLink size={15} />
+          </a>
+        )}
       </div>
       <p>{desc}</p>
       {items.length === 0 && <p style={{ marginTop: 8 }}>Loading feed…</p>}

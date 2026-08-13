@@ -412,8 +412,8 @@ html[data-theme='dark'] .topbar { background: rgba(10, 26, 32, 0.86); }
   right: 0;
   height: 3px;
 }
-.learn-card--hn::before { background: linear-gradient(90deg, var(--logo-red), var(--hn)); }
-.learn-card--gh::before { background: linear-gradient(90deg, var(--primary), var(--primary-2)); }
+.learn-card--health::before { background: linear-gradient(90deg, var(--accent), var(--primary)); }
+.learn-card--tips::before { background: linear-gradient(90deg, var(--accent-2), var(--primary)); }
 .learn-card--org::before { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
 .learn-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .learn-head h3 { margin: 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }

@@ -138,17 +138,17 @@ export function seedEvents() {
 
 export function seedFeeds() {
   return {
-    hn: [
-      { id: 'hn1', title: 'How I rebuilt my study habits with spaced repetition', meta: 'med.news · 2h' },
-      { id: 'hn2', title: 'Hospitals are hiring — what the 2026 nursing outlook means for students', meta: 'health.jobs · 5h' },
-      { id: 'hn3', title: 'A simple mental model for reading lab values', meta: 'clin.lab · 9h' },
-      { id: 'hn4', title: 'Show HN: An open-source EMR for teaching hospitals', meta: 'open.health · 1d' },
+    health: [
+      { id: 'h1', title: 'WHO: hand hygiene remains the single most effective way to prevent infections', meta: 'who.int' },
+      { id: 'h2', title: 'New guidance on antibiotic stewardship for community health workers', meta: 'health.policy' },
+      { id: 'h3', title: 'Study links 30 minutes of daily activity to lower heart-disease risk', meta: 'med.news' },
+      { id: 'h4', title: 'WHO publishes the 2026 global immunization coverage outlook', meta: 'who.int' },
     ],
-    gh: [
-      { id: 'gh1', title: 'First commit: FNAHS student handbook now on Notion', meta: 'org/docs · 1d' },
-      { id: 'gh2', title: 'Pull request: event attendance QR flow v2', meta: 'org/attendance · 2d' },
-      { id: 'gh3', title: 'Release: study guide generator for MedTech finals', meta: 'org/tools · 4d' },
-      { id: 'gh4', title: 'Issue #42: volunteer sign-up form is hard to find', meta: 'org/site · 5d' },
+    tips: [
+      { id: 't1', title: 'Wash hands for 20 seconds — about the time it takes to hum “Happy Birthday” twice', meta: 'infection control' },
+      { id: 't2', title: 'Take blood pressure with the cuff at heart level after 5 minutes of seated rest', meta: 'vital signs' },
+      { id: 't3', title: 'Sleep 7–9 hours a night — immunity and memory consolidate while you rest', meta: 'wellness' },
+      { id: 't4', title: 'Hydrate before you feel thirsty; mild dehydration already impairs focus', meta: 'hydration' },
     ],
   }
 }

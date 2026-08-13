@@ -4,7 +4,7 @@ import { uid } from './format'
 
 /* ---------------- demo store (localStorage) ---------------- */
 
-const LS_KEY = 'fnahs-codex-db-v1'
+const LS_KEY = 'fnahs-codex-db-v2'
 
 function loadDb() {
   try {
@@ -162,26 +162,31 @@ async function demoMarkAttendance(eventId, userId) {
 
 async function getFeeds() {
   if (!SUPABASE_ENABLED) return db.feeds || seedFeeds()
-  // Live mode: try real feeds, fall back to seeds quietly.
-  const [hn, gh] = await Promise.allSettled([
-    fetch('https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=4').then((r) => r.json()),
-    fetch('https://api.github.com/repos/openai/openai-python/commits?per_page=4').then((r) => r.json()),
-  ])
-  const out = { hn: [], gh: [] }
-  if (hn.status === 'fulfilled' && hn.value?.hits?.length) {
-    out.hn = hn.value.hits.map((h) => ({
-      id: h.objectID,
-      title: h.title,
-      meta: `${h.points || 0} pts · ${h.num_comments || 0} comments`,
-    }))
-  } else out.hn = seedFeeds().hn
-  if (gh.status === 'fulfilled' && Array.isArray(gh.value) && gh.value.length) {
-    out.gh = gh.value.slice(0, 4).map((c) => ({
-      id: c.sha,
-      title: (c.commit?.message || '').split('\n')[0].slice(0, 70),
-      meta: c.commit?.author?.date ? new Date(c.commit.author.date).toLocaleDateString() : '',
-    }))
-  } else out.gh = seedFeeds().gh
+  // Live mode: try the WHO health news feed (via a CORS proxy), fall back to curated seeds.
+  const out = { health: seedFeeds().health, tips: seedFeeds().tips }
+  try {
+    const rssUrl = encodeURIComponent('https://www.who.int/rss-feeds/news-english.xml')
+    const res = await fetch(`https://api.allorigins.win/raw?url=${rssUrl}`, { signal: AbortSignal.timeout(9000) })
+    if (res.ok) {
+      const xml = await res.text()
+      const doc = new DOMParser().parseFromString(xml, 'text/xml')
+      const items = [...doc.querySelectorAll('item')]
+        .slice(0, 4)
+        .map((it, i) => {
+          const title = (it.querySelector('title')?.textContent || '').replace(/<[^>]+>/g, '').trim()
+          const date = it.querySelector('pubDate')?.textContent
+          return {
+            id: it.querySelector('guid')?.textContent || `w${i}`,
+            title: title.slice(0, 80),
+            meta: date ? new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'who.int',
+          }
+        })
+        .filter((i) => i.title)
+      if (items.length) out.health = items
+    }
+  } catch {
+    /* keep curated health headlines */
+  }
   return out
 }
 
