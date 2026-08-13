@@ -120,7 +120,7 @@ export default function Feed() {
   }
 
   return (
-    <div>
+    <div className="page-c">
       <h1 className="page-title">FEED</h1>
       <p className="page-sub">
         {q ? `Results for “${q}”` : 'Org announcements, study tips, and community posts.'}

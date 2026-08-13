@@ -116,7 +116,7 @@ img { max-width: 100%; }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes sheetIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes sheetSlide { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes sheetSlide { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes sheetUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes blink { 50% { opacity: 0; } }
@@ -362,10 +362,10 @@ img { max-width: 100%; }
 }
 .sheet {
   position: fixed;
-  top: 0; right: 0; bottom: 0;
+  top: 0; left: 0; bottom: 0;
   width: min(420px, 100%);
   background: var(--paper);
-  border-left: 1px solid var(--line-strong);
+  border-right: 1px solid var(--line-strong);
   box-shadow: var(--sh-lg);
   z-index: 71;
   padding: 26px 26px 40px;
@@ -1317,10 +1317,11 @@ html[data-theme='dark'] .id-card {
    ============================================================ */
 .auth-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; }
 .auth-logo img {
-  width: 46px; height: 46px;
+  height: 64px;
+  width: auto;
   flex: none;
-  border-radius: 50%;
-  padding: 2px;
+  object-fit: contain;
+  border-radius: 10px;
   background: var(--paper);
   border: 1px solid var(--gold);
   box-shadow: 0 0 0 3px var(--paper), 0 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent);
@@ -1333,3 +1334,15 @@ html[data-theme='dark'] .id-card {
 .auth-card .field input, .auth-card .field select { padding: 10px 14px; }
 .btn--lg { min-height: 46px; padding: 12px 24px; }
 .auth-note { margin-top: 16px; line-height: 1.8; }
+
+/* ============================================================
+   CENTERED PAGE COLUMN + events header
+   ============================================================ */
+.page-c { max-width: 880px; margin: 0 auto; width: 100%; }
+.page-c .page-title, .page-c .page-sub { text-align: center; }
+.page-c .page-title { justify-content: center; }
+.page-c .dir-tools { justify-content: center; }
+.page-c .dir-search { flex: 1 1 460px; max-width: 520px; }
+.events-head { text-align: center; }
+.events-head .page-sub { margin-bottom: 16px; }
+.events-head .btn { margin-bottom: 26px; }

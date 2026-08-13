@@ -51,12 +51,10 @@ export default function Events() {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div>
-          <h1 className="page-title">EVENTS</h1>
-          <p className="page-sub">Org events — scan your ID QR at the door to log attendance.</p>
-        </div>
+    <div className="page-c">
+      <div className="events-head">
+        <h1 className="page-title">EVENTS</h1>
+        <p className="page-sub">Org events — scan your ID QR at the door to log attendance.</p>
         <button className="btn btn--primary" onClick={() => setModal(true)}>
           <Plus size={16} /> Create event
         </button>

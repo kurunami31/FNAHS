@@ -67,7 +67,7 @@ export default function IdCard() {
   }
 
   return (
-    <div>
+    <div className="page-c">
       <h1 className="page-title">
         MY ID <span className="page-kicker">digital id pass</span>
       </h1>

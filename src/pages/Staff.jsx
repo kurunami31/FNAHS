@@ -125,7 +125,7 @@ export default function Staff() {
   }
 
   return (
-    <div>
+    <div className="page-c">
       <h1 className="page-title">
         ATTENDANCE <span className="page-kicker">staff tools</span>
       </h1>

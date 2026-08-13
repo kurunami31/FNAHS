@@ -3,7 +3,6 @@ import { Users, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
 import { initials } from '../lib/format'
-import { PROGRAMS } from '../lib/mock'
 import MemberModal from '../components/MemberModal'
 
 export default function Directory() {
@@ -11,7 +10,6 @@ export default function Directory() {
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
-  const [prog, setProg] = useState('')
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
@@ -29,15 +27,14 @@ export default function Directory() {
     const needle = q.trim().toLowerCase()
     return members.filter(
       (m) =>
-        (!needle ||
-          m.full_name?.toLowerCase().includes(needle) ||
-          m.program?.toLowerCase().includes(needle)) &&
-        (!prog || m.program === prog)
+        !needle ||
+        m.full_name?.toLowerCase().includes(needle) ||
+        m.program?.toLowerCase().includes(needle)
     )
-  }, [members, q, prog])
+  }, [members, q])
 
   return (
-    <div>
+    <div className="page-c">
       <h1 className="page-title">
         DIRECTORY <span className="page-kicker">members</span>
       </h1>
@@ -46,14 +43,8 @@ export default function Directory() {
       <div className="dir-tools">
         <div className="dir-search">
           <Search size={17} />
-          <input placeholder="Search by name or program…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input placeholder="Search by name…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <select className="dir-filter" value={prog} onChange={(e) => setProg(e.target.value)} aria-label="Filter by program">
-          <option value="">All programs</option>
-          {PROGRAMS.map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
       </div>
 
       <div className="member-count">
