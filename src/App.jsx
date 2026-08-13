@@ -4,6 +4,7 @@ import { CheckCircle2, AlertCircle, Info } from 'lucide-react'
 import { useApp } from './context/AppContext'
 import Layout from './components/Layout'
 import ChatWidget from './components/ChatWidget'
+import PrivacyNotice from './components/PrivacyNotice'
 
 const Home = lazy(() => import('./pages/Home'))
 const Feed = lazy(() => import('./pages/Feed'))
@@ -17,6 +18,7 @@ const Signup = lazy(() => import('./pages/Signup'))
 
 export default function App() {
   const { user, toasts } = useApp()
+  const consentPending = !!user && !user.privacy_policy_accepted_at
 
   return (
     <>
@@ -42,7 +44,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>
 
-      {user && <ChatWidget />}
+      {user && !consentPending && <ChatWidget />}
 
       <div className="toast-wrap">
         {toasts.map((t) => (
@@ -86,5 +88,6 @@ function RequireAuth({ children }) {
     )
   }
   if (!user) return <Navigate to="/login" replace />
+  if (!user.privacy_policy_accepted_at) return <PrivacyNotice />
   return children
 }

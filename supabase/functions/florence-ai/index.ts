@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('OPENAI_API_KEY')
     if (!apiKey) {
       return json(
-        { reply: "Florence's brain isn't wired up yet — ask a staff member to set the OPENAI_API_KEY secret. 🧠" },
+        { reply: "Florence's brain isn't wired up yet — ask a staff member to set the OPENAI_API_KEY secret." },
         200,
         origin
       )

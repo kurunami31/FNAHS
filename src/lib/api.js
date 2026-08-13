@@ -345,7 +345,7 @@ export const api = {
     ? async (id) => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, program, year_level, role, avatar_url, created_at')
+          .select('id, full_name, program, year_level, role, avatar_url, created_at, privacy_policy_accepted_at')
           .eq('id', id)
           .maybeSingle()
         if (error) {
@@ -368,7 +368,7 @@ export const api = {
         const { data, error } = await supabase
           .from('profiles')
           .upsert(patch, { onConflict: 'id' })
-          .select('id, full_name, program, year_level, role, avatar_url, created_at')
+          .select('id, full_name, program, year_level, role, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
         return data
@@ -378,6 +378,30 @@ export const api = {
         db.profiles[p.id] = { ...db.profiles[p.id], ...clean }
         saveDb(db)
         return db.profiles[p.id]
+      },
+
+  /* privacy consent — the gate writes only the caller's own row */
+  acceptPrivacyPolicy: SUPABASE_ENABLED
+    ? async () => {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const now = new Date().toISOString()
+        const { data, error } = await supabase
+          .from('profiles')
+          .update({ privacy_policy_accepted_at: now })
+          .eq('id', user.id)
+          .select('id, privacy_policy_accepted_at')
+          .maybeSingle()
+        if (error) throw error
+        return data
+      }
+    : async () => {
+        const me = demoCurrentUserId()
+        if (!me) throw new Error('You must be signed in.')
+        await demoUpsertProfile({ id: me, privacy_policy_accepted_at: new Date().toISOString() })
+        return { privacy_policy_accepted_at: demoGetProfile(me).privacy_policy_accepted_at }
       },
 
   /* posts */
@@ -527,13 +551,12 @@ export const api = {
         if (patch.full_name !== undefined) clean.full_name = sanitizeText(patch.full_name, 120)
         if (patch.program !== undefined) clean.program = sanitizeText(patch.program, 120)
         if (patch.year_level !== undefined) clean.year_level = sanitizeText(patch.year_level, 20)
-        if (patch.role !== undefined) clean.role = sanitizeText(patch.role, 20)
         if (patch.avatar_url !== undefined) clean.avatar_url = sanitizeUrl(patch.avatar_url)
         const { data, error } = await supabase
           .from('profiles')
           .update(clean)
           .eq('id', id)
-          .select('id, full_name, program, year_level, role, avatar_url, created_at')
+          .select('id, full_name, program, year_level, role, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
         return data
@@ -542,6 +565,28 @@ export const api = {
         db.profiles[id] = { ...db.profiles[id], ...patch }
         saveDb(db)
         return db.profiles[id]
+      },
+
+  /* roles + positions go through the superadmin-gated RPCs only
+     (client-side role/positions updates are blocked by the guard trigger) */
+  changeRole: SUPABASE_ENABLED
+    ? async (id, role) => {
+        const { error } = await supabase.rpc('change_role', { p_target: id, p_new_role: role })
+        if (error) throw error
+      }
+    : async (id, role) => {
+        db.profiles[id] = { ...db.profiles[id], role }
+        saveDb(db)
+      },
+
+  setPositions: SUPABASE_ENABLED
+    ? async (id, positions) => {
+        const { error } = await supabase.rpc('set_positions', { p_target: id, p_positions: positions })
+        if (error) throw error
+      }
+    : async (id, positions) => {
+        db.profiles[id] = { ...db.profiles[id], positions }
+        saveDb(db)
       },
 
   deleteUser: SUPABASE_ENABLED

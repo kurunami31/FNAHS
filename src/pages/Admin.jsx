@@ -60,12 +60,12 @@ export default function Admin() {
       return
     }
     try {
-      await api.updateUser(m.id, { role })
+      await api.changeRole(m.id, role)
       setMembers((ms) => ms.map((x) => (x.id === m.id ? { ...x, role } : x)))
       toast(`${m.full_name} is now ${role}`)
     } catch (e) {
       console.error(e)
-      toast('Role update failed', 'err')
+      toast(e.message?.includes('insufficient') ? 'Only a superadmin can change roles' : 'Role update failed', 'err')
     }
   }
 
@@ -292,8 +292,10 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
     setSaving(true)
     try {
       if (mode === 'edit') {
-        const row = await api.updateUser(member.id, form)
-        onSaved(row || { ...member, ...form })
+        const { role, ...rest } = form
+        const row = await api.updateUser(member.id, rest)
+        if (role && role !== member.role) await api.changeRole(member.id, role)
+        onSaved({ ...(row || { ...member, ...rest }), role })
       } else {
         const row = await api.createUser(form)
         onSaved(row)
