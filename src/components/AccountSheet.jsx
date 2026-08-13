@@ -104,7 +104,7 @@ export default function AccountSheet({ onClose, onLogout }) {
 
       <div className="sheet-sec">
         <h4>Profile</h4>
-        {user?.role !== 'student' && (
+        {user?.role === 'student' && (
           <div className="mm-pic">
             <button
               className="avatar avatar--ring avatar-btn"
@@ -133,7 +133,7 @@ export default function AccountSheet({ onClose, onLogout }) {
           <input value={form.full_name || ''} onChange={(e) => onNameChange(e.target.value)} autoComplete="name" />
           {user?.role !== 'student' && <div className="mm-pic-hint">Changes are saved automatically.</div>}
         </div>
-        {user?.role !== 'student' && (
+        {user?.role === 'student' && (
           <>
             <div className="field">
               <label>Program</label>
@@ -162,7 +162,7 @@ export default function AccountSheet({ onClose, onLogout }) {
             </div>
           </>
         )}
-        {user?.role !== 'student' && (
+        {user?.role === 'student' && (
           <button className="btn btn--primary btn--block" onClick={save} disabled={saving}>
             {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save profile
           </button>
