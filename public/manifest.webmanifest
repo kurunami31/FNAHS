@@ -1,0 +1,12 @@
+{
+  "name": "FNAHS Community Platform",
+  "short_name": "FNAHS",
+  "description": "The community platform of the Faculty of Nursing and Allied Health Sciences.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#081021",
+  "theme_color": "#081021",
+  "icons": [
+    { "src": "/FNAHS.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
