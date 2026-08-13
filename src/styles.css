@@ -1925,3 +1925,24 @@ html[data-theme='dark'] .sec-head::after {
 @media (prefers-reduced-motion: reduce) {
   .vital::after { animation: none; }
 }
+
+/* ID card — mobile: let the card grow so the details never clip */
+.id-card { width: min(430px, 100%); }
+.id-row b { min-width: 0; white-space: normal; }
+.id-row { align-items: flex-start; }
+
+@media (max-width: 560px) {
+  .id-card { aspect-ratio: auto; }
+  .id-head { padding: 10px 12px; gap: 10px; }
+  .id-head .seal-mini { width: 34px; height: 34px; }
+  .id-org { font-size: 0.9rem; }
+  .id-fac { font-size: 0.4rem; }
+  .id-valid { font-size: 0.42rem; padding: 4px 5px; }
+  .id-mid { gap: 12px; padding: 12px 14px; }
+  .id-photo { width: 76px; }
+  .id-name { font-size: 1.02rem; }
+  .id-row { font-size: 0.52rem; padding: 4px 0; }
+  .id-foot { padding: 10px 14px 14px; gap: 10px; }
+  .id-qr-box { width: 66px; height: 66px; padding: 5px; }
+  .id-ecg { margin-top: 6px; height: 11px; }
+}

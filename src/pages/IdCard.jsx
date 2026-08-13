@@ -110,8 +110,9 @@ export default function IdCard() {
             <div className="id-details">
               <div className="id-name">{name}</div>
               <div className="id-rows">
-                <div className="id-row">PROGRAM&nbsp;&nbsp;<b>{user?.program || 'BS Nursing'}</b></div>
-                <div className="id-row">YEAR&nbsp;&nbsp;<b>{user?.year_level || '—'}</b></div>
+                {user?.program && <div className="id-row">PROGRAM&nbsp;&nbsp;<b>{user.program}</b></div>}
+                {user?.year_level && <div className="id-row">YEAR&nbsp;&nbsp;<b>{user.year_level}</b></div>}
+                {user?.section && <div className="id-row">SECTION&nbsp;&nbsp;<b>{user.section}</b></div>}
                 <div className="id-row">ROLE&nbsp;&nbsp;<b>{roleLabel(user?.role)}</b></div>
                 {!!user?.positions?.length && (
                   <div className="id-row">POSITION&nbsp;&nbsp;<b>{user.positions.map(positionLabel).join(' · ')}</b></div>
