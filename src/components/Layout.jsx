@@ -29,7 +29,7 @@ export default function Layout() {
   }
 
   return (
-    <div className="app-shell scanlines">
+    <div className="app-shell">
       {drawer && <div className="drawer-backdrop" onClick={() => setDrawer(false)} />}
       <aside className={`sidebar ${drawer ? 'sidebar--open' : ''}`}>
         <div className="sidebar-brand">

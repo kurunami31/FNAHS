@@ -38,7 +38,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="auth-wrap scanlines" style={{ background: 'radial-gradient(700px 400px at 80% -10%, var(--accent-glow-soft), transparent 60%), var(--bg)' }}>
+    <div className="auth-wrap" style={{ background: 'radial-gradient(700px 400px at 80% -10%, var(--accent-glow-soft), transparent 60%), var(--bg)' }}>
       <div className="auth-card">
         <div className="auth-logo">
           <img src="/FNAHS.png" alt="FNAHS logo" />

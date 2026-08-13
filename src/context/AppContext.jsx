@@ -7,7 +7,7 @@ const AppContext = createContext(null)
 const THEME_KEY = 'fnahs-codex-theme'
 
 export function AppProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || 'dark')
+  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || 'light')
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [toasts, setToasts] = useState([])
@@ -15,7 +15,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     localStorage.setItem(THEME_KEY, theme)
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#030309' : '#ffffff')
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0a1a20' : '#ffffff')
   }, [theme])
 
   useEffect(() => {
