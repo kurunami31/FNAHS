@@ -18,12 +18,28 @@ export default function ChatWidget() {
   const [busy, setBusy] = useState(false)
   const logRef = useRef(null)
   const inputRef = useRef(null)
+  const historyLoaded = useRef(false)
 
   useEffect(() => {
     const openHandler = () => setOpen(true)
     window.addEventListener('florence:open', openHandler)
     return () => window.removeEventListener('florence:open', openHandler)
   }, [])
+
+  useEffect(() => {
+    if (!open || historyLoaded.current) return
+    historyLoaded.current = true
+    api
+      .getChatHistory()
+      .then((rows) => {
+        if (!rows?.length) return
+        setMessages((m) => [
+          ...m,
+          ...rows.map((r) => ({ role: r.role === 'user' ? 'user' : 'bot', content: r.content })),
+        ])
+      })
+      .catch(() => {})
+  }, [open])
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' })
@@ -45,16 +61,21 @@ export default function ChatWidget() {
     setInput('')
     setBusy(true)
     setMessages((m) => [...m, { role: 'user', content }, { role: 'bot', content: '' }])
+    api.saveChatMessage('user', content).catch(() => {})
+    let full = ''
     try {
       await api.aiChat({
-        messages: [...messages, { role: 'user', content }],
-        onChunk: (chunk) =>
+        messages: [...messages.slice(-8), { role: 'user', content }],
+        onChunk: (chunk) => {
+          full += chunk
           setMessages((m) => {
             const next = [...m]
             next[next.length - 1] = { role: 'bot', content: next[next.length - 1].content + chunk }
             return next
-          }),
+          })
+        },
       })
+      if (full) api.saveChatMessage('assistant', full).catch(() => {})
     } finally {
       setBusy(false)
     }

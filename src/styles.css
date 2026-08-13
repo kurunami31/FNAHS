@@ -1562,3 +1562,184 @@ html[data-theme='dark'] .id-card {
 .pos-chip:hover { border-color: var(--accent); color: var(--ink); }
 .pos-chip--on { background: var(--brand-grad); border-color: transparent; color: var(--accent-ink); }
 .field-hint { font-weight: 400; font-size: 0.74rem; color: var(--muted); margin-left: 6px; }
+
+/* ============================================================
+   ANNOUNCEMENTS
+   ============================================================ */
+.ann-sec { margin-top: 22px; }
+.ann-composer { background: var(--deep); padding: 14px; }
+.ann-composer textarea { resize: vertical; }
+.ann-composer-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ann-composer-actions .btn { margin-left: auto; }
+.ann-composer-actions .btn + .btn, .ann-composer-actions .btn--sm + .btn--sm { margin-left: 0; }
+.ann-pin { display: inline-flex; align-items: center; gap: 7px; font-size: 0.82rem; color: var(--ink-soft); cursor: pointer; }
+.ann-pin input { accent-color: var(--accent); width: 15px; height: 15px; }
+.ann-list { display: grid; gap: 10px; }
+.ann {
+  display: flex;
+  gap: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: var(--r-md);
+  padding: 14px 15px;
+  box-shadow: var(--sh-sm);
+}
+.ann--pinned { border-left-color: var(--accent); background: linear-gradient(180deg, var(--accent-glow-soft), var(--paper) 60%); }
+.ann-pin-icon { color: var(--accent); padding-top: 2px; }
+.ann-body { flex: 1; min-width: 0; }
+.ann-title { font-weight: 650; font-size: 0.98rem; color: var(--ink); }
+.ann-text { color: var(--ink-soft); font-size: 0.9rem; line-height: 1.7; margin-top: 4px; white-space: pre-line; }
+.ann-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+.ann-avatar {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--metal);
+  overflow: hidden;
+}
+.ann-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ann-actions { display: flex; align-items: flex-start; gap: 4px; }
+
+/* ============================================================
+   NOTIFICATIONS BELL
+   ============================================================ */
+.notif-wrap { position: relative; }
+.notif-dot {
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 17px; height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font: 700 10px/17px var(--f-ocr);
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: -8px;
+  width: min(360px, calc(100vw - 32px));
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-lg);
+  z-index: 60;
+  overflow: hidden;
+}
+.notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--deep);
+}
+.notif-head h3 { margin: 0; font-family: var(--f-display); font-size: 1rem; }
+.notif-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: transparent;
+  color: var(--accent-2);
+  font: 600 0.78rem/1 var(--f-body);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 999px;
+}
+.notif-mark:hover { background: var(--accent-glow-soft); }
+.notif-list { max-height: min(420px, 60vh); overflow: auto; }
+.notif-item {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.notif-item:hover { background: var(--accent-glow-soft); }
+.notif-item--unread { background: var(--accent-glow-soft); }
+.notif-ic {
+  flex: none;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-2);
+  background: var(--accent-glow-soft);
+  margin-top: 1px;
+}
+.notif-txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.notif-txt b { font-size: 0.86rem; color: var(--ink); }
+.notif-txt span { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.notif-txt em { font-size: 0.72rem; font-style: normal; color: var(--muted); }
+.notif-new {
+  flex: none;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  margin-top: 7px;
+}
+@media (max-width: 640px) {
+  .notif-panel { right: -70px; }
+}
+
+/* ============================================================
+   EVENT POLLS
+   ============================================================ */
+.poll { margin-top: 10px; }
+.poll + .poll { border-top: 1px dashed var(--line-strong); padding-top: 10px; }
+.poll-q { font-weight: 650; font-size: 0.92rem; margin-bottom: 8px; }
+.poll-options { display: grid; gap: 6px; }
+.poll-opt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--deep);
+  color: var(--ink);
+  padding: 9px 12px;
+  font: 500 0.86rem/1.4 var(--f-body);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.poll-opt:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
+.poll-opt:disabled { cursor: default; }
+.poll-opt--mine { border-color: var(--accent); }
+.poll-fill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  background: var(--accent-glow-soft);
+  transition: width 0.4s ease;
+  pointer-events: none;
+}
+.poll-label { position: relative; flex: 1; min-width: 0; }
+.poll-pct { position: relative; font: 600 0.78rem/1 var(--f-ocr); color: var(--muted); }
+.poll-opt--mine .poll-pct { color: var(--accent-2); }
+.poll-opt svg { position: relative; color: var(--accent); flex: none; }
+.poll-meta { margin-top: 7px; font-size: 0.76rem; color: var(--muted); }

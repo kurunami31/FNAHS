@@ -729,5 +729,234 @@ export const api = {
 
   getFeeds,
   aiChat,
+
+  /* ---------------- announcements (announcer-gated by RLS) ---------------- */
+  getAnnouncements: SUPABASE_ENABLED
+    ? async () => {
+        const { data, error } = await supabase
+          .from('announcements')
+          .select('*, profiles!announcements_author_id_fkey(full_name, avatar_url)')
+          .is('archived_at', null)
+          .order('pinned', { ascending: false })
+          .order('created_at', { ascending: false })
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
+        return data || []
+      }
+    : async () => {
+        const list = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
+        return list.sort((a, b) => (b.pinned - a.pinned) || (new Date(b.created_at) - new Date(a.created_at)))
+      },
+
+  createAnnouncement: SUPABASE_ENABLED
+    ? async ({ title, body, pinned }) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { data, error } = await supabase
+          .from('announcements')
+          .insert({ title: sanitizeText(title, 200), body: sanitizeText(body, 2000), pinned: !!pinned, author_id: user.id })
+          .select('*, profiles!announcements_author_id_fkey(full_name, avatar_url)')
+          .single()
+        if (error) throw error
+        return data
+      }
+    : async ({ title, body, pinned }) => {
+        const me = db.profiles[demoCurrentUserId()] || db.profiles[DEMO_USER_ID]
+        const list = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
+        const row = { id: uid(), title, body, pinned: !!pinned, author_id: me?.id, created_at: new Date().toISOString(), profiles: { full_name: me?.full_name || 'FNAHS', avatar_url: me?.avatar_url || null } }
+        list.unshift(row)
+        localStorage.setItem('fnahs-demo-announcements', JSON.stringify(list))
+        return row
+      },
+
+  updateAnnouncement: SUPABASE_ENABLED
+    ? async (id, patch) => {
+        const clean = {}
+        if (patch.title !== undefined) clean.title = sanitizeText(patch.title, 200)
+        if (patch.body !== undefined) clean.body = sanitizeText(patch.body, 2000)
+        if (patch.pinned !== undefined) clean.pinned = !!patch.pinned
+        if (patch.archived_at !== undefined) clean.archived_at = patch.archived_at
+        const { error } = await supabase.from('announcements').update(clean).eq('id', id)
+        if (error) throw error
+      }
+    : async (id, patch) => {
+        const list = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
+        const row = list.find((a) => a.id === id)
+        if (row) Object.assign(row, patch)
+        localStorage.setItem('fnahs-demo-announcements', JSON.stringify(list))
+      },
+
+  deleteAnnouncement: SUPABASE_ENABLED
+    ? async (id) => {
+        const { error } = await supabase.from('announcements').delete().eq('id', id)
+        if (error) throw error
+      }
+    : async (id) => {
+        const list = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
+        localStorage.setItem('fnahs-demo-announcements', JSON.stringify(list.filter((a) => a.id !== id)))
+      },
+
+  /* ---------------- notifications (own rows only) ---------------- */
+  getNotifications: SUPABASE_ENABLED
+    ? async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { list: [], unread: 0 }
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(30)
+        if (error) {
+          markDbError(error)
+          return { list: [], unread: 0 }
+        }
+        return { list: data || [], unread: (data || []).filter((n) => !n.read_at).length }
+      }
+    : async () => {
+        const me = demoCurrentUserId()
+        const all = JSON.parse(localStorage.getItem('fnahs-demo-notifs') || '[]')
+        const list = all.filter((n) => n.user_id === me).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 30)
+        return { list, unread: list.filter((n) => !n.read_at).length }
+      },
+
+  markNotificationRead: SUPABASE_ENABLED
+    ? async (id) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', user.id)
+      }
+    : async (id) => {
+        const all = JSON.parse(localStorage.getItem('fnahs-demo-notifs') || '[]')
+        const n = all.find((x) => x.id === id)
+        if (n) n.read_at = new Date().toISOString()
+        localStorage.setItem('fnahs-demo-notifs', JSON.stringify(all))
+      },
+
+  markAllNotificationsRead: SUPABASE_ENABLED
+    ? async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('user_id', user.id).is('read_at', null)
+      }
+    : async () => {
+        markNotificationRead()
+      },
+
+  /* ---------------- event polls ---------------- */
+  getPolls: SUPABASE_ENABLED
+    ? async (eventId) => {
+        const { data, error } = await supabase
+          .from('event_polls')
+          .select('*, poll_options(*, poll_votes(user_id))')
+          .eq('event_id', eventId)
+          .order('created_at', { ascending: true })
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        return (data || []).map((p) => ({
+          ...p,
+          options: (p.poll_options || []).map((o) => ({
+            ...o,
+            votes: (o.poll_votes || []).map((v) => v.user_id),
+          })),
+        }))
+      }
+    : async (eventId) => {
+        const all = JSON.parse(localStorage.getItem('fnahs-demo-polls') || '[]')
+        return all.filter((p) => p.event_id === eventId)
+      },
+
+  createPoll: SUPABASE_ENABLED
+    ? async (eventId, question, optionLabels) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { data: poll, error: pe } = await supabase
+          .from('event_polls')
+          .insert({ event_id: eventId, question: sanitizeText(question, 300), created_by: user.id })
+          .select()
+          .single()
+        if (pe) throw pe
+        const labels = (optionLabels || []).map((l) => sanitizeText(l, 120)).filter(Boolean)
+        if (labels.length) {
+          const { error: oe } = await supabase
+            .from('poll_options')
+            .insert(labels.map((label) => ({ poll_id: poll.id, label })))
+          if (oe) throw oe
+        }
+        return poll
+      }
+    : async (eventId, question, optionLabels) => {
+        const me = demoCurrentUserId() || DEMO_USER_ID
+        const all = JSON.parse(localStorage.getItem('fnahs-demo-polls') || '[]')
+        const poll = { id: uid(), event_id: eventId, question, created_by: me, created_at: new Date().toISOString(), options: optionLabels.map((label) => ({ id: uid(), label, votes: [] })) }
+        all.push(poll)
+        localStorage.setItem('fnahs-demo-polls', JSON.stringify(all))
+        return poll
+      },
+
+  castVote: SUPABASE_ENABLED
+    ? async (pollId, optionId) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { error } = await supabase
+          .from('poll_votes')
+          .upsert({ poll_id: pollId, option_id: optionId, user_id: user.id }, { onConflict: 'poll_id,user_id' })
+        if (error) throw error
+      }
+    : async (pollId, optionId) => {
+        const me = demoCurrentUserId() || DEMO_USER_ID
+        const all = JSON.parse(localStorage.getItem('fnahs-demo-polls') || '[]')
+        const poll = all.find((p) => p.id === pollId)
+        if (poll) {
+          poll.options.forEach((o) => (o.votes = o.votes.filter((v) => v !== me)))
+          poll.options.find((o) => o.id === optionId)?.votes.push(me)
+        }
+        localStorage.setItem('fnahs-demo-polls', JSON.stringify(all))
+      },
+
+  /* ---------------- Florence chat history (own messages) ---------------- */
+  getChatHistory: SUPABASE_ENABLED
+    ? async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return []
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('role, content, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true })
+          .limit(40)
+        if (error) {
+          markDbError(error)
+          return []
+        }
+        return data || []
+      }
+    : async () => {
+        const me = demoCurrentUserId()
+        const all = JSON.parse(localStorage.getItem('fnahs-demo-chat') || '{}')
+        return (all[me] || []).slice(-40)
+      },
+
+  saveChatMessage: SUPABASE_ENABLED
+    ? async (role, content) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        await supabase.from('chat_messages').insert({ user_id: user.id, role, content: String(content || '').slice(0, 12000) })
+      }
+    : async (role, content) => {
+        const me = demoCurrentUserId()
+        if (!me) return
+        const all = JSON.parse(localStorage.getItem('fnahs-demo-chat') || '{}')
+        const list = all[me] || []
+        list.push({ role, content, created_at: new Date().toISOString() })
+        all[me] = list.slice(-100)
+        localStorage.setItem('fnahs-demo-chat', JSON.stringify(all))
+      },
+
   PROGRAMS,
 }

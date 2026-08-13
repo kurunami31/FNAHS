@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X, Clock, MapPin, Users, QrCode, Check } from 'lucide-react'
+import { X, Clock, MapPin, Users, QrCode, Check, BarChart3, Plus } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { canAny } from '../rbac'
 import { api } from '../lib/api'
@@ -10,8 +10,11 @@ export default function EventModal({ event, onClose, onChanged }) {
   const [members, setMembers] = useState([])
   const [scanned, setScanned] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [polls, setPolls] = useState(null)
+  const [pollForm, setPollForm] = useState({ question: '', options: ['', ''] })
 
   const isStaff = canAny(user, ['attendance.scan', 'events.manage'])
+  const canPoll = canAny(user, ['polls.manage', 'events.manage'])
 
   useEffect(() => {
     api.getMembers().then(setMembers).catch(() => {})
@@ -19,7 +22,50 @@ export default function EventModal({ event, onClose, onChanged }) {
       .getAttendance(event.id)
       .then((rows) => setScanned(rows.length))
       .catch(() => {})
+    api
+      .getPolls(event.id)
+      .then(setPolls)
+      .catch(() => setPolls([]))
   }, [event.id])
+
+  const castVote = async (pollId, optionId) => {
+    try {
+      await api.castVote(pollId, optionId)
+      api
+        .getPolls(event.id)
+        .then(setPolls)
+        .catch(() => {})
+    } catch (e) {
+      console.error(e)
+      toast('Could not save your vote', 'err')
+    }
+  }
+
+  const submitPoll = async () => {
+    const labels = pollForm.options.map((o) => o.trim()).filter(Boolean)
+    if (!pollForm.question.trim() || labels.length < 2) {
+      toast('Add a question and at least two options', 'err')
+      return
+    }
+    try {
+      await api.createPoll(event.id, pollForm.question.trim(), labels)
+      setPollForm({ question: '', options: ['', ''] })
+      api
+        .getPolls(event.id)
+        .then(setPolls)
+        .catch(() => {})
+      toast('Poll created')
+    } catch (e) {
+      console.error(e)
+      toast('Could not create the poll', 'err')
+    }
+  }
+
+  const myId = user?.id
+  const myVote = (p) => {
+    for (const o of p.options) if (o.votes.includes(myId)) return o.id
+    return null
+  }
 
   const goingIds = Object.entries(event.rsvps || {})
     .filter(([, s]) => s === 'going')
@@ -71,6 +117,83 @@ export default function EventModal({ event, onClose, onChanged }) {
         </div>
 
         {event.description && <p className="event-desc" style={{ marginTop: 16 }}>{event.description}</p>}
+
+        {polls && polls.length > 0 && (
+          <div className="evm-sec">
+            <h5><BarChart3 size={14} /> Polls</h5>
+            {polls.map((p) => {
+              const voted = myVote(p)
+              const total = p.options.reduce((s, o) => s + o.votes.length, 0)
+              return (
+                <div key={p.id} className="poll">
+                  <div className="poll-q">{p.question}</div>
+                  <div className="poll-options">
+                    {p.options.map((o) => {
+                      const n = o.votes.length
+                      const pct = total ? Math.round((n / total) * 100) : 0
+                      const isMine = voted === o.id
+                      return (
+                        <button
+                          key={o.id}
+                          className={`poll-opt${isMine ? ' poll-opt--mine' : ''}`}
+                          disabled={!!voted}
+                          onClick={() => castVote(p.id, o.id)}
+                        >
+                          <span className="poll-fill" style={{ width: voted ? `${pct}%` : 0 }} />
+                          <span className="poll-label">{o.label}</span>
+                          {voted && <span className="poll-pct">{n} · {pct}%</span>}
+                          {isMine && <Check size={14} />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="poll-meta">
+                    {voted ? `${total} vote${total === 1 ? '' : 's'} — you voted` : 'Pick one — results show after you vote'}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {canPoll && (
+          <div className="evm-sec">
+            <h5><Plus size={14} /> New poll</h5>
+            <div className="field" style={{ marginBottom: 8 }}>
+              <input
+                value={pollForm.question}
+                onChange={(e) => setPollForm({ ...pollForm, question: e.target.value })}
+                placeholder="Question (e.g. Which date works for the outreach?)"
+                maxLength={300}
+              />
+            </div>
+            {pollForm.options.map((o, i) => (
+              <div className="field" style={{ marginBottom: 6 }} key={i}>
+                <input
+                  value={o}
+                  onChange={(e) => {
+                    const options = [...pollForm.options]
+                    options[i] = e.target.value
+                    setPollForm({ ...pollForm, options })
+                  }}
+                  placeholder={`Option ${i + 1}`}
+                  maxLength={120}
+                />
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+              <button
+                className="btn btn--ghost btn--sm"
+                onClick={() => setPollForm({ ...pollForm, options: [...pollForm.options, ''] })}
+              >
+                <Plus size={13} /> Add option
+              </button>
+              <button className="btn btn--primary btn--sm" onClick={submitPoll}>
+                Create poll
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="evm-sec">
           <h5>Attendees</h5>

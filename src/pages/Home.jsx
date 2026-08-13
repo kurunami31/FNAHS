@@ -6,6 +6,7 @@ import { api } from '../lib/api'
 import { seedFeeds, ORG_TAGLINE, PROGRAMS } from '../lib/mock'
 import { timeAgo } from '../lib/format'
 import EventModal from '../components/EventModal'
+import Announcements from '../components/Announcements'
 
 export default function Home() {
   const { user } = useApp()
@@ -83,6 +84,8 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {user && <Announcements />}
 
       <div className="home-cols">
         <section className="sec" aria-labelledby="h-briefs">

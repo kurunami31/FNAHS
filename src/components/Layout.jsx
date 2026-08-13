@@ -20,6 +20,7 @@ import { api } from '../lib/api'
 import { initials } from '../lib/format'
 import AccountSheet from './AccountSheet'
 import SearchOverlay from './SearchOverlay'
+import NotificationsBell from './NotificationsBell'
 
 const NAV = [
   { to: '/app', label: 'Home', icon: HomeIcon, end: true },
@@ -153,6 +154,7 @@ export default function Layout() {
           FNAHS <b>/</b> {section}
         </div>
         <div className="spacer" />
+        <NotificationsBell />
         <button className="icon-btn" onClick={() => setSearchOpen(true)} aria-label="Search" title="Search (Ctrl+K)">
           <Search size={19} />
         </button>
