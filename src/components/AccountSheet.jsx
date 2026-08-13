@@ -19,6 +19,13 @@ export default function AccountSheet({ onClose, onLogout }) {
     if (user) setForm({ full_name: user.full_name || '', program: user.program || '', year_level: user.year_level || '', section: user.section || '', avatar_url: user.avatar_url || '' })
   }, [user])
 
+  const autoSave = () => {
+    if (user?.role === 'superadmin' || user?.role === 'moderator') {
+      clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => save(), 800)
+    }
+  }
+
   const onPick = (e) => {
     const f = e.target.files?.[0]
     e.target.value = ''
@@ -43,6 +50,7 @@ export default function AccountSheet({ onClose, onLogout }) {
         const side = Math.min(img.width, img.height)
         ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size)
         setForm((f2) => ({ ...f2, avatar_url: canvas.toDataURL('image/jpeg', 0.85) }))
+        autoSave()
       }
       img.src = reader.result
     }
@@ -52,12 +60,7 @@ export default function AccountSheet({ onClose, onLogout }) {
   const onNameChange = (v) => {
     setForm((f2) => ({ ...f2, full_name: v }))
     // Staff/leaders keep a plain name field — changes save automatically.
-      if (user?.role !== 'student') {
-      clearTimeout(saveTimer.current)
-      saveTimer.current = setTimeout(() => {
-        if (v.trim()) save()
-      }, 800)
-    }
+    autoSave()
   }
 
   const save = async () => {
@@ -81,7 +84,7 @@ export default function AccountSheet({ onClose, onLogout }) {
   return (
     <div className="sheet" role="dialog" aria-label="Account settings">
       <div className="sheet-head">
-        {user?.role !== 'student' ? (
+        {user?.role === 'superadmin' ? (
           <div className="avatar avatar--ring">
             {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
           </div>
@@ -104,7 +107,7 @@ export default function AccountSheet({ onClose, onLogout }) {
 
       <div className="sheet-sec">
         <h4>Profile</h4>
-        {user?.role === 'student' && (
+        {user?.role !== 'superadmin' && (
           <div className="mm-pic">
             <button
               className="avatar avatar--ring avatar-btn"
@@ -119,7 +122,7 @@ export default function AccountSheet({ onClose, onLogout }) {
                 <Camera size={14} /> {form.avatar_url ? 'Change photo' : 'Add photo'}
               </button>
               {form.avatar_url && (
-                <button className="btn btn--link btn--sm" onClick={() => setForm((f2) => ({ ...f2, avatar_url: '' }))}>
+                <button className="btn btn--link btn--sm" onClick={() => { setForm((f2) => ({ ...f2, avatar_url: '' })); autoSave() }}>
                   Remove photo
                 </button>
               )}
