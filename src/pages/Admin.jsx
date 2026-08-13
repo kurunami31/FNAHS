@@ -46,9 +46,13 @@ export default function Admin() {
   }
 
   const needle = q.trim().toLowerCase()
-  const visibleMembers = members.filter(
-    (m) => !needle || m.full_name?.toLowerCase().includes(needle) || m.email?.toLowerCase().includes(needle)
-  )
+  // superadmin accounts stay invisible in the console — nobody can manage
+  // the owner account from the UI, and it never shows up in member lists.
+  const visibleMembers = members
+    .filter((m) => m.role !== 'superadmin')
+    .filter(
+      (m) => !needle || m.full_name?.toLowerCase().includes(needle) || m.email?.toLowerCase().includes(needle)
+    )
 
   const changeRole = async (m, role) => {
     if (m.id === user.id && role !== 'superadmin') {
