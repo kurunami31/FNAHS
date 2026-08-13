@@ -67,7 +67,7 @@ export default function Signup() {
             <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Juan Dela Cruz" autoComplete="name" />
           </div>
           <div className="field">
-            <label>FNAHS email</label>
+            <label>Email</label>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="student@fnahs.edu.ph" autoComplete="email" />
           </div>
           <div className="field">
