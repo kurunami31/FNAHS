@@ -161,33 +161,43 @@ async function demoMarkAttendance(eventId, userId) {
 
 /* ---------------- feeds ---------------- */
 
+let feedCache = null
+let feedCacheAt = 0
+
 async function getFeeds() {
-  if (!SUPABASE_ENABLED) return db.feeds || seedFeeds()
-  // Live mode: try the WHO health news feed (via a CORS proxy), fall back to curated seeds.
-  const out = { health: seedFeeds().health, tips: seedFeeds().tips }
+  // Memoize for the session so page visits don't refetch every time.
+  if (feedCache && Date.now() - feedCacheAt < 15 * 60e3) return feedCache
+  const out = { health: seedFeeds().health, tips: seedFeeds().tips, news: seedFeeds().health }
   try {
-    const rssUrl = encodeURIComponent('https://www.who.int/rss-feeds/news-english.xml')
-    const res = await fetch(`https://api.allorigins.win/raw?url=${rssUrl}`, { signal: AbortSignal.timeout(9000) })
+    const res = await fetch(
+      `https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.who.int/rss-feeds/news-english.xml')}`,
+      { signal: AbortSignal.timeout(6000) }
+    )
     if (res.ok) {
       const xml = await res.text()
       const doc = new DOMParser().parseFromString(xml, 'text/xml')
       const items = [...doc.querySelectorAll('item')]
-        .slice(0, 4)
+        .slice(0, 6)
         .map((it, i) => {
           const title = (it.querySelector('title')?.textContent || '').replace(/<[^>]+>/g, '').trim()
+          if (!title) return null
           const date = it.querySelector('pubDate')?.textContent
           return {
             id: it.querySelector('guid')?.textContent || `w${i}`,
-            title: title.slice(0, 80),
-            meta: date ? new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'who.int',
+            title: title.slice(0, 110),
+            url: it.querySelector('link')?.textContent || '',
+            source: 'WHO',
+            created_at: date ? new Date(date).toISOString() : new Date().toISOString(),
           }
         })
-        .filter((i) => i.title)
-      if (items.length) out.health = items
+        .filter(Boolean)
+      if (items.length) out.news = items
     }
   } catch {
-    /* keep curated health headlines */
+    /* keep curated headlines */
   }
+  feedCache = out
+  feedCacheAt = Date.now()
   return out
 }
 
@@ -376,6 +386,99 @@ export const api = {
         if (error) throw error
       }
     : demoDeletePost,
+
+  /* moderation + admin CRUD */
+  updatePost: SUPABASE_ENABLED
+    ? async (postId, patch) => {
+        const { error } = await supabase.from('posts').update(patch).eq('id', postId)
+        if (error) throw error
+      }
+    : async (postId, patch) => {
+        const post = db.posts.find((p) => p.id === postId)
+        if (post) Object.assign(post, patch)
+        saveDb(db)
+      },
+
+  getUsers: SUPABASE_ENABLED
+    ? async () => {
+        const { data, error } = await supabase.from('profiles').select('*').order('full_name')
+        if (error) throw error
+        return data || []
+      }
+    : () => Object.values(db.profiles),
+
+  createUser: SUPABASE_ENABLED
+    ? async (p) => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .insert({ ...p, created_at: new Date().toISOString() })
+          .select()
+          .single()
+        if (error) throw error
+        return data
+      }
+    : async (p) => {
+        const row = {
+          id: uid(),
+          full_name: p.full_name,
+          email: p.email,
+          program: p.program || PROGRAMS[0],
+          year_level: p.year_level || '1',
+          role: p.role || 'student',
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+        }
+        db.profiles[row.id] = row
+        saveDb(db)
+        return row
+      },
+
+  updateUser: SUPABASE_ENABLED
+    ? async (id, patch) => {
+        const { data, error } = await supabase.from('profiles').update(patch).eq('id', id).select().single()
+        if (error) throw error
+        return data
+      }
+    : async (id, patch) => {
+        db.profiles[id] = { ...db.profiles[id], ...patch }
+        saveDb(db)
+        return db.profiles[id]
+      },
+
+  deleteUser: SUPABASE_ENABLED
+    ? async (id) => {
+        const { error } = await supabase.from('profiles').delete().eq('id', id)
+        if (error) throw error
+      }
+    : async (id) => {
+        delete db.profiles[id]
+        db.posts = db.posts.filter((p) => p.user_id !== id)
+        saveDb(db)
+      },
+
+  updateEvent: SUPABASE_ENABLED
+    ? async (eventId, patch) => {
+        const { data, error } = await supabase.from('events').update(patch).eq('id', eventId).select().single()
+        if (error) throw error
+        return data
+      }
+    : async (eventId, patch) => {
+        const ev = db.events.find((e) => e.id === eventId)
+        if (ev) Object.assign(ev, patch)
+        saveDb(db)
+        return ev
+      },
+
+  deleteEvent: SUPABASE_ENABLED
+    ? async (eventId) => {
+        const { error } = await supabase.from('events').delete().eq('id', eventId)
+        if (error) throw error
+      }
+    : async (eventId) => {
+        db.events = db.events.filter((e) => e.id !== eventId)
+        delete db.attendance[eventId]
+        saveDb(db)
+      },
 
   /* events */
   getEvents: SUPABASE_ENABLED

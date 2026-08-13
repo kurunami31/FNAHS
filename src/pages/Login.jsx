@@ -71,7 +71,7 @@ export default function Login() {
 
         <p className="auth-note">
           No account yet? <Link to="/signup" style={{ color: 'var(--accent)' }}>Join FNAHS</Link><br />
-          {isDemo ? 'Staff demo: staff@fnahs.edu.ph' : 'Reserved for the students of the Faculty of Nursing and Allied Health Sciences.'}
+          {isDemo ? 'Staff demo: staff@fnahs.edu.ph · Admin demo: fnahsadmin@fnahs.edu.ph' : 'Reserved for the students of the Faculty of Nursing and Allied Health Sciences.'}
         </p>
       </div>
     </div>

@@ -11,6 +11,7 @@ const Events = lazy(() => import('./pages/Events'))
 const Directory = lazy(() => import('./pages/Directory'))
 const IdCard = lazy(() => import('./pages/IdCard'))
 const Staff = lazy(() => import('./pages/Staff'))
+const Admin = lazy(() => import('./pages/Admin'))
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
 
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="directory" element={<Page><Directory /></Page>} />
           <Route path="idcard" element={<Page><IdCard /></Page>} />
           <Route path="staff" element={<Page><Staff /></Page>} />
+          <Route path="admin" element={<Page><Admin /></Page>} />
         </Route>
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>

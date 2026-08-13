@@ -117,7 +117,7 @@ export default function AccountSheet({ onClose, onLogout }) {
         <div className="field">
           <label>Year level</label>
           <select value={form.year_level || ''} onChange={(e) => setForm({ ...form, year_level: e.target.value })}>
-            {['1', '2', '3', '4', '5'].map((y) => (
+            {['1', '2', '3', '4'].map((y) => (
               <option key={y} value={y}>Year {y}</option>
             ))}
           </select>

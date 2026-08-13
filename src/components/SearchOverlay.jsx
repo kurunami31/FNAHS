@@ -21,22 +21,25 @@ export default function SearchOverlay({ onClose }) {
       return
     }
     let alive = true
-    Promise.all([
-      api.getPosts().catch(() => []),
-      api.getMembers().catch(() => []),
-    ]).then(([posts, members]) => {
-      if (!alive) return
-      setResults({
-        posts: posts
-          .filter((p) => p.content?.toLowerCase().includes(needle) || p.author?.full_name?.toLowerCase().includes(needle))
-          .slice(0, 4),
-        members: members
-          .filter((m) => m.full_name?.toLowerCase().includes(needle) || m.program?.toLowerCase().includes(needle))
-          .slice(0, 4),
+    const timer = setTimeout(() => {
+      Promise.all([
+        api.getPosts().catch(() => []),
+        api.getMembers().catch(() => []),
+      ]).then(([posts, members]) => {
+        if (!alive) return
+        setResults({
+          posts: posts
+            .filter((p) => p.content?.toLowerCase().includes(needle) || p.author?.full_name?.toLowerCase().includes(needle))
+            .slice(0, 4),
+          members: members
+            .filter((m) => m.full_name?.toLowerCase().includes(needle) || m.program?.toLowerCase().includes(needle))
+            .slice(0, 4),
+        })
       })
-    })
+    }, 250)
     return () => {
       alive = false
+      clearTimeout(timer)
     }
   }, [q])
 

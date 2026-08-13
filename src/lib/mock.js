@@ -33,6 +33,16 @@ export function seedProfiles() {
       avatar_url: null,
       created_at: new Date(now - 90 * d).toISOString(),
     },
+    admin: {
+      id: 'admin',
+      full_name: 'FNAHS Administrator',
+      email: 'fnahsadmin@fnahs.edu.ph',
+      program: 'BS Nursing',
+      year_level: '—',
+      role: 'superadmin',
+      avatar_url: null,
+      created_at: new Date(now - 180 * d).toISOString(),
+    },
   }
 }
 

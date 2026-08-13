@@ -121,6 +121,28 @@ export default function Home() {
         </section>
       </div>
 
+      <section className="sec" aria-labelledby="h-news">
+        <div className="sec-head">
+          <h2 id="h-news">Health News Wire</h2>
+          <span className="sec-kicker">who &amp; health orgs</span>
+          <a className="sec-more" href="https://www.who.int/news" target="_blank" rel="noreferrer">
+            who.int <ArrowRight size={13} />
+          </a>
+        </div>
+        <div className="brief-list">
+          {feeds.news.slice(0, 6).map((n) => (
+            <article key={n.id} className="brief brief--tip">
+              {n.url ? (
+                <p className="brief-title"><a href={n.url} target="_blank" rel="noreferrer">{n.title}</a></p>
+              ) : (
+                <p className="brief-title">{n.title}</p>
+              )}
+              <div className="brief-meta">{n.source || 'WHO'} · {timeAgo(n.created_at)}</div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="sec" aria-labelledby="h-rounds">
         <div className="sec-head">
           <h2 id="h-rounds">On the Rounds</h2>

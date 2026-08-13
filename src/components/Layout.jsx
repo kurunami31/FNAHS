@@ -7,6 +7,7 @@ import {
   Users,
   CreditCard,
   ShieldCheck,
+  Settings2,
   Search,
   Moon,
   Sun,
@@ -30,8 +31,11 @@ const SECTION = [
   ['/app/directory', 'directory'],
   ['/app/idcard', 'my id'],
   ['/app/staff', 'staff tools'],
+  ['/app/admin', 'admin'],
   ['/app', 'home'],
 ]
+
+const ADMIN_ROLES = ['superadmin', 'staff', 'moderator']
 
 export default function Layout() {
   const { user, theme, setTheme, logout, toast } = useApp()
@@ -41,6 +45,7 @@ export default function Layout() {
   const loc = useLocation()
 
   const isStaff = ['staff', 'superadmin'].includes(user?.role)
+  const isAdmin = ADMIN_ROLES.includes(user?.role)
   const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || [, 'FNAHS'])[1]
 
   useEffect(() => {
@@ -94,6 +99,16 @@ export default function Layout() {
               <ShieldCheck size={21} strokeWidth={2} />
             </NavLink>
           )}
+          {isAdmin && (
+            <NavLink
+              to="/app/admin"
+              className={({ isActive }) => `rail-link${isActive ? ' rail-link--on' : ''}`}
+              aria-label="Admin console"
+              title="Admin console"
+            >
+              <Settings2 size={21} strokeWidth={2} />
+            </NavLink>
+          )}
         </nav>
         <div className="rail-foot">
           <button
@@ -135,6 +150,12 @@ export default function Layout() {
             <span>{label}</span>
           </NavLink>
         ))}
+        {isAdmin && (
+          <NavLink to="/app/admin" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+            <Settings2 size={21} />
+            <span>Admin</span>
+          </NavLink>
+        )}
       </nav>
 
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
