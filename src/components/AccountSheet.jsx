@@ -34,8 +34,8 @@ export default function AccountSheet({ onClose, onLogout }) {
       toast('Please pick an image file', 'err')
       return
     }
-    if (f.size > 512 * 1024) {
-      toast('Image too large — keep it under 512 KB', 'err')
+    if (f.size > 5 * 1024 * 1024) {
+      toast('Image too large — keep it under 5 MB', 'err')
       return
     }
     const reader = new FileReader()
@@ -126,7 +126,7 @@ export default function AccountSheet({ onClose, onLogout }) {
                   Remove photo
                 </button>
               )}
-              <div className="mm-pic-hint">Squared JPG/PNG up to 512 KB — used on your ID card and in the directory.</div>
+              <div className="mm-pic-hint">Squared JPG/PNG up to 5 MB — used on your ID card and in the directory.</div>
             </div>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPick} />
           </div>
