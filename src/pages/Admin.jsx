@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ShieldAlert, Users, Newspaper, CalendarDays, Plus, Pencil, Trash2, X, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { can } from '../rbac'
 import { api } from '../lib/api'
 import { initials, timeAgo, monthDay } from '../lib/format'
 import { PROGRAMS } from '../lib/mock'
 
-const ROLES = ['student', 'moderator', 'staff', 'superadmin']
-const ADMIN_ROLES = ['superadmin', 'staff', 'moderator']
+const ROLES = ['student', 'moderator', 'superadmin']
 
 export default function Admin() {
   const { user, toast } = useApp()
@@ -35,12 +35,12 @@ export default function Admin() {
     load()
   }, [load])
 
-  if (!ADMIN_ROLES.includes(user?.role)) {
+  if (!can(user, 'console.access')) {
     return (
       <div className="empty-state">
         <ShieldAlert size={44} />
         <h3>Admin console</h3>
-        <p>This page is reserved for FNAHS moderators, staff, and administrators.</p>
+        <p>This page is reserved for FNAHS officers and administrators.</p>
       </div>
     )
   }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { can } from '../rbac'
 import { api } from '../lib/api'
 import { initials } from '../lib/format'
 import { PROGRAMS, ORG_FULL } from '../lib/mock'
@@ -158,5 +159,5 @@ export default function AccountSheet({ onClose, onLogout }) {
 }
 
 function isStaff(u) {
-  return ['staff', 'superadmin'].includes(u?.role)
+  return can(u, 'attendance.scan') || can(u, 'console.access')
 }

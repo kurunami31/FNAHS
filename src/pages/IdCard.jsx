@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { toPng } from 'html-to-image'
 import { Download, ShieldCheck, Loader2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { can } from '../rbac'
 import { api } from '../lib/api'
 import { initials, monthDay, timeAgo } from '../lib/format'
 
@@ -19,7 +20,7 @@ export default function IdCard() {
       .catch(() => {})
   }, [])
 
-  const isStaff = ['staff', 'superadmin'].includes(user?.role)
+  const isStaff = can(user, 'feed.moderate') || can(user, 'events.manage') || can(user, 'attendance.scan')
   const name = user?.full_name || 'Student Member'
   const qrValue = JSON.stringify({ t: 'fnahs-id', id: user?.id || 'demo', n: name, v: 1 })
   const serial =

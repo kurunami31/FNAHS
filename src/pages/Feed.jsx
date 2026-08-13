@@ -4,6 +4,7 @@ import {
   Heart, MessageCircle, Archive, Trash2, ImagePlus, Send, ChevronDown, ChevronUp, Newspaper,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { can } from '../rbac'
 import { api } from '../lib/api'
 import { initials, timeAgo } from '../lib/format'
 
@@ -187,7 +188,7 @@ export default function Feed() {
           key={p.id}
           post={p}
           meId={user?.id}
-          canModerate={isDemo || user?.id === p.user_id || ['staff', 'superadmin'].includes(user?.role)}
+          canModerate={isDemo || user?.id === p.user_id || can(user, 'feed.moderate')}
           onLike={onLike}
           onComment={onComment}
           onArchive={onArchive}

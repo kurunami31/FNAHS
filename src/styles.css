@@ -1,35 +1,43 @@
 /* ============================================================
-   FNAHS — "The Clinic"
+   FNAHS — "The Clinic" · v2 identity
    Faculty of Nursing and Allied Health Sciences community platform.
-Institutional gold-seal identity: Fraunces serif wordmarks,
-   Instrument Sans body, Share Tech Mono chart labels.
-   Light = gold & white (the logo's two colors).
+   Identity rebuilt from the institutional seal:
+   gold (#C09000 family) × white in light mode,
+   seal-night navy-black (#0A0A14) in dark mode.
+   Fraunces serif wordmarks, Instrument Sans body, Share Tech Mono data.
    ============================================================ */
 
 :root {
-  --accent: #a67400;
+  /* seal gold */
+  --accent: #c09000;
   --accent-2: #d9a514;
-  --gold: #b8860b;
-  --gold-soft: #e9c039;
+  --gold: #c09000;
+  --gold-soft: #f0d070;
   --accent-ink: #ffffff;
-  --accent-glow: rgba(166, 116, 0, 0.2);
-  --accent-glow-soft: rgba(166, 116, 0, 0.08);
-  --accent-glow-secondary: rgba(217, 165, 20, 0.14);
-  --brand-grad: linear-gradient(135deg, #d9a514, #a67400);
-  --metal: linear-gradient(135deg, #e9c039 0%, #b8860b 45%, #7d5800 100%);
-  --bg: #faf7ee;
+  --accent-glow: rgba(192, 144, 0, 0.18);
+  --accent-glow-soft: rgba(192, 144, 0, 0.07);
+  --accent-glow-secondary: rgba(217, 165, 20, 0.13);
+  --brand-grad: linear-gradient(135deg, #d9a514, #c09000);
+  --metal: linear-gradient(135deg, #f0d070 0%, #c09000 45%, #7d5a00 100%);
+
+  /* seal navy + ink */
+  --navy: #100e60;
+  --navy-2: #1e2b8a;
+  --royal: #2b3ac9;
+
+  --bg: #ffffff;
   --deep: #ffffff;
   --paper: #ffffff;
-  --ink: #2b2410;
-  --ink-soft: #55492b;
-  --muted: #8a7d5c;
-  --line: #ece4cf;
-  --line-strong: #d8cba8;
+  --ink: #16143e;
+  --ink-soft: #4a4878;
+  --muted: #8a88b0;
+  --line: #efecdd;
+  --line-strong: #d8d3c0;
   --ok: #1f9d5f;
   --warn: #d98f1f;
   --danger: #e5484d;
-  --hn: #b8860b;
-  --primary: #d9a514;
+  --hn: #c09000;
+  --primary: #c09000;
   --primary-2: #8a6200;
 
   --f-display: 'Fraunces', Georgia, 'Times New Roman', serif;
@@ -44,37 +52,43 @@ Institutional gold-seal identity: Fraunces serif wordmarks,
   --topbar-h: 60px;
   --tabbar-h: 64px;
 
-  --sh-sm: 0 1px 2px rgba(43, 36, 16, 0.05), 0 1px 3px rgba(43, 36, 16, 0.06);
-  --sh-md: 0 2px 6px rgba(43, 36, 16, 0.05), 0 10px 26px -14px rgba(43, 36, 16, 0.14);
-  --sh-lg: 0 14px 44px -16px rgba(43, 36, 16, 0.2);
---sh-glow: 0 6px 24px -8px var(--accent-glow);
+  --sh-sm: 0 1px 2px rgba(22, 20, 62, 0.05), 0 1px 3px rgba(22, 20, 62, 0.06);
+  --sh-md: 0 2px 6px rgba(22, 20, 62, 0.05), 0 10px 26px -14px rgba(22, 20, 62, 0.14);
+  --sh-lg: 0 14px 44px -16px rgba(22, 20, 62, 0.2);
+  --sh-glow: 0 6px 24px -8px var(--accent-glow);
   --sh-glow-secondary: 0 6px 26px -8px var(--accent-glow-secondary);
 }
 
 html[data-theme='dark'] {
-  --accent: #ffd34d;
+  --accent: #f0c948;
   --accent-2: #e6b800;
-  --gold: #ffd34d;
+  --gold: #f0c948;
   --gold-soft: #ffe9a8;
   --accent-ink: #141210;
-  --accent-glow: rgba(255, 211, 77, 0.22);
-  --accent-glow-soft: rgba(255, 211, 77, 0.08);
+  --accent-glow: rgba(240, 201, 72, 0.2);
+  --accent-glow-soft: rgba(240, 201, 72, 0.08);
   --accent-glow-secondary: rgba(230, 184, 0, 0.14);
-  --brand-grad: linear-gradient(135deg, #e6b800, #b8860b);
-  --metal: linear-gradient(135deg, #f4cf4d 0%, #d9a514 45%, #8a6200 100%);
-  --bg: #000000;
-  --deep: #0a0a0a;
-  --paper: #141414;
-  --ink: #f5f1e6;
-  --ink-soft: #bcb6a6;
-  --muted: #7f7a6c;
-  --line: #232323;
-  --line-strong: #383838;
+  --brand-grad: linear-gradient(135deg, #e6b800, #c09000);
+  --metal: linear-gradient(135deg, #ffd95c 0%, #c09000 45%, #7d5a00 100%);
+
+  /* seal night */
+  --navy: #141a6e;
+  --navy-2: #1e2b8a;
+  --royal: #4a5bff;
+
+  --bg: #0a0a14;
+  --deep: #0e0e1c;
+  --paper: #131326;
+  --ink: #f2efe3;
+  --ink-soft: #b9b7cc;
+  --muted: #7e7c99;
+  --line: #24243a;
+  --line-strong: #35354f;
   --ok: #2bb673;
   --warn: #ffb84d;
   --danger: #ff6b70;
-  --hn: #ffb84d;
-  --primary: #ffd34d;
+  --hn: #f0c948;
+  --primary: #f0c948;
   --primary-2: #a67c00;
   --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3);
   --sh-md: 0 2px 6px rgba(0, 0, 0, 0.4), 0 10px 26px -14px rgba(0, 0, 0, 0.7);

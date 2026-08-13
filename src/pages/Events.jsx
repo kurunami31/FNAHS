@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { CalendarDays, MapPin, Clock, Plus, Check, X, Users } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { can } from '../rbac'
 import { api } from '../lib/api'
 import { fmtDateTime, monthDay } from '../lib/format'
 import EventModal from '../components/EventModal'
-
-const EVENT_EDITORS = ['staff', 'moderator', 'superadmin']
 
 export default function Events() {
   const { user, toast } = useApp()
@@ -14,7 +13,7 @@ export default function Events() {
   const [modal, setModal] = useState(false)
   const [selected, setSelected] = useState(null)
 
-  const canCreate = EVENT_EDITORS.includes(user?.role)
+  const canCreate = can(user, 'events.manage')
 
   const load = useCallback(async () => {
     try {

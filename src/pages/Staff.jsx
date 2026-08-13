@@ -2,10 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ShieldCheck, Camera, CameraOff, Users, QrCode } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useApp } from '../context/AppContext'
+import { can } from '../rbac'
 import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
-
-const ATTENDANCE_ROLES = ['staff', 'moderator', 'superadmin']
 
 export default function Staff() {
   const { user, toast } = useApp()
@@ -17,6 +16,8 @@ export default function Staff() {
   const [last, setLast] = useState(null)
   const [tallies, setTallies] = useState([])
   const scanBoxRef = useRef(null)
+
+  const isStaff = can(user, 'attendance.scan')
 
   const loadTallies = useCallback(async () => {
     try {
@@ -114,14 +115,12 @@ export default function Staff() {
     }
   }
 
-  const isStaff = ATTENDANCE_ROLES.includes(user?.role)
-
   if (!isStaff) {
     return (
       <div className="empty-state">
         <ShieldCheck size={44} />
         <h3>Staff tools</h3>
-        <p>This page is reserved for FNAHS staff, moderators, and officers.</p>
+        <p>This page is reserved for FNAHS officers on door duty.</p>
       </div>
     )
   }

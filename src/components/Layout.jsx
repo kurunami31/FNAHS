@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { can } from '../rbac'
 import { api } from '../lib/api'
 import { initials } from '../lib/format'
 import AccountSheet from './AccountSheet'
@@ -38,8 +39,6 @@ const SECTION = [
   ['/app', 'home'],
 ]
 
-const ADMIN_ROLES = ['superadmin', 'staff', 'moderator']
-
 export default function Layout() {
   const { user, theme, setTheme, logout, toast } = useApp()
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -47,8 +46,8 @@ export default function Layout() {
   const navigate = useNavigate()
   const loc = useLocation()
 
-  const isStaff = ['staff', 'superadmin'].includes(user?.role)
-  const isAdmin = ADMIN_ROLES.includes(user?.role)
+  const canScan = can(user, 'attendance.scan')
+  const canConsole = can(user, 'console.access')
   const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || [, 'FNAHS'])[1]
   const [dbNotice, setDbNotice] = useState(false)
 
@@ -112,7 +111,7 @@ export default function Layout() {
               <Icon size={21} strokeWidth={2} />
             </NavLink>
           ))}
-          {isStaff && (
+          {canScan && (
             <NavLink
               to="/app/staff"
               className={({ isActive }) => `rail-link${isActive ? ' rail-link--on' : ''}`}
@@ -122,7 +121,7 @@ export default function Layout() {
               <ShieldCheck size={21} strokeWidth={2} />
             </NavLink>
           )}
-          {isAdmin && (
+          {canConsole && (
             <NavLink
               to="/app/admin"
               className={({ isActive }) => `rail-link${isActive ? ' rail-link--on' : ''}`}
@@ -173,13 +172,13 @@ export default function Layout() {
             <span>{label}</span>
           </NavLink>
         ))}
-        {isStaff && (
+        {canScan && (
           <NavLink to="/app/staff" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
             <ShieldCheck size={21} />
             <span>Staff</span>
           </NavLink>
         )}
-        {isAdmin && (
+        {canConsole && (
           <NavLink to="/app/admin" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
             <Settings2 size={21} />
             <span>Admin</span>

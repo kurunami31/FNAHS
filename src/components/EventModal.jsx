@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X, Clock, MapPin, Users, QrCode, Check } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { canAny } from '../rbac'
 import { api } from '../lib/api'
 import { initials, monthDay, fmtDateTime } from '../lib/format'
 
@@ -10,7 +11,7 @@ export default function EventModal({ event, onClose, onChanged }) {
   const [scanned, setScanned] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  const isStaff = ['staff', 'moderator', 'superadmin'].includes(user?.role)
+  const isStaff = canAny(user, ['attendance.scan', 'events.manage'])
 
   useEffect(() => {
     api.getMembers().then(setMembers).catch(() => {})
