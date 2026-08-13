@@ -17,7 +17,16 @@ export default function AccountSheet({ onClose, onLogout }) {
   useEffect(() => () => clearTimeout(saveTimer.current), [])
 
   useEffect(() => {
-    if (user) setForm({ full_name: user.full_name || '', program: user.program || '', year_level: user.year_level || '', section: user.section || '', avatar_url: user.avatar_url || '' })
+    if (user)
+      setForm({
+        surname: user.surname || '',
+        first_name: user.first_name || '',
+        middle_initial: user.middle_initial || '',
+        program: user.program || '',
+        year_level: user.year_level || '',
+        section: user.section || '',
+        avatar_url: user.avatar_url || '',
+      })
   }, [user])
 
   const autoSave = () => {
@@ -58,20 +67,29 @@ export default function AccountSheet({ onClose, onLogout }) {
     reader.readAsDataURL(f)
   }
 
-  const onNameChange = (v) => {
-    setForm((f2) => ({ ...f2, full_name: v }))
+  const onNameChange = (key) => (v) => {
+    setForm((f2) => ({ ...f2, [key]: v }))
     // Staff/leaders keep a plain name field — changes save automatically.
     autoSave()
   }
 
   const save = async () => {
-    if (!form.full_name?.trim()) {
-      toast('Name cannot be empty', 'err')
+    if (!form.first_name?.trim() || !form.surname?.trim()) {
+      toast('First name and surname are required', 'err')
       return
     }
     setSaving(true)
     try {
-      const updated = await api.upsertProfile({ id: user.id, full_name: form.full_name.trim(), program: form.program, year_level: form.year_level, section: form.section, avatar_url: form.avatar_url || null })
+      const updated = await api.upsertProfile({
+        id: user.id,
+        first_name: form.first_name.trim(),
+        surname: form.surname.trim(),
+        middle_initial: form.middle_initial || null,
+        program: form.program,
+        year_level: form.year_level,
+        section: form.section,
+        avatar_url: form.avatar_url || null,
+      })
       if (updated) setUser({ ...user, ...updated })
       toast('Profile saved')
     } catch (e) {
@@ -116,7 +134,7 @@ export default function AccountSheet({ onClose, onLogout }) {
               onClick={() => fileRef.current?.click()}
               aria-label="Change photo"
             >
-              {form.avatar_url ? <img src={form.avatar_url} alt="" /> : initials(form.full_name)}
+              {form.avatar_url ? <img src={form.avatar_url} alt="" /> : initials(form.first_name || user?.full_name || 'Member')}
             </button>
             <div>
               <button className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
@@ -133,10 +151,38 @@ export default function AccountSheet({ onClose, onLogout }) {
           </div>
         )}
         <div className="field">
-          <label>Full name</label>
-          <input value={form.full_name || ''} onChange={(e) => onNameChange(e.target.value)} autoComplete="name" />
-          {user?.role !== 'student' && <div className="mm-pic-hint">Changes are saved automatically.</div>}
+          <label>Surname</label>
+          <input
+            value={form.surname || ''}
+            onChange={(e) => onNameChange('surname')(e.target.value)}
+            autoComplete="family-name"
+            placeholder="Dela Cruz"
+          />
         </div>
+        <div className="field">
+          <label>First name</label>
+          <input
+            value={form.first_name || ''}
+            onChange={(e) => onNameChange('first_name')(e.target.value)}
+            autoComplete="given-name"
+            placeholder="Juan"
+          />
+        </div>
+        <div className="field">
+          <label>Middle initial</label>
+          <input
+            value={form.middle_initial || ''}
+            onChange={(e) => onNameChange('middle_initial')(e.target.value)}
+            maxLength={1}
+            autoComplete="off"
+            placeholder="M"
+            style={{ textTransform: 'uppercase' }}
+          />
+        </div>
+        <div className="mm-pic-hint">
+          ID format: {form.surname ? form.surname.toUpperCase() : 'SURNAME'}, {form.first_name ? form.first_name.toUpperCase() : 'FIRST'}{form.middle_initial ? ` ${form.middle_initial.toUpperCase()}.` : ''}
+        </div>
+        {user?.role !== 'student' && <div className="mm-pic-hint">Changes are saved automatically.</div>}
         {user?.role === 'student' && (
           <>
             <div className="field">

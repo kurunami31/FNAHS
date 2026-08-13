@@ -1,4 +1,4 @@
-import { supabase, isSupabase, SUPABASE_ENABLED } from '../supabase'
+﻿import { supabase, isSupabase, SUPABASE_ENABLED } from '../supabase'
 import { demoDb, DEMO_USER_ID, PROGRAMS, streamMockReply, seedFeeds } from './mock'
 import { uid } from './format'
 
@@ -25,6 +25,16 @@ function sanitizeUrl(value) {
   } catch {
     return null
   }
+}
+
+function composeFullName({ first_name, middle_initial, surname, full_name }) {
+  const first = sanitizeText(first_name, 60)
+  const surnameClean = sanitizeText(surname, 60)
+  if (first && surnameClean) {
+    const mi = sanitizeText(middle_initial, 1).toUpperCase().replace(/\.$/, '')
+    return [first, mi ? `${mi}.` : null, surnameClean].filter(Boolean).join(' ')
+  }
+  return sanitizeText(full_name, 120)
 }
 
 /* ---------------- database health flag ---------------- */
@@ -73,7 +83,7 @@ function saveDb(db) {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(db))
   } catch {
-    /* storage full / private mode — ignore */
+    /* storage full / private mode â€” ignore */
   }
 }
 
@@ -259,7 +269,7 @@ async function aiChat({ messages, onChunk }) {
     })
     if (error) throw error
     const text = typeof data === 'string' ? data : data?.reply || JSON.stringify(data)
-    // Not streamed — emit in chunks for a natural feel.
+    // Not streamed â€” emit in chunks for a natural feel.
     for (const chunk of text.match(/.{1,4}/gs) || [text]) {
       onChunk(chunk)
       await new Promise((r) => setTimeout(r, 12))
@@ -335,7 +345,7 @@ export const api = {
       // match by email so staff@fnahs.edu.ph maps to the staff account
       const found = Object.values(db.profiles).find((p) => p.email.toLowerCase() === email.toLowerCase())
       if (found && found.role === 'superadmin' && password !== ADMIN_PASSWORD) {
-        throw new Error('Incorrect admin password — see the README.')
+        throw new Error('Incorrect admin password â€” see the README.')
       }
       if (!found) {
         // any other demo email works; create on the fly
@@ -364,7 +374,7 @@ export const api = {
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name } } })
     if (error) throw error
     if (!data.session) {
-      // confirmation email flow — profile will be created by trigger
+      // confirmation email flow â€” profile will be created by trigger
       return { user: null, needsConfirmation: true }
     }
     return { user: await api.getProfile(data.user.id) }
@@ -383,7 +393,7 @@ export const api = {
     ? async (id) => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .eq('id', id)
           .maybeSingle()
         if (error) {
@@ -397,32 +407,35 @@ export const api = {
   upsertProfile: SUPABASE_ENABLED
     ? async (p) => {
         const patch = {
-          full_name: sanitizeText(p.full_name, 120),
+          full_name: composeFullName(p),
+          surname: sanitizeText(p.surname, 60) || null,
+          first_name: sanitizeText(p.first_name, 60) || null,
+          middle_initial: sanitizeText(p.middle_initial, 1).toUpperCase().replace(/\.$/, '') || null,
           program: sanitizeText(p.program, 120),
           year_level: sanitizeText(p.year_level, 20),
           section: sanitizeText(p.section, 20),
           avatar_url: sanitizeUrl(p.avatar_url),
         }
         // The profile row always exists (created at signup), and RLS has no
-        // INSERT policy — so upsert would be denied. A plain UPDATE is the
+        // INSERT policy â€” so upsert would be denied. A plain UPDATE is the
         // correct operation here and matches the self-edit policy.
         const { data, error } = await supabase
           .from('profiles')
           .update(patch)
           .eq('id', p.id)
-          .select('id, full_name, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
         return data
       }
     : async (p) => {
-        const clean = { ...p, full_name: sanitizeText(p.full_name, 120), avatar_url: sanitizeUrl(p.avatar_url) }
+        const clean = { ...p, full_name: composeFullName(p) || sanitizeText(p.full_name, 120), avatar_url: sanitizeUrl(p.avatar_url) }
         db.profiles[p.id] = { ...db.profiles[p.id], ...clean }
         saveDb(db)
         return db.profiles[p.id]
       },
 
-  /* privacy consent — the gate writes only the caller's own row */
+  /* privacy consent â€” the gate writes only the caller's own row */
   acceptPrivacyPolicy: SUPABASE_ENABLED
     ? async () => {
         const {
@@ -470,7 +483,7 @@ export const api = {
         return posts.map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
       },
 
-  /* directory — served by the security-definer get_directory() RPC (no email, no RLS gaps) */
+  /* directory â€” served by the security-definer get_directory() RPC (no email, no RLS gaps) */
   getMembers: SUPABASE_ENABLED
     ? async () => {
         const { data, error } = await supabase.rpc('get_directory').order('full_name')
@@ -550,7 +563,7 @@ export const api = {
 
   getUsers: SUPABASE_ENABLED
     ? async () => {
-        // security-definer RPC — only staff/superadmin may read profiles (incl. email)
+        // security-definer RPC â€” only staff/superadmin may read profiles (incl. email)
         const { data, error } = await supabase.rpc('admin_get_users')
         if (error) {
           markDbError(error)
@@ -590,7 +603,15 @@ export const api = {
   updateUser: SUPABASE_ENABLED
     ? async (id, patch) => {
         const clean = {}
-        if (patch.full_name !== undefined) clean.full_name = sanitizeText(patch.full_name, 120)
+        if (patch.surname !== undefined) clean.surname = sanitizeText(patch.surname, 60) || null
+        if (patch.first_name !== undefined) clean.first_name = sanitizeText(patch.first_name, 60) || null
+        if (patch.middle_initial !== undefined) clean.middle_initial = sanitizeText(patch.middle_initial, 1).toUpperCase().replace(/\.$/, '') || null
+        if (patch.surname !== undefined || patch.first_name !== undefined || patch.middle_initial !== undefined) {
+          clean.full_name = composeFullName({ ...patch })
+        }
+        if (patch.full_name !== undefined && patch.surname === undefined && patch.first_name === undefined) {
+          clean.full_name = sanitizeText(patch.full_name, 120)
+        }
         if (patch.program !== undefined) clean.program = sanitizeText(patch.program, 120)
         if (patch.year_level !== undefined) clean.year_level = sanitizeText(patch.year_level, 20)
         if (patch.avatar_url !== undefined) clean.avatar_url = sanitizeUrl(patch.avatar_url)
@@ -598,7 +619,7 @@ export const api = {
           .from('profiles')
           .update(clean)
           .eq('id', id)
-          .select('id, full_name, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
         return data

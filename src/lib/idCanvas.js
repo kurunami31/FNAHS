@@ -47,6 +47,18 @@ function loadImage(src, timeout = 8000) {
   })
 }
 
+async function loadAvatar(src) {
+  try {
+    const busted = `${src}${src.includes('?') ? '&' : '?'}dl=${Date.now()}`
+    const res = await fetch(busted)
+    if (!res.ok) throw new Error('fetch failed')
+    const blob = await res.blob()
+    return loadImage(URL.createObjectURL(blob))
+  } catch {
+    return loadImage(src, 4000)
+  }
+}
+
 export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   const ctx = c.getContext('2d')
   const W = ID_W
@@ -122,6 +134,13 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   ctx.textAlign = 'left'
 
   const name = profile?.full_name || 'Student Member'
+  const parts = name.trim().split(/\s+/)
+  const firstName =
+    (profile?.first_name || parts[0] || '').trim().replace(/\.$/, '') ||
+    profile?.first_name ||
+    ''
+  const surname = (profile?.surname || parts[parts.length - 1] || firstName).trim()
+  const middleInitial = (profile?.middle_initial || '').trim().replace(/\.$/, '').toUpperCase()
   const px = 44
   const py = 162
   const pw = 150
@@ -129,8 +148,8 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   let photoOk = false
   if (avatarUrl) {
     try {
-      const img = await loadImage(`${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}dl=${Date.now()}`)
-      const scale = Math.max(img.width / pw, img.height / ph)
+      const img = await loadAvatar(avatarUrl)
+      const scale = Math.min(img.width / pw, img.height / ph)
       const dw = img.width / scale
       const dh = img.height / scale
       const dx = px + (pw - dw) / 2
@@ -190,18 +209,16 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   ctx.font = `11px ${OCR}`
   ctx.fillText('NAME', cx, py + 26)
 
-  const parts = name.trim().split(/\s+/)
-  const first = parts[0] || ''
-  const last = parts.slice(1).join(' ') || first
-  if (first !== last) {
+  const smallName = `${firstName.toUpperCase()}${middleInitial ? ` ${middleInitial}.` : ''}`.trim()
+  if (smallName) {
     ctx.fillStyle = INK
     ctx.font = `14px ${OCR}`
-    ctx.fillText(first.toUpperCase(), cx, py + 50)
+    ctx.fillText(ellipse(smallName, 34), cx, py + 50)
   }
-  const ns = fitFont(ctx, last.toUpperCase(), FACE, 42, 18, cw)
+  const ns = fitFont(ctx, surname.toUpperCase(), FACE, 42, 18, cw)
   ctx.font = `700 ${ns}px ${FACE}`
   ctx.fillStyle = INK
-  ctx.fillText(ellipse(last.toUpperCase(), 26), cx, py + 88)
+  ctx.fillText(ellipse(surname.toUpperCase(), 26), cx, py + 88)
 
   ctx.fillStyle = MUT
   ctx.font = `11px ${OCR}`

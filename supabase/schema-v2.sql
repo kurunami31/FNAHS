@@ -27,6 +27,25 @@ alter table public.profiles add column if not exists privacy_policy_accepted_at 
 -- student class section (A/B/C/D…) — edited by students on their own profile
 alter table public.profiles add column if not exists section text;
 
+-- name broken into Surname / First name / Middle initial (ID format)
+alter table public.profiles add column if not exists surname text;
+alter table public.profiles add column if not exists first_name text;
+alter table public.profiles add column if not exists middle_initial text;
+
+update public.profiles
+set
+  first_name = s.parts[1],
+  surname = s.parts[array_length(s.parts, 1)],
+  middle_initial = case when array_length(s.parts, 1) > 2 then left(s.parts[2], 1) end
+from (
+  select id, string_to_array(trim(full_name), ' ') as parts
+  from public.profiles
+  where full_name is not null and full_name <> ''
+) s
+where public.profiles.id = s.id
+  and public.profiles.first_name is null
+  and public.profiles.surname is null;
+
 do $$
 begin
   if not exists (select 1 from pg_constraint where conname = 'profiles_positions_check') then

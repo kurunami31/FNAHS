@@ -2025,3 +2025,8 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
   .auth-logo img { height: 150px; }
   .brand-mobile img { width: 34px; height: 34px; }
 }
+
+/* FNAHS logo — emblem-first: thin rings, no double borders; artwork now square (trimmed PNG) */
+.seal { padding: 2px; border-width: 1.5px; box-shadow: var(--sh-sm); }
+.hero-seal { padding: 3px; border-width: 1.5px; box-shadow: 0 10px 30px -8px var(--accent-glow); }
+.hero-seal img { transform: scale(1.02); }
