@@ -288,9 +288,9 @@ create policy "staff can delete attendance"
 -- ---------- rate limits (Florence chat) ----------
 create table if not exists public.rate_limits (
   bucket text not null,
-  window timestamptz not null,
+  window_at timestamptz not null,
   calls int not null default 0,
-  primary key (bucket, window)
+  primary key (bucket, window_at)
 );
 
 alter table public.rate_limits enable row level security;
@@ -305,11 +305,11 @@ declare
   v_window timestamptz := to_timestamp(floor(extract(epoch from now()) / (p_window_minutes * 60)) * p_window_minutes * 60);
   v_calls int;
 begin
-  insert into public.rate_limits (bucket, window, calls)
+  insert into public.rate_limits (bucket, window_at, calls)
   values (p_bucket, v_window, 1)
-  on conflict (bucket, window) do update set calls = public.rate_limits.calls + 1
+  on conflict (bucket, window_at) do update set calls = public.rate_limits.calls + 1
   returning calls into v_calls;
-  delete from public.rate_limits where window < now() - interval '2 hours';
+  delete from public.rate_limits where window_at < now() - interval '2 hours';
   return v_calls <= p_max;
 end;
 $$;
