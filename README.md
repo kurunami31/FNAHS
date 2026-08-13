@@ -1,6 +1,6 @@
 # FNAHS · Community Platform
 
-A community platform for the **Faculty of Nursing and Allied Health Sciences**, with a clean clinical design — rebranded with the FNAHS logo and a green/cyan/gold palette drawn directly from it (sampled from the logo's own pixels).
+A community platform for the **Faculty of Nursing and Allied Health Sciences**, with a clean clinical design — rebranded with the FNAHS logo and a gold & white palette drawn directly from its two main colors.
 
 > One community for the FNAHS squad — attend org events with a scan, keep up with students, learn from live feeds, and get help from Florence, the in-house AI assistant.
 
@@ -13,7 +13,7 @@ A community platform for the **Faculty of Nursing and Allied Health Sciences**, 
 - **My ID** — digital student ID card with a QR code, scannable at events
 - **Staff tools** — camera-based QR scanner to log event attendance
 - **Settings** — profile, program/year level, dark/light theme
-- Calm clinical light theme by default (green/cyan/gold from the logo), dark theme toggle, PWA-ready
+- Gold & white light theme by default (the logo's two colors), pure-black night dark theme toggle, PWA-ready
 
 ## Run locally
 
