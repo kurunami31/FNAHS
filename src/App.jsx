@@ -1,10 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useApp } from './context/AppContext'
 import Layout from './components/Layout'
+import ChatWidget from './components/ChatWidget'
 import Home from './pages/Home'
 import Feed from './pages/Feed'
 import Events from './pages/Events'
-import Florence from './pages/Florence'
 import IdCard from './pages/IdCard'
 import Settings from './pages/Settings'
 import Staff from './pages/Staff'
@@ -13,7 +13,7 @@ import Signup from './pages/Signup'
 import { CheckCircle2, AlertCircle, Info } from 'lucide-react'
 
 export default function App() {
-  const { toasts } = useApp()
+  const { user, toasts } = useApp()
 
   return (
     <>
@@ -31,13 +31,14 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="feed" element={<Feed />} />
           <Route path="events" element={<Events />} />
-          <Route path="florence" element={<Florence />} />
           <Route path="idcard" element={<IdCard />} />
           <Route path="settings" element={<Settings />} />
           <Route path="staff" element={<Staff />} />
         </Route>
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>
+
+      {user && <ChatWidget />}
 
       <div className="toast-wrap">
         {toasts.map((t) => (

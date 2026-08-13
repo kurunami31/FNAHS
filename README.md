@@ -9,7 +9,7 @@ A community platform for the **Faculty of Nursing and Allied Health Sciences**, 
 - **Home** — hero with the FNAHS logo and live health-content feeds
 - **Feed** — org posts with likes, comments, image attachments, archive & delete, search
 - **Events** — upcoming org events with RSVP and event creation
-- **Florence** — the org's in-house AI assistant, named after Florence Nightingale (chat with streaming replies)
+- **Florence** — the org's in-house AI assistant, named after Florence Nightingale, now a floating chat bubble available on every page (chat with streaming replies)
 - **My ID** — digital student ID card with a QR code, scannable at events
 - **Staff tools** — camera-based QR scanner to log event attendance
 - **Settings** — profile, program/year level, dark/light theme

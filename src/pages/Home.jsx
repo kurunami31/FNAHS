@@ -40,7 +40,7 @@ export default function Home() {
                 <button className="btn btn--primary" onClick={() => navigate('/app/feed')}>
                   Open the feed <ArrowRight size={16} />
                 </button>
-                <button className="btn btn--ghost" onClick={() => navigate('/app/florence')}>
+                <button className="btn btn--ghost" onClick={() => window.dispatchEvent(new Event('florence:open'))}>
                   <Stethoscope size={16} /> Talk to Florence
                 </button>
               </>

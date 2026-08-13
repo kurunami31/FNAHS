@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
-  Home, Newspaper, CalendarDays, Stethoscope, CreditCard, Settings as SettingsIcon,
+  Home, Newspaper, CalendarDays, CreditCard, Settings as SettingsIcon,
   ShieldCheck, Search, Moon, Sun, Menu, LogOut,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
@@ -11,7 +11,6 @@ const NAV = [
   { to: '/app', label: 'Home', icon: Home, end: true },
   { to: '/app/feed', label: 'Feed', icon: Newspaper },
   { to: '/app/events', label: 'Events', icon: CalendarDays },
-  { to: '/app/florence', label: 'Florence', icon: Stethoscope },
   { to: '/app/idcard', label: 'My ID', icon: CreditCard },
 ]
 
