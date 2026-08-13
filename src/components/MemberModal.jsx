@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { X, Newspaper, CalendarDays } from 'lucide-react'
 import { api } from '../lib/api'
 import { initials, timeAgo } from '../lib/format'
+import { roleLabel, positionLabel } from '../rbac'
 
 export default function MemberModal({ member, onClose }) {
   const navigate = useNavigate()
@@ -31,13 +32,16 @@ export default function MemberModal({ member, onClose }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             <h3 className="mm-name">{member.full_name}</h3>
             <div className="mm-role">
-              {member.role === 'staff' ? (
-                <span className="badge badge--done">faculty</span>
-              ) : (
-                <span className="badge">student</span>
-              )}
+              <span className="badge badge--done">{roleLabel(member.role)}</span>
               <span className="chip">{member.program || '—'} · YR {member.year_level || '—'}</span>
             </div>
+            {!!member.positions?.length && (
+              <div className="mm-positions">
+                {member.positions.map((p) => (
+                  <span key={p} className="badge">{positionLabel(p)}</span>
+                ))}
+              </div>
+            )}
           </div>
           <button className="icon-btn" onClick={onClose} aria-label="Close profile">
             <X size={18} />
@@ -54,7 +58,7 @@ export default function MemberModal({ member, onClose }) {
             <span>events going</span>
           </div>
           <div className="mm-stat">
-            <b>{member.role === 'staff' ? 'FACULTY' : 'STUDENT'}</b>
+            <b>{roleLabel(member.role)}</b>
             <span>role</span>
           </div>
         </div>

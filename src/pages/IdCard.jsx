@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { toPng } from 'html-to-image'
 import { Download, ShieldCheck, Loader2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { can } from '../rbac'
+import { can, roleLabel, positionLabel } from '../rbac'
 import { api } from '../lib/api'
 import { initials, monthDay, timeAgo } from '../lib/format'
 
@@ -98,7 +98,10 @@ export default function IdCard() {
               <div className="id-rows">
                 <div className="id-row">PROGRAM&nbsp;&nbsp;<b>{user?.program || 'BS Nursing'}</b></div>
                 <div className="id-row">YEAR&nbsp;&nbsp;<b>{user?.year_level || '—'}</b></div>
-                <div className="id-row">ROLE&nbsp;&nbsp;<b>{isStaff ? 'Faculty' : 'Student'}</b></div>
+                <div className="id-row">ROLE&nbsp;&nbsp;<b>{roleLabel(user?.role)}</b></div>
+                {!!user?.positions?.length && (
+                  <div className="id-row">POSITION&nbsp;&nbsp;<b>{user.positions.map(positionLabel).join(' · ')}</b></div>
+                )}
               </div>
             </div>
           </div>

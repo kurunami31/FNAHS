@@ -345,7 +345,7 @@ export const api = {
     ? async (id) => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, program, year_level, role, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .eq('id', id)
           .maybeSingle()
         if (error) {
@@ -368,7 +368,7 @@ export const api = {
         const { data, error } = await supabase
           .from('profiles')
           .upsert(patch, { onConflict: 'id' })
-          .select('id, full_name, program, year_level, role, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
         return data
@@ -556,7 +556,7 @@ export const api = {
           .from('profiles')
           .update(clean)
           .eq('id', id)
-          .select('id, full_name, program, year_level, role, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
         return data

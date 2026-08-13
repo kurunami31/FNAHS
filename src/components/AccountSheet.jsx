@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { can } from '../rbac'
+import { roleLabel, positionLabel } from '../rbac'
 import { api } from '../lib/api'
 import { initials } from '../lib/format'
 import { PROGRAMS, ORG_FULL } from '../lib/mock'
@@ -140,10 +140,19 @@ export default function AccountSheet({ onClose, onLogout }) {
         <div className="sheet-row">
           <div className="sr-txt">
             <h5>Role</h5>
-            <p>{user?.role || 'student'} — {isStaff(user) ? 'can use staff tools' : 'member access'}</p>
+            <p>{roleLabel(user?.role)} — {accessText(user)}</p>
           </div>
           <ShieldCheck size={16} style={{ color: 'var(--muted)' }} />
         </div>
+        {!!user?.positions?.length && (
+          <div className="sheet-row">
+            <div className="sr-txt">
+              <h5>Position</h5>
+              <p>{user.positions.map(positionLabel).join(' · ')}</p>
+            </div>
+            <ShieldCheck size={16} style={{ color: 'var(--muted)' }} />
+          </div>
+        )}
         <div className="sheet-row">
           <div className="sr-txt">
             <h5>Organization</h5>
@@ -158,6 +167,10 @@ export default function AccountSheet({ onClose, onLogout }) {
   )
 }
 
-function isStaff(u) {
-  return can(u, 'attendance.scan') || can(u, 'console.access')
+function accessText(u) {
+  if (!u) return 'member access'
+  if (u.role === 'superadmin') return 'owner access'
+  if (u.role === 'moderator') return 'moderator tools'
+  if (u.positions?.length) return 'officer tools'
+  return 'member access'
 }

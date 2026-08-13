@@ -1545,3 +1545,20 @@ html[data-theme='dark'] .id-card {
   .privacy-actions { flex-direction: column-reverse; }
   .privacy-actions .privacy-btn { justify-content: center; width: 100%; }
 }
+
+.dir-positions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.mm-positions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.pos-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.pos-chip {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font: 600 0.78rem/1.2 var(--f-body);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.pos-chip:hover { border-color: var(--accent); color: var(--ink); }
+.pos-chip--on { background: var(--brand-grad); border-color: transparent; color: var(--accent-ink); }
+.field-hint { font-weight: 400; font-size: 0.74rem; color: var(--muted); margin-left: 6px; }

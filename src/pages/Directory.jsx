@@ -3,6 +3,7 @@ import { Users, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
 import { initials } from '../lib/format'
+import { positionLabel } from '../rbac'
 import MemberModal from '../components/MemberModal'
 
 export default function Directory() {
@@ -80,9 +81,18 @@ export default function Directory() {
               <div className="member-av">{m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}</div>
               <div style={{ minWidth: 0 }}>
                 <div className="member-name">{m.full_name}</div>
-                <div className="member-meta">{m.role === 'staff' ? 'Faculty' : m.program || 'Student'} · YR {m.year_level || '—'}</div>
+                <div className="member-meta">{m.program || 'Student'} · YR {m.year_level || '—'}</div>
+                {!!m.positions?.length && (
+                  <div className="dir-positions">
+                    {m.positions.map((p) => (
+                      <span key={p} className="badge">{positionLabel(p)}</span>
+                    ))}
+                  </div>
+                )}
               </div>
-              {m.role === 'staff' && <span className="badge badge--done" style={{ marginLeft: 'auto' }}>faculty</span>}
+              {m.role === 'moderator' && !m.positions?.length && (
+                <span className="badge badge--done" style={{ marginLeft: 'auto' }}>moderator</span>
+              )}
             </div>
           ))}
         </div>

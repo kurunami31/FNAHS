@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ShieldAlert, Users, Newspaper, CalendarDays, Plus, Pencil, Trash2, X, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { can } from '../rbac'
+import { can, POSITIONS, positionLabel } from '../rbac'
 import { api } from '../lib/api'
 import { initials, timeAgo, monthDay } from '../lib/format'
 import { PROGRAMS } from '../lib/mock'
@@ -150,6 +150,13 @@ export default function Admin() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{m.full_name}</div>
                   <div className="ledger-meta">{m.email} · {m.program || '—'} · YR {m.year_level || '—'}</div>
+                  {!!m.positions?.length && (
+                    <div className="dir-positions">
+                      {m.positions.map((p) => (
+                        <span key={p} className="badge">{positionLabel(p)}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <select
                   className="role-select"
@@ -278,8 +285,8 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
   const { toast } = useApp()
   const [form, setForm] = useState(() =>
     mode === 'edit'
-      ? { full_name: member.full_name || '', email: member.email || '', program: member.program || PROGRAMS[0], year_level: member.year_level || '1', role: member.role || 'student' }
-      : { full_name: '', email: '', program: PROGRAMS[0], year_level: '1', role: 'student' }
+      ? { full_name: member.full_name || '', email: member.email || '', program: member.program || PROGRAMS[0], year_level: member.year_level || '1', role: member.role || 'student', positions: member.positions || [] }
+      : { full_name: '', email: '', program: PROGRAMS[0], year_level: '1', role: 'student', positions: [] }
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -292,10 +299,13 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
     setSaving(true)
     try {
       if (mode === 'edit') {
-        const { role, ...rest } = form
+        const { role, positions, ...rest } = form
         const row = await api.updateUser(member.id, rest)
         if (role && role !== member.role) await api.changeRole(member.id, role)
-        onSaved({ ...(row || { ...member, ...rest }), role })
+        if (JSON.stringify(positions || []) !== JSON.stringify(member.positions || [])) {
+          await api.setPositions(member.id, positions || [])
+        }
+        onSaved({ ...(row || { ...member, ...rest }), role, positions })
       } else {
         const row = await api.createUser(form)
         onSaved(row)
@@ -344,6 +354,26 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
               <option key={r} value={r}>{r}</option>
             ))}
           </select>
+        </div>
+        <div className="field">
+          <label>Positions <span className="field-hint">(what tools the member gets — pick none for a plain member)</span></label>
+          <div className="pos-grid">
+            {POSITIONS.map((p) => {
+              const on = form.positions?.includes(p)
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  className={`pos-chip${on ? ' pos-chip--on' : ''}`}
+                  onClick={() =>
+                    setForm((f) => ({ ...f, positions: on ? f.positions.filter((x) => x !== p) : [...(f.positions || []), p] }))
+                  }
+                >
+                  {positionLabel(p)}
+                </button>
+              )
+            })}
+          </div>
         </div>
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
