@@ -22,6 +22,7 @@ export default function AccountSheet({ onClose, onLogout }) {
         surname: user.surname || '',
         first_name: user.first_name || '',
         middle_initial: user.middle_initial || '',
+        id_no: user.id_no || '',
         program: user.program || '',
         year_level: user.year_level || '',
         section: user.section || '',
@@ -78,6 +79,11 @@ export default function AccountSheet({ onClose, onLogout }) {
       toast('First name and surname are required', 'err')
       return
     }
+    const idNo = form.id_no?.trim() || ''
+    if (idNo && !/^\d{4}-\d{4}$/.test(idNo)) {
+      toast('ID no. must look like 2024-0001 (4 digits, dash, 4 digits)', 'err')
+      return
+    }
     setSaving(true)
     try {
       const updated = await api.upsertProfile({
@@ -85,6 +91,7 @@ export default function AccountSheet({ onClose, onLogout }) {
         first_name: form.first_name.trim(),
         surname: form.surname.trim(),
         middle_initial: form.middle_initial || null,
+        id_no: idNo || null,
         program: form.program,
         year_level: form.year_level,
         section: form.section,
@@ -185,6 +192,17 @@ export default function AccountSheet({ onClose, onLogout }) {
         {user?.role !== 'student' && <div className="mm-pic-hint">Changes are saved automatically.</div>}
         {user?.role === 'student' && (
           <>
+            <div className="field">
+              <label>ID no.</label>
+              <input
+                value={form.id_no || ''}
+                onChange={(e) => setForm({ ...form, id_no: e.target.value })}
+                placeholder="2024-0001"
+                maxLength={9}
+                autoComplete="off"
+                inputMode="numeric"
+              />
+            </div>
             <div className="field">
               <label>Program</label>
               <select value={form.program || ''} onChange={(e) => setForm({ ...form, program: e.target.value })}>

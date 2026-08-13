@@ -32,6 +32,9 @@ alter table public.profiles add column if not exists surname text;
 alter table public.profiles add column if not exists first_name text;
 alter table public.profiles add column if not exists middle_initial text;
 
+-- school ID number in xxxx-yyyy format (shown on the digital ID)
+alter table public.profiles add column if not exists id_no text;
+
 update public.profiles
 set
   first_name = s.parts[1],

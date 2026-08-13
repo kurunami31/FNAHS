@@ -393,7 +393,7 @@ export const api = {
     ? async (id) => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, surname, first_name, middle_initial, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .eq('id', id)
           .maybeSingle()
         if (error) {
@@ -411,6 +411,7 @@ export const api = {
           surname: sanitizeText(p.surname, 60) || null,
           first_name: sanitizeText(p.first_name, 60) || null,
           middle_initial: sanitizeText(p.middle_initial, 1).toUpperCase().replace(/\.$/, '') || null,
+          id_no: sanitizeText(p.id_no, 12),
           program: sanitizeText(p.program, 120),
           year_level: sanitizeText(p.year_level, 20),
           section: sanitizeText(p.section, 20),
@@ -423,7 +424,7 @@ export const api = {
           .from('profiles')
           .update(patch)
           .eq('id', p.id)
-          .select('id, full_name, surname, first_name, middle_initial, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
         return data
@@ -606,6 +607,7 @@ export const api = {
         if (patch.surname !== undefined) clean.surname = sanitizeText(patch.surname, 60) || null
         if (patch.first_name !== undefined) clean.first_name = sanitizeText(patch.first_name, 60) || null
         if (patch.middle_initial !== undefined) clean.middle_initial = sanitizeText(patch.middle_initial, 1).toUpperCase().replace(/\.$/, '') || null
+        if (patch.id_no !== undefined) clean.id_no = sanitizeText(patch.id_no, 12)
         if (patch.surname !== undefined || patch.first_name !== undefined || patch.middle_initial !== undefined) {
           clean.full_name = composeFullName({ ...patch })
         }
@@ -619,7 +621,7 @@ export const api = {
           .from('profiles')
           .update(clean)
           .eq('id', id)
-          .select('id, full_name, surname, first_name, middle_initial, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
         return data

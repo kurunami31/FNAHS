@@ -91,7 +91,7 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
 
   let sealOk = false
   try {
-    const seal = await loadImage('/FNAHS.png')
+    const seal = await loadImage('/dorsu-logo.png')
     ctx.save()
     rr(ctx, 28, 28, 76, 76, 16)
     ctx.clip()
@@ -108,7 +108,7 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
     ctx.fillStyle = '#fffdf6'
     ctx.font = `700 30px ${FACE}`
     ctx.textAlign = 'center'
-    ctx.fillText('F', 66, 76)
+    ctx.fillText('D', 66, 76)
     ctx.textAlign = 'left'
   }
 
@@ -141,10 +141,13 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
     ''
   const surname = (profile?.surname || parts[parts.length - 1] || firstName).trim()
   const middleInitial = (profile?.middle_initial || '').trim().replace(/\.$/, '').toUpperCase()
-  const px = 44
-  const py = 162
+  const py = 156
   const pw = 150
   const ph = 187
+  const qy = py
+  const qs = 184
+  const px = cx - (pw + 26 + qs) / 2
+  const qx = px + pw + 26
   let photoOk = false
   if (avatarUrl) {
     try {
@@ -182,9 +185,6 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   rr(ctx, px, py, pw, ph, 16)
   ctx.stroke()
 
-  const qx = l - 210
-  const qy = py
-  const qs = 210
   if (qr) {
     try {
       const qImg = await loadImage(qr)
@@ -200,29 +200,29 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   ctx.fillStyle = MUT
   ctx.font = `11px ${OCR}`
   ctx.textAlign = 'center'
-  ctx.fillText('SCAN ME', qx + qs / 2, qy + qs + 22)
+  ctx.fillText('SCAN ME', qx + qs / 2, qy + qs + 16)
   ctx.textAlign = 'left'
 
-  const cx = 220
-  const cw = qx - cx - 24
+  const nameBottom = py + ph + 12
   ctx.fillStyle = MUT
   ctx.font = `11px ${OCR}`
-  ctx.fillText('NAME', cx, py + 26)
+  ctx.textAlign = 'center'
+  ctx.fillText('NAME', cx, nameBottom)
 
   const smallName = `${firstName.toUpperCase()}${middleInitial ? ` ${middleInitial}.` : ''}`.trim()
   if (smallName) {
     ctx.fillStyle = INK
     ctx.font = `14px ${OCR}`
-    ctx.fillText(ellipse(smallName, 34), cx, py + 50)
+    ctx.fillText(ellipse(smallName, 34), cx, nameBottom + 22)
   }
-  const ns = fitFont(ctx, surname.toUpperCase(), FACE, 42, 18, cw)
+  const ns = fitFont(ctx, surname.toUpperCase(), FACE, 42, 18, 480)
   ctx.font = `700 ${ns}px ${FACE}`
   ctx.fillStyle = INK
-  ctx.fillText(ellipse(surname.toUpperCase(), 26), cx, py + 88)
+  ctx.fillText(ellipse(surname.toUpperCase(), 26), cx, nameBottom + 54)
 
   ctx.fillStyle = MUT
   ctx.font = `11px ${OCR}`
-  ctx.fillText('DETAILS', cx, py + 122)
+  ctx.fillText('DETAILS', cx, nameBottom + 86)
 
   const rows = []
   if (profile?.program) rows.push(['PROGRAM', profile.program])
@@ -230,36 +230,22 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   if (profile?.section) rows.push(['SEC', profile.section])
   if (profile?.role && profile.role !== 'student') rows.push(['ROLE', profile.role.replace(/^\w/, (ch) => ch.toUpperCase())])
   if (profile?.positions?.length) rows.push(['POSITION', profile.positions.join(' · ')])
-  const serial = String(profile?.id || 'demo').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12)
-  rows.push(['ID', serial])
 
-  ctx.font = `14px ${OCR}`
-  const rowY = py + 148
+  ctx.font = `13px ${OCR}`
+  const rowY = nameBottom + 110
   rows.forEach(([k, v], i) => {
     ctx.fillStyle = ROW
-    ctx.fillText(`${k} : ${ellipse(String(v).toUpperCase(), 30)}`, cx, rowY + i * 24)
+    ctx.fillText(`${k} : ${ellipse(String(v).toUpperCase(), 34)}`, cx, rowY + i * 18)
   })
 
-  const ey = H - 76
-  ctx.strokeStyle = 'rgba(192, 144, 0, 0.55)'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  let x = 44
-  ctx.moveTo(x, ey)
-  x += 200
-  ctx.lineTo(x, ey)
-  ctx.lineTo(x + 14, ey - 12)
-  ctx.lineTo(x + 28, ey + 10)
-  ctx.lineTo(x + 42, ey)
-  x += 42
-  ctx.lineTo(l, ey)
-  ctx.stroke()
+  const serial = String(profile?.id || 'demo').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12)
+  const idRef = profile?.id_no ? String(profile.id_no).toUpperCase() : serial
 
   ctx.fillStyle = MUT
   ctx.font = `12px ${OCR}`
   ctx.fillText('DAVAO ORIENTAL STATE UNIVERSITY', 44, H - 30)
   ctx.fillStyle = GOLD_D
   ctx.textAlign = 'right'
-  ctx.fillText('FNAHS · NURSING & ALLIED HEALTH SCIENCES', l, H - 30)
+  ctx.fillText(`ID : ${idRef}`, l, H - 30)
   ctx.textAlign = 'left'
 }
