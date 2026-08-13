@@ -15,7 +15,13 @@ function sanitizeUrl(value) {
   if (!value) return null
   try {
     const url = new URL(value)
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null
+    if (url.protocol === 'https:' || url.protocol === 'http:') return url.href
+    // Uploads are client-side resized to data:image URLs (jpeg/png/webp/gif).
+    // Cap the payload so a stray huge blob can't bloat the profiles/posts rows.
+    if (url.protocol === 'data:' && /^data:image\/(jpeg|png|webp|gif);base64,/i.test(value) && value.length <= 2_500_000) {
+      return value
+    }
+    return null
   } catch {
     return null
   }

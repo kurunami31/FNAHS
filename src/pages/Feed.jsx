@@ -81,8 +81,32 @@ export default function Feed() {
     }
     const reader = new FileReader()
     reader.onload = () => {
-      setImageData(reader.result)
-      setImage(file.name)
+      // Animated GIFs pass through untouched; everything else is re-encoded
+      // to a ≤1200px JPEG so the stored data URL stays lean.
+      const accept = (dataUrl) => {
+        if (dataUrl.length > 2_500_000) {
+          toast('Image too large — try a smaller photo', 'err')
+          return
+        }
+        setImageData(dataUrl)
+        setImage(file.name)
+      }
+      if (file.type === 'image/gif') {
+        accept(reader.result)
+        return
+      }
+      const img = new Image()
+      img.onload = () => {
+        const MAX = 1200
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(img.width * scale)
+        canvas.height = Math.round(img.height * scale)
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+        accept(canvas.toDataURL('image/jpeg', 0.82))
+      }
+      img.onerror = () => accept(reader.result)
+      img.src = reader.result
     }
     reader.readAsDataURL(file)
   }
