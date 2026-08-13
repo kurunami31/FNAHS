@@ -266,6 +266,38 @@ async function aiChat({ messages, onChunk }) {
   }
 }
 
+/* ---------------- WHO health centre ---------------- */
+
+let whoNewsCache = null
+let whoNewsCacheAt = 0
+
+async function getWhoNews() {
+  if (whoNewsCache && Date.now() - whoNewsCacheAt < 15 * 60e3) return whoNewsCache
+  if (SUPABASE_ENABLED && supabase) {
+    try {
+      const { data, error } = await supabase.functions.invoke('who-news')
+      if (!error && Array.isArray(data?.articles) && data.articles.length) {
+        whoNewsCache = data.articles
+        whoNewsCacheAt = Date.now()
+        return whoNewsCache
+      }
+      if (error) console.warn('who-news edge function:', error.message || error)
+    } catch (e) {
+      console.warn('who-news unavailable, using WHO RSS fallback:', e)
+    }
+  }
+  // Fallback: WHO's official RSS headlines (same source the Feed uses).
+  const feeds = await getFeeds()
+  whoNewsCacheAt = Date.now()
+  return (feeds.news || []).map((n) => ({
+    title: n.title,
+    url: n.url,
+    image: null,
+    source: 'WHO',
+    published_at: n.created_at,
+  }))
+}
+
 /* ---------------- unified API surface ---------------- */
 
 export const api = {
@@ -728,6 +760,7 @@ export const api = {
           .filter((t) => t.count > 0),
 
   getFeeds,
+  getWhoNews,
   aiChat,
 
   /* ---------------- announcements (announcer-gated by RLS) ---------------- */

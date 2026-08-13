@@ -4,6 +4,7 @@ import {
   Home as HomeIcon,
   Newspaper,
   CalendarDays,
+  HeartPulse,
   Users,
   CreditCard,
   ShieldCheck,
@@ -26,6 +27,7 @@ const NAV = [
   { to: '/app', label: 'Home', icon: HomeIcon, end: true },
   { to: '/app/feed', label: 'Feed', icon: Newspaper },
   { to: '/app/events', label: 'Events', icon: CalendarDays },
+  { to: '/app/health', label: 'Health', icon: HeartPulse },
   { to: '/app/directory', label: 'Directory', icon: Users },
   { to: '/app/idcard', label: 'My ID', icon: CreditCard },
 ]
@@ -33,6 +35,7 @@ const NAV = [
 const SECTION = [
   ['/app/feed', 'feed'],
   ['/app/events', 'events'],
+  ['/app/health', 'health centre'],
   ['/app/directory', 'directory'],
   ['/app/idcard', 'my id'],
   ['/app/staff', 'staff tools'],
