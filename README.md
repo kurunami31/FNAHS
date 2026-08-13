@@ -16,7 +16,7 @@ A community platform for the **Faculty of Nursing and Allied Health Sciences**, 
 - **Admin console** — moderation hub for superadmins, staff, and moderators: manage members (roles, edit, delete), posts (edit, archive, delete), and events (edit, delete)
 - **Account sheet** — profile, program/year level, dark/light theme, sign out (slide-over from the avatar)
 - **Search** — Ctrl+K command search across posts and members
-- Gold & white light theme by default (the logo's two colors), pure-black night dark theme toggle, PWA-ready
+- Institutional gold &amp; white house style (the logo's two colors, maroon-tinted gold with a printed-circuit grid), PWA-ready
 
 ## Run locally
 

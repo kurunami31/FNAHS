@@ -6,7 +6,7 @@ import { initials } from '../lib/format'
 import { PROGRAMS, ORG_FULL } from '../lib/mock'
 
 export default function AccountSheet({ onClose, onLogout }) {
-  const { user, setUser, theme, setTheme, toast } = useApp()
+  const { user, setUser, toast } = useApp()
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const fileRef = useRef(null)
@@ -125,27 +125,6 @@ export default function AccountSheet({ onClose, onLogout }) {
         <button className="btn btn--primary btn--block" onClick={save} disabled={saving}>
           {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save profile
         </button>
-      </div>
-
-      <div className="sheet-sec">
-        <h4>Display</h4>
-        <div className="sheet-row">
-          <div className="sr-txt">
-            <h5>{theme === 'dark' ? 'Night mode' : 'Day mode'}</h5>
-            <p>Pure-black night shift or gold &amp; white day shift.</p>
-          </div>
-          <label className="switch">
-            <input type="checkbox" checked={theme === 'dark'} onChange={() => setTheme()} aria-label="Toggle theme" />
-            <span className="track" />
-          </label>
-        </div>
-        <div className="sheet-row">
-          <div className="sr-txt">
-            <h5>Institutional look</h5>
-            <p>Maroon-tinted gold with a printed-circuit grid — the FNAHS house style.</p>
-          </div>
-          <span className="badge badge--done" style={{ marginRight: 2 }}>applied</span>
-        </div>
       </div>
 
       <div className="sheet-sec">
