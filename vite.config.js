@@ -17,7 +17,6 @@ const CSP = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'none'",
   "upgrade-insecure-requests",
 ].join('; ')
 
