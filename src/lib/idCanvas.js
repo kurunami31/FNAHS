@@ -116,7 +116,7 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   ctx.textAlign = 'right'
   ctx.fillStyle = GOLD_D
   ctx.font = `700 22px ${OCR}`
-  ctx.fillText('FNAHS', l, 52)
+  ctx.fillText('FNAHS · PULSO', l, 52)
   ctx.fillStyle = MUT
   ctx.font = `12px ${OCR}`
   ctx.fillText('FACULTY OF NURSING & ALLIED HEALTH SCIENCES', l, 76)
@@ -131,7 +131,7 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   ctx.fillStyle = '#fff8e6'
   ctx.font = `14px ${OCR}`
   ctx.textAlign = 'center'
-  ctx.fillText('OFFICIAL STUDENT IDENTITY · FNAHS', W / 2, sy + 20)
+  ctx.fillText('OFFICIAL STUDENT IDENTITY · FNAHS PULSO', W / 2, sy + 20)
   ctx.textAlign = 'left'
 
   const name = profile?.full_name || 'Student Member'

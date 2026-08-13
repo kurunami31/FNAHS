@@ -102,7 +102,7 @@ export default function IdCard() {
       // Desktop path: file share sheet if supported (Chromium/Edge), else direct download.
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], title: 'FNAHS ID', text: 'My FNAHS digital ID.' })
+          await navigator.share({ files: [file], title: 'FNAHS PULSO ID', text: 'My FNAHS PULSO digital ID.' })
           setTimeout(() => URL.revokeObjectURL(url), 4000)
         } catch (shareErr) {
           if (shareErr.name !== 'AbortError') saveToDownloads()
@@ -130,7 +130,7 @@ export default function IdCard() {
       <h1 className="page-title">
         MY ID <span className="page-kicker">digital id pass</span>
       </h1>
-      <p className="page-sub">One QR ID for every FNAHS event — scan at the door and attendance is logged on the fly.</p>
+      <p className="page-sub">One QR ID for every FNAHS PULSO event — scan at the door and attendance is logged on the fly.</p>
 
       <div className="id-stage">
         {preview ? (

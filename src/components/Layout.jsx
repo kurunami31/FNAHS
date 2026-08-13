@@ -52,7 +52,7 @@ export default function Layout() {
 
   const canScan = can(user, 'attendance.scan')
   const canConsole = can(user, 'console.access')
-  const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || [, 'FNAHS'])[1]
+  const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || [, 'FNAHS PULSO'])[1]
   const [dbNotice, setDbNotice] = useState(false)
 
   useEffect(() => {
@@ -151,10 +151,10 @@ export default function Layout() {
       <header className="topbar">
         <NavLink to="/app" className="brand-mobile" aria-label="FNAHS home">
           <img src="/FNAHS.png" alt="" />
-          <span>FNAHS</span>
+          <span>FNAHS PULSO</span>
         </NavLink>
         <div className="top-ctx">
-          FNAHS <b>/</b> {section}
+          FNAHS PULSO <b>/</b> {section}
         </div>
         <div className="spacer" />
         <NotificationsBell />

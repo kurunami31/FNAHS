@@ -111,7 +111,7 @@ export default function ChatWidget() {
           <div className="chat-head">
             <span className="dot" />
             <div>
-              <h2>Florence · FNAHS</h2>
+              <h2>Florence · FNAHS PULSO</h2>
               <div className="sub">{isDemo ? 'demo replies · ' : ''}assistant online · nursing & allied health</div>
             </div>
             <Sparkles size={18} style={{ color: 'var(--accent)' }} />

@@ -35,9 +35,9 @@ export default function Login() {
           <img src="/FNAHS.png" alt="FNAHS logo" />
           <div>
             <div style={{ fontFamily: 'var(--f-id)', fontSize: '1.3rem', lineHeight: 1.1 }}>
-              FNAHS
+              FNAHS <span style={{ color: 'var(--gold)', fontStyle: 'italic' }}>PULSO</span>
             </div>
-            <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>community platform</div>
+            <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>proactive &amp; united legion of student nurses</div>
           </div>
         </div>
         <Ecg className="auth-ecg" />
@@ -72,7 +72,7 @@ export default function Login() {
         </form>
 
         <p className="auth-note">
-          No account yet? <Link to="/signup" style={{ color: 'var(--accent)' }}>Join FNAHS</Link><br />
+          No account yet? <Link to="/signup" style={{ color: 'var(--accent)' }}>Join FNAHS PULSO</Link><br />
           {isDemo ? 'Staff demo: staff@fnahs.edu.ph · Admin demo: fnahsadmin@fnahs.edu.ph / dorsufnahs2026' : 'Reserved for the students of the Faculty of Nursing and Allied Health Sciences.'}
         </p>
       </div>

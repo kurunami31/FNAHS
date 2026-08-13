@@ -52,8 +52,10 @@ export default function Home() {
           <img src="/FNAHS.png" alt="FNAHS seal" />
         </div>
         <div className="hero-eyebrow d2">faculty of nursing &amp; allied health sciences</div>
-        <h1 className="hero-title d3">FNAHS</h1>
-        <div className="hero-fac d3">community platform · est. 2026</div>
+        <h1 className="hero-title d3">
+          FNAHS <em>PULSO</em>
+        </h1>
+        <div className="hero-fac d3">pulso · proactive &amp; united legion of student nurses organization</div>
         <p className="hero-tagline d4">{ORG_TAGLINE}</p>
         <Ecg className="hero-ecg d5" />
         <div className="hero-actions d6">

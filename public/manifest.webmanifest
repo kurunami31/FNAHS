@@ -1,7 +1,7 @@
-{
-  "name": "FNAHS",
-  "short_name": "FNAHS",
-  "description": "The community platform of the Faculty of Nursing and Allied Health Sciences.",
+﻿{
+  "name": "FNAHS · PULSO",
+  "short_name": "FNAHS PULSO",
+  "description": "FNAHS · PULSO — Proactive and United Legion of Student nurses Organization, the Faculty of Nursing and Allied Health Sciences community platform.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -12,3 +12,4 @@
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
+

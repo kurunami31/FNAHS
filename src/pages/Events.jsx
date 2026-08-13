@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+﻿import { useCallback, useEffect, useState } from 'react'
 import { CalendarDays, MapPin, Clock, Plus, Check, X, Users } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
@@ -57,7 +57,7 @@ export default function Events() {
     <div className="page-c">
       <div className="events-head">
         <h1 className="page-title">EVENTS</h1>
-        <p className="page-sub">Org events — scan your ID QR at the door to log attendance.</p>
+        <p className="page-sub">Org events â€” scan your ID QR at the door to log attendance.</p>
         {canCreate && (
           <button className="btn btn--primary" onClick={() => setModal(true)}>
             <Plus size={16} /> Create event
@@ -164,7 +164,7 @@ function CreateEventModal({ onClose, onCreate }) {
         {error && <div className="form-error">{error}</div>}
         <div className="field">
           <label>Event title</label>
-          <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. FNAHS General Assembly" />
+          <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. FNAHS PULSO General Assembly" />
         </div>
         <div className="field">
           <label>Description</label>
@@ -185,10 +185,11 @@ function CreateEventModal({ onClose, onCreate }) {
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn--primary" disabled={saving} onClick={submit}>
-            {saving ? 'Saving…' : 'Publish event'}
+            {saving ? 'Savingâ€¦' : 'Publish event'}
           </button>
         </div>
       </div>
     </div>
   )
 }
+

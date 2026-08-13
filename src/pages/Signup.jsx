@@ -45,13 +45,13 @@ export default function Signup() {
           <img src="/FNAHS.png" alt="FNAHS logo" />
           <div>
             <div style={{ fontFamily: 'var(--f-id)', fontSize: '1.3rem', lineHeight: 1.1 }}>
-              FNAHS
+              FNAHS <span style={{ color: 'var(--gold)', fontStyle: 'italic' }}>PULSO</span>
             </div>
-            <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>community platform</div>
+            <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>proactive &amp; united legion of student nurses</div>
           </div>
         </div>
         <Ecg className="auth-ecg" />
-        <h1 className="auth-title">Join <em>FNAHS</em></h1>
+        <h1 className="auth-title">Join <em>FNAHS PULSO</em></h1>
         <p className="auth-sub">One last step — then you're in.</p>
 
         {isDemo && (

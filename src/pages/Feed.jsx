@@ -169,7 +169,7 @@ export default function Feed() {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <textarea
-            placeholder="Share something with the FNAHS community…"
+            placeholder="Share something with the FNAHS PULSO community…"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
