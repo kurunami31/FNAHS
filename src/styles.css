@@ -651,7 +651,7 @@ img { max-width: 100%; }
   padding: 5px 2px;
 }
 .composer textarea::placeholder { color: var(--muted); }
-.composer .composer-side { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+.composer .composer-side { display: flex; flex-direction: row; gap: 8px; align-items: flex-end; }
 
 .post-card {
   position: relative;
