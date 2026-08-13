@@ -13,6 +13,7 @@ const CSP = [
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.allorigins.win",
+  "manifest-src 'self' https://vercel.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

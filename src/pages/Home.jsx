@@ -10,7 +10,7 @@ import EventModal from '../components/EventModal'
 export default function Home() {
   const { user } = useApp()
   const navigate = useNavigate()
-  const [feeds, setFeeds] = useState(() => ({ health: seedFeeds().health, tips: seedFeeds().tips }))
+  const [feeds, setFeeds] = useState(() => ({ health: seedFeeds().health, tips: seedFeeds().tips, news: seedFeeds().health }))
   const [events, setEvents] = useState([])
   const [selected, setSelected] = useState(null)
   const [memberCount, setMemberCount] = useState(0)
