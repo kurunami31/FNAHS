@@ -413,9 +413,9 @@ export const api = {
           throw error
         }
         setDbStatus('ok')
-        return data || []
+        return (data || []).filter((m) => m.role !== 'superadmin')
       }
-    : () => Object.values(db.profiles),
+    : () => Object.values(db.profiles).filter((m) => m.role !== 'superadmin'),
 
   createPost: SUPABASE_ENABLED
     ? async ({ content, image_url }) => {

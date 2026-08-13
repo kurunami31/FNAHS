@@ -323,6 +323,7 @@ set search_path = public
 as $$
   select id, full_name, program, year_level, role, avatar_url, created_at
   from public.profiles
+  where role is distinct from 'superadmin'
   order by full_name;
 $$;
 
