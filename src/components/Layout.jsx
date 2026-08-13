@@ -9,8 +9,11 @@ import {
   ShieldCheck,
   Settings2,
   Search,
+  AlertTriangle,
+  X,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { api } from '../lib/api'
 import { initials } from '../lib/format'
 import AccountSheet from './AccountSheet'
 import SearchOverlay from './SearchOverlay'
@@ -45,6 +48,14 @@ export default function Layout() {
   const isStaff = ['staff', 'superadmin'].includes(user?.role)
   const isAdmin = ADMIN_ROLES.includes(user?.role)
   const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || [, 'FNAHS'])[1]
+  const [dbNotice, setDbNotice] = useState(false)
+
+  useEffect(() => {
+    const check = () => setDbNotice(api.dbStatus === 'missing' && api.isSupabase)
+    check()
+    window.addEventListener('fnahs:dbstatus', check)
+    return () => window.removeEventListener('fnahs:dbstatus', check)
+  }, [])
 
   useEffect(() => {
     const onKey = (e) => {
@@ -70,6 +81,18 @@ export default function Layout() {
 
   return (
     <div className="app-shell">
+      {dbNotice && (
+        <div className="db-banner" role="alert">
+          <AlertTriangle size={16} />
+          <p>
+            <b>Database not set up yet.</b> Run <code>supabase/schema.sql</code> in your Supabase SQL editor to
+            enable the community pages.
+          </p>
+          <button className="icon-btn" onClick={() => setDbNotice(false)} aria-label="Dismiss" title="Dismiss">
+            <X size={16} />
+          </button>
+        </div>
+      )}
       <aside className="seal-rail">
         <NavLink to="/app" className="seal" aria-label="FNAHS home" title="FNAHS">
           <img src="/FNAHS.png" alt="FNAHS seal" />

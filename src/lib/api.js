@@ -21,6 +21,23 @@ function sanitizeUrl(value) {
   }
 }
 
+/* ---------------- database health flag ---------------- */
+
+let dbStatus = 'ok' // 'ok' | 'missing'
+
+function setDbStatus(s) {
+  if (dbStatus === s) return
+  dbStatus = s
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('fnahs:dbstatus'))
+}
+
+function markDbError(error) {
+  const code = error?.code
+  if (code === 'PGRST202' || code === '42501' || error?.status === 404 || error?.status === 403) {
+    setDbStatus('missing')
+  }
+}
+
 /* ---------------- demo store (localStorage) ---------------- */
 
 const LS_KEY = 'fnahs-db-v2'
@@ -256,6 +273,10 @@ export const api = {
     return isSupabase
   },
 
+  get dbStatus() {
+    return dbStatus
+  },
+
   /* auth */
   getSession() {
     if (!SUPABASE_ENABLED) {
@@ -327,7 +348,10 @@ export const api = {
           .select('id, full_name, program, year_level, role, avatar_url, created_at')
           .eq('id', id)
           .maybeSingle()
-        if (error || !data) return null
+        if (error) {
+          markDbError(error)
+          return null
+        }
         return data
       }
     : demoGetProfile,
@@ -364,7 +388,11 @@ export const api = {
           .select('*, comments(*), post_likes(user_id), profiles!posts_user_id_fkey(full_name, avatar_url, program)')
           .is('archived_at', null)
           .order('created_at', { ascending: false })
-        if (error) throw error
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
         return (data || []).map((p) => ({
           ...p,
           likes: (p.post_likes || []).map((l) => l.user_id),
@@ -380,7 +408,11 @@ export const api = {
   getMembers: SUPABASE_ENABLED
     ? async () => {
         const { data, error } = await supabase.rpc('get_directory').order('full_name')
-        if (error) throw error
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
         return data || []
       }
     : () => Object.values(db.profiles),
@@ -450,7 +482,11 @@ export const api = {
     ? async () => {
         // security-definer RPC — only staff/superadmin may read profiles (incl. email)
         const { data, error } = await supabase.rpc('admin_get_users')
-        if (error) throw error
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
         return data || []
       }
     : () => Object.values(db.profiles),
@@ -547,7 +583,11 @@ export const api = {
           .select('*, rsvps(*)')
           .gte('ends_at', new Date(Date.now() - 24 * 3600e3).toISOString())
           .order('starts_at', { ascending: true })
-        if (error) throw error
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
         return (data || []).map((e) => ({
           ...e,
           rsvps: Object.fromEntries((e.rsvps || []).map((r) => [r.user_id, r.status])),

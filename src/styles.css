@@ -99,6 +99,21 @@ img { max-width: 100%; }
    SHELL — seal rail + topbar + main
    ============================================================ */
 .app-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
+.db-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--warn) 15%, var(--paper));
+  border-bottom: 1px solid color-mix(in srgb, var(--warn) 40%, var(--line));
+  color: var(--ink);
+}
+.db-banner p { margin: 0; font-size: 0.85rem; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.db-banner code { font-family: var(--f-ocr); font-size: 0.75rem; background: var(--bg); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line-strong); }
+.db-banner .icon-btn { margin-left: auto; flex: none; }
 
 .seal-rail {
   position: fixed;
