@@ -35,9 +35,11 @@ npm run build      # production build
 ## Florence (AI assistant)
 
 1. `npx supabase init && npx supabase functions deploy florence-ai`
-2. `npx supabase secrets set OPENAI_API_KEY=sk-...`
-   - Optional: `OPENAI_BASE_URL` (any OpenAI-compatible API) and `OPENAI_MODEL` (default `gpt-4o-mini`).
-3. Until then, the chat falls back to built-in demo replies so the UI always works.
+2. Set the LLM provider key:
+   - **Groq** (recommended — fast, free tier): `npx supabase secrets set OPENAI_API_KEY=gsk_...` — a `gsk_` key is auto-routed to Groq with `llama-3.3-70b-versatile`.
+   - **OpenAI**: `npx supabase secrets set OPENAI_API_KEY=sk-...` (default model `gpt-4o-mini`).
+   - Optional overrides: `OPENAI_BASE_URL` and `OPENAI_MODEL` for any other OpenAI-compatible API.
+3. Until the function is deployed, the chat falls back to built-in demo replies so the UI always works.
 
 ## Stack
 

@@ -2,10 +2,11 @@
 //
 // Deploy:
 //   supabase functions deploy florence-ai
-//   supabase secrets set OPENAI_API_KEY=sk-...
+//   supabase secrets set OPENAI_API_KEY=gsk_...   (Groq)  or  sk-...  (OpenAI)
 //
-// It talks to any OpenAI-compatible chat API (OpenAI, DeepSeek, Groq, etc.).
-// Override the base URL with OPENAI_BASE_URL if needed.
+// Talks to any OpenAI-compatible chat API (OpenAI, Groq, DeepSeek, etc.).
+// Keys starting with gsk_ are auto-routed to Groq with a Groq default model.
+// Override with OPENAI_BASE_URL / OPENAI_MODEL if needed.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
@@ -57,8 +58,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    const base = Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1'
-    const model = Deno.env.get('OPENAI_MODEL') || 'gpt-4o-mini'
+    // gsk_ keys are Groq — route them automatically.
+    const isGroq = apiKey.startsWith('gsk_')
+    const base = Deno.env.get('OPENAI_BASE_URL') || (isGroq ? 'https://api.groq.com/openai/v1' : 'https://api.openai.com/v1')
+    const model = Deno.env.get('OPENAI_MODEL') || (isGroq ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini')
 
     const upstream = await fetch(`${base}/chat/completions`, {
       method: 'POST',
