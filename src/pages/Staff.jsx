@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ShieldCheck, Camera, CameraOff, Users, QrCode } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useApp } from '../context/AppContext'
@@ -81,7 +81,7 @@ export default function Staff() {
       setScanning(true)
     } catch (e) {
       console.error(e)
-      toast('Could not start the camera â€” check permissions', 'err')
+      toast('Could not start the camera — check permissions', 'err')
     }
   }
 
@@ -139,7 +139,7 @@ export default function Staff() {
         <div className="field" style={{ marginBottom: 0 }}>
           <label>Pick the active event</label>
           <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
-            {events.length === 0 && <option value="">No events yetâ€¦</option>}
+            {events.length === 0 && <option value="">No events yet…</option>}
             {events.map((e) => (
               <option key={e.id} value={e.id}>{e.title}</option>
             ))}
@@ -186,7 +186,7 @@ export default function Staff() {
         </div>
         {last && (
           <div className="form-ok" style={{ marginTop: 14, marginBottom: 0 }}>
-            Last scan: <b>{last.id.slice(0, 8)}</b> Â· {timeAgo(last.at)}
+            Last scan: <b>{last.id.slice(0, 8)}</b> · {timeAgo(last.at)}
           </div>
         )}
       </section>
@@ -218,7 +218,7 @@ export default function Staff() {
                     {a.profiles?.program
                       ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}`
                       : ''}{' '}
-                    Â· scanned {timeAgo(a.scanned_at)}
+                    · scanned {timeAgo(a.scanned_at)}
                   </div>
                 </div>
                 <span className="badge badge--ok">present</span>

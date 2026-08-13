@@ -1,5 +1,5 @@
-﻿/* ============================================================
-   FNAHS â€” "The Clinic" Â· v2 identity
+/* ============================================================
+   FNAHS — "The Clinic" · v2 identity
    Faculty of Nursing and Allied Health Sciences community platform.
    Identity rebuilt from the institutional seal:
    gold (#C09000 family) Ã— white in light mode,
@@ -140,7 +140,7 @@ img { max-width: 100%; }
 .d4 { animation-delay: 0.26s; } .d5 { animation-delay: 0.33s; } .d6 { animation-delay: 0.4s; }
 
 /* ============================================================
-   SHELL â€” seal rail + topbar + main
+   SHELL — seal rail + topbar + main
    ============================================================ */
 .app-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
 .db-banner {
@@ -309,7 +309,7 @@ img { max-width: 100%; }
 .page-sub { color: var(--muted); font-size: 0.92rem; margin: 2px 0 28px; }
 
 /* ============================================================
-   MOBILE â€” bottom tab bar + topbar adapt
+   MOBILE — bottom tab bar + topbar adapt
    ============================================================ */
 .tabbar { display: none; }
 
@@ -546,7 +546,7 @@ img { max-width: 100%; }
 }
 
 /* ============================================================
-   HOME â€” seal hero, vitals, briefs, rounds
+   HOME — seal hero, vitals, briefs, rounds
    ============================================================ */
 .seal-hero {
   position: relative;
@@ -646,7 +646,7 @@ img { max-width: 100%; }
 }
 
 /* ============================================================
-   FEED â€” bulletin board
+   FEED — bulletin board
    ============================================================ */
 .composer {
 display: flex;
@@ -746,7 +746,7 @@ display: flex;
 }
 
 /* ============================================================
-   EVENTS â€” rounds ticket stubs
+   EVENTS — rounds ticket stubs
    ============================================================ */
 .event-ticket {
   display: flex;
@@ -853,7 +853,7 @@ display: flex;
 .member-count b { color: var(--gold); font-weight: 400; }
 
 /* ============================================================
-   ID CARD â€” hospital badge
+   ID CARD — hospital badge
    ============================================================ */
 .id-stage { display: flex; flex-direction: column; align-items: center; gap: 18px; }
 .id-card {
@@ -991,7 +991,7 @@ html[data-theme='dark'] .id-card {
 .id-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
 /* ============================================================
-   STAFF â€” rounds ledger
+   STAFF — rounds ledger
    ============================================================ */
 .ledger { border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--paper); box-shadow: var(--sh-sm); }
 .ledger-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
@@ -1026,7 +1026,7 @@ html[data-theme='dark'] .id-card {
 @keyframes fnahs-spin { to { transform: rotate(360deg); } }
 
 /* ============================================================
-   ADMIN â€” moderation console
+   ADMIN — moderation console
    ============================================================ */
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
 .tab-btn {
@@ -1150,7 +1150,7 @@ html[data-theme='dark'] .id-card {
 }
 
 /* ============================================================
-   FLORENCE â€” floating chat
+   FLORENCE — floating chat
    ============================================================ */
 .chat-fab {
   position: fixed;
@@ -1864,7 +1864,7 @@ html[data-theme='dark'] .sec-head::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='8'%3E%3Cpath d='M0 4h34l3-3 5 6 5-6 3 3h70' fill='none' stroke='%23f0c948' stroke-width='1.4'/%3E%3C/svg%3E");
 }
 
-/* vitals read like a patient monitor â€” live dot per channel */
+/* vitals read like a patient monitor — live dot per channel */
 .vital::after {
   content: '';
   position: absolute;
@@ -1883,7 +1883,7 @@ html[data-theme='dark'] .sec-head::after {
   100% { box-shadow: 0 0 0 0 transparent; }
 }
 
-/* clinical briefs â€” IV port dot on the rail */
+/* clinical briefs — IV port dot on the rail */
 .brief { position: relative; }
 .brief::before {
   content: '';
@@ -1912,7 +1912,7 @@ html[data-theme='dark'] .sec-head::after {
   -webkit-mask-image: radial-gradient(620px 340px at 50% 0%, #000 25%, transparent 75%);
 }
 
-/* ID card â€” static ECG printout strip (safe for image export) */
+/* ID card — static ECG printout strip (safe for image export) */
 .id-ecg {
   height: 14px;
   margin-top: 10px;
@@ -1926,7 +1926,7 @@ html[data-theme='dark'] .sec-head::after {
   .vital::after { animation: none; }
 }
 
-/* ID card â€” mobile: let the card grow so the details never clip */
+/* ID card — mobile: let the card grow so the details never clip */
 .id-card { width: min(430px, 100%); }
 .id-row b { min-width: 0; white-space: normal; }
 .id-row { align-items: flex-start; }
@@ -1947,7 +1947,7 @@ html[data-theme='dark'] .sec-head::after {
   .id-ecg { margin-top: 6px; height: 11px; }
 }
 
-/* ID card â€” bigger QR, reorganized balance */
+/* ID card — bigger QR, reorganized balance */
 .id-card { aspect-ratio: auto; min-height: 330px; }
 .id-photo { width: 88px; }
 .id-foot { align-items: center; }
@@ -1960,7 +1960,7 @@ html[data-theme='dark'] .sec-head::after {
   .id-qr-box { width: 108px; height: 108px; padding: 6px; }
 }
 
-/* ID card â€” photo + QR side by side, details full-width below */
+/* ID card — photo + QR side by side, details full-width below */
 .id-mid { flex-direction: column; gap: 14px; }
 .id-mid-row { display: flex; align-items: center; justify-content: center; gap: 22px; }
 .id-photo { width: 108px; height: 108px; }
@@ -1974,7 +1974,7 @@ html[data-theme='dark'] .sec-head::after {
   .id-mid-row { gap: 16px; }
 }
 
-/* ID card â€” photo left, QR right, first/last name under photo */
+/* ID card — photo left, QR right, first/last name under photo */
 .id-mid-row { justify-content: space-between; align-items: center; }
 .id-photo { width: 112px; height: 112px; }
 .id-qr-block { gap: 6px; }
@@ -1990,7 +1990,7 @@ html[data-theme='dark'] .sec-head::after {
   .id-last { font-size: 1.1rem; }
 }
 
-/* ID card â€” bsitcodex-inspired refinements (strip, labels, portrait photo, foot lines) */
+/* ID card — bsitcodex-inspired refinements (strip, labels, portrait photo, foot lines) */
 .id-card { background: linear-gradient(170deg, #fffdf6 0%, #fdf9ef 55%, #f6ecce 100%); border: 1.5px solid var(--id-line); }
 html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0%, #0c0c0c 100%); }
 .id-strip { background: linear-gradient(90deg, var(--gold), #a06d00); color: #fff8e6; font-family: var(--f-ocr); font-size: 0.58rem; letter-spacing: 0.26em; text-transform: uppercase; text-align: center; padding: 5px 0 4px; box-shadow: 0 1px rgba(120, 80, 0, 0.25); }
@@ -2009,11 +2009,11 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
   .id-strip { font-size: 0.54rem; letter-spacing: 0.2em; }
 }
 
-/* ID card â€” canvas-rendered preview (bsitcodex-style artifact) */
+/* ID card — canvas-rendered preview (bsitcodex-style artifact) */
 .id-preview { width: min(430px, 100%); height: auto; border-radius: var(--r-lg); box-shadow: var(--sh-lg); display: block; margin: 0 auto; background: #fff; }
 .id-card-loading { width: min(430px, 100%); aspect-ratio: 856 / 430; border-radius: var(--r-lg); border: 1.5px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: var(--f-ocr); font-size: 0.8rem; letter-spacing: 0.1em; text-align: center; margin: 0 auto; background: var(--paper); }
 
-/* FNAHS logo â€” bigger everywhere so the org marks are clearly seen */
+/* FNAHS logo — bigger everywhere so the org marks are clearly seen */
 .seal { width: 64px; height: 64px; padding: 5px; }
 .brand-mobile img { width: 38px; height: 38px; }
 .hero-seal { width: 124px; height: 124px; }
@@ -2026,7 +2026,7 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
   .brand-mobile img { width: 34px; height: 34px; }
 }
 
-/* FNAHS logo â€” emblem-first: thin rings, no double borders; artwork now square (trimmed PNG) */
+/* FNAHS logo — emblem-first: thin rings, no double borders; artwork now square (trimmed PNG) */
 .seal { padding: 2px; border-width: 1.5px; box-shadow: var(--sh-sm); }
 .hero-seal { padding: 3px; border-width: 1.5px; box-shadow: 0 10px 30px -8px var(--accent-glow); }
 .hero-seal img { transform: scale(1.02); }

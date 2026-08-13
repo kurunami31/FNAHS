@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ShieldAlert, Users, Newspaper, CalendarDays, Plus, Pencil, Trash2, X, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can, POSITIONS, positionLabel } from '../rbac'
@@ -46,7 +46,7 @@ export default function Admin() {
   }
 
   const needle = q.trim().toLowerCase()
-  // superadmin accounts stay invisible in the console â€” nobody can manage
+  // superadmin accounts stay invisible in the console — nobody can manage
   // the owner account from the UI, and it never shows up in member lists.
   const visibleMembers = members
     .filter((m) => m.role !== 'superadmin')
@@ -135,7 +135,7 @@ export default function Admin() {
           <div className="admin-toolbar">
             <div className="dir-search">
               <Search size={17} />
-              <input placeholder="Search membersâ€¦" value={q} onChange={(e) => setQ(e.target.value)} />
+              <input placeholder="Search members…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
             <button className="btn btn--primary" onClick={() => setMemberModal({ mode: 'create' })}>
               <Plus size={15} /> Add member
@@ -149,7 +149,7 @@ export default function Admin() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{m.full_name}</div>
-                  <div className="ledger-meta">{m.email} Â· {m.program || 'â€”'} Â· YR {m.year_level || 'â€”'}</div>
+                  <div className="ledger-meta">{m.email} · {m.program || '—'} · YR {m.year_level || '—'}</div>
                   {!!m.positions?.length && (
                     <div className="dir-positions">
                       {m.positions.map((p) => (
@@ -187,7 +187,7 @@ export default function Admin() {
           <div className="admin-toolbar">
             <div className="dir-search">
               <Search size={17} />
-              <input placeholder="Search postsâ€¦" value={q} onChange={(e) => setQ(e.target.value)} />
+              <input placeholder="Search posts…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
           </div>
           <div className="ledger">
@@ -197,7 +197,7 @@ export default function Admin() {
                 <div className="ledger-row" key={p.id}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="post-clamp">{p.content}</div>
-                    <div className="ledger-meta">{p.author?.full_name || 'unknown'} Â· {timeAgo(p.created_at)} Â· {p.likes?.length || 0} likes</div>
+                    <div className="ledger-meta">{p.author?.full_name || 'unknown'} · {timeAgo(p.created_at)} · {p.likes?.length || 0} likes</div>
                   </div>
                   <div className="admin-actions">
                     <button className="icon-btn" title="Edit" onClick={() => setPostModal(p)}>
@@ -227,7 +227,7 @@ export default function Admin() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{e.title}</div>
-                  <div className="ledger-meta">{e.location} Â· {timeAgo(e.starts_at)}</div>
+                  <div className="ledger-meta">{e.location} · {timeAgo(e.starts_at)}</div>
                 </div>
                 <div className="admin-actions">
                   <button className="icon-btn" title="Edit" onClick={() => setEventModal(e)}>
@@ -342,8 +342,8 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
         <div className="field">
           <label>Year level</label>
           <select value={form.year_level} onChange={(e) => setForm({ ...form, year_level: e.target.value })}>
-            {['1', '2', '3', '4', 'â€”'].map((y) => (
-              <option key={y} value={y}>{y === 'â€”' ? 'Faculty' : `Year ${y}`}</option>
+            {['1', '2', '3', '4', '—'].map((y) => (
+              <option key={y} value={y}>{y === '—' ? 'Faculty' : `Year ${y}`}</option>
             ))}
           </select>
         </div>
@@ -356,7 +356,7 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
           </select>
         </div>
         <div className="field">
-          <label>Positions <span className="field-hint">(what tools the member gets â€” pick none for a plain member)</span></label>
+          <label>Positions <span className="field-hint">(what tools the member gets — pick none for a plain member)</span></label>
           <div className="pos-grid">
             {POSITIONS.map((p) => {
               const on = form.positions?.includes(p)
@@ -378,7 +378,7 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn--primary" disabled={saving} onClick={submit}>
-            {saving ? 'Savingâ€¦' : mode === 'edit' ? 'Save changes' : 'Create member'}
+            {saving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Create member'}
           </button>
         </div>
       </div>
@@ -414,7 +414,7 @@ function PostEditModal({ post, onClose, onSaved }) {
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn--primary" disabled={saving || !content.trim()} onClick={submit}>
-            {saving ? 'Savingâ€¦' : 'Save changes'}
+            {saving ? 'Saving…' : 'Save changes'}
           </button>
         </div>
       </div>
@@ -484,7 +484,7 @@ function EventEditModal({ event, onClose, onSaved }) {
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn--primary" disabled={saving} onClick={submit}>
-            {saving ? 'Savingâ€¦' : 'Save changes'}
+            {saving ? 'Saving…' : 'Save changes'}
           </button>
         </div>
       </div>

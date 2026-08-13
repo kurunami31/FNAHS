@@ -1,4 +1,4 @@
-﻿import { supabase, isSupabase, SUPABASE_ENABLED } from '../supabase'
+import { supabase, isSupabase, SUPABASE_ENABLED } from '../supabase'
 import { demoDb, DEMO_USER_ID, PROGRAMS, streamMockReply, seedFeeds } from './mock'
 import { uid } from './format'
 
@@ -83,7 +83,7 @@ function saveDb(db) {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(db))
   } catch {
-    /* storage full / private mode â€” ignore */
+    /* storage full / private mode — ignore */
   }
 }
 
@@ -269,7 +269,7 @@ async function aiChat({ messages, onChunk }) {
     })
     if (error) throw error
     const text = typeof data === 'string' ? data : data?.reply || JSON.stringify(data)
-    // Not streamed â€” emit in chunks for a natural feel.
+    // Not streamed — emit in chunks for a natural feel.
     for (const chunk of text.match(/.{1,4}/gs) || [text]) {
       onChunk(chunk)
       await new Promise((r) => setTimeout(r, 12))
@@ -345,7 +345,7 @@ export const api = {
       // match by email so staff@fnahs.edu.ph maps to the staff account
       const found = Object.values(db.profiles).find((p) => p.email.toLowerCase() === email.toLowerCase())
       if (found && found.role === 'superadmin' && password !== ADMIN_PASSWORD) {
-        throw new Error('Incorrect admin password â€” see the README.')
+        throw new Error('Incorrect admin password — see the README.')
       }
       if (!found) {
         // any other demo email works; create on the fly
@@ -374,7 +374,7 @@ export const api = {
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name } } })
     if (error) throw error
     if (!data.session) {
-      // confirmation email flow â€” profile will be created by trigger
+      // confirmation email flow — profile will be created by trigger
       return { user: null, needsConfirmation: true }
     }
     return { user: await api.getProfile(data.user.id) }
@@ -418,7 +418,7 @@ export const api = {
           avatar_url: sanitizeUrl(p.avatar_url),
         }
         // The profile row always exists (created at signup), and RLS has no
-        // INSERT policy â€” so upsert would be denied. A plain UPDATE is the
+        // INSERT policy — so upsert would be denied. A plain UPDATE is the
         // correct operation here and matches the self-edit policy.
         const { data, error } = await supabase
           .from('profiles')
@@ -436,7 +436,7 @@ export const api = {
         return db.profiles[p.id]
       },
 
-  /* privacy consent â€” the gate writes only the caller's own row */
+  /* privacy consent — the gate writes only the caller's own row */
   acceptPrivacyPolicy: SUPABASE_ENABLED
     ? async () => {
         const {
@@ -484,7 +484,7 @@ export const api = {
         return posts.map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
       },
 
-  /* directory â€” served by the security-definer get_directory() RPC (no email, no RLS gaps) */
+  /* directory — served by the security-definer get_directory() RPC (no email, no RLS gaps) */
   getMembers: SUPABASE_ENABLED
     ? async () => {
         const { data, error } = await supabase.rpc('get_directory').order('full_name')
@@ -564,7 +564,7 @@ export const api = {
 
   getUsers: SUPABASE_ENABLED
     ? async () => {
-        // security-definer RPC â€” only staff/superadmin may read profiles (incl. email)
+        // security-definer RPC — only staff/superadmin may read profiles (incl. email)
         const { data, error } = await supabase.rpc('admin_get_users')
         if (error) {
           markDbError(error)
