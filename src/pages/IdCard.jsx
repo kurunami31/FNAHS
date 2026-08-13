@@ -41,23 +41,37 @@ export default function IdCard() {
       } catch {
         /* ignore */
       }
-      const dataUrl = await toPng(node, { pixelRatio: Math.min(window.devicePixelRatio || 1, 2) })
-      const file = new File([await (await fetch(dataUrl)).blob()], 'FNAHS-ID.png', { type: 'image/png' })
-      const fallback = () => {
+      const blob = await (await fetch(await toPng(node, { pixelRatio: Math.min(window.devicePixelRatio || 1, 2) }))).blob()
+      const url = URL.createObjectURL(blob)
+      const file = new File([blob], 'FNAHS-ID.png', { type: 'image/png' })
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '')
+
+      const saveToDownloads = () => {
         const a = document.createElement('a')
-        a.href = dataUrl
+        a.href = url
         a.download = 'FNAHS-ID.png'
+        a.rel = 'noopener'
         a.click()
+        setTimeout(() => URL.revokeObjectURL(url), 4000)
         toast('Saved — check your downloads folder')
       }
+
+      // Mobile path: native share sheet (Save to Files / Save Image on iOS, Share on Android).
+      // Desktop path: file share sheet if supported (Chromium/Edge), else direct download.
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: 'FNAHS ID', text: 'My FNAHS digital ID.' })
+          setTimeout(() => URL.revokeObjectURL(url), 4000)
         } catch (err) {
-          if (err.name !== 'AbortError') fallback()
+          if (err.name !== 'AbortError') saveToDownloads()
         }
+      } else if (isIOS) {
+        // iOS without file sharing: open the image so the user can long-press → Save Image.
+        window.open(url, '_blank')
+        setTimeout(() => URL.revokeObjectURL(url), 60_000)
+        toast('Tap and hold the image to save it')
       } else {
-        fallback()
+        saveToDownloads()
       }
     } catch (e) {
       console.error(e)

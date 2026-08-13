@@ -31,7 +31,7 @@ npm run build      # production build
 ## Go live with Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run `supabase/schema.sql` in the SQL Editor → **Authentication → Providers → enable Email confirmations**.
+2. Run `supabase/schema.sql` and `supabase/schema-v2.sql` in the SQL Editor (roles: student/moderator/superadmin + officer positions; email confirmation is disabled — new signups can log in immediately).
 3. Create `.env.local` (see `.env.example`) with your project URL + anon key.
 4. Promote your first staff account — must run in the SQL editor (postgres bypasses RLS):
    `update public.profiles set role = 'superadmin' where id = (select id from auth.users where email = '<your email>');`
