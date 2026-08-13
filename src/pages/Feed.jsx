@@ -67,8 +67,15 @@ export default function Feed() {
   const pickImage = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if (!allowed.includes(file.type)) {
+      toast('Only JPEG, PNG, WebP or GIF images', 'err')
+      e.target.value = ''
+      return
+    }
     if (file.size > 4 * 1024 * 1024) {
       toast('Image too large (max 4MB)', 'err')
+      e.target.value = ''
       return
     }
     const reader = new FileReader()
@@ -151,7 +158,7 @@ export default function Feed() {
           )}
         </div>
         <div className="composer-side">
-          <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickImage} />
+          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={pickImage} />
           <button className="icon-btn" title="Attach an image" onClick={() => fileRef.current?.click()}>
             <ImagePlus size={20} />
           </button>

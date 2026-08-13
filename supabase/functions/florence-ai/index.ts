@@ -3,16 +3,28 @@
 // Deploy:
 //   supabase functions deploy florence-ai
 //   supabase secrets set OPENAI_API_KEY=gsk_...   (Groq)  or  sk-...  (OpenAI)
+//   supabase secrets set FLORENCE_ORIGINS=https://your-site.example   (comma-separated)
 //
 // Talks to any OpenAI-compatible chat API (OpenAI, Groq, DeepSeek, etc.).
 // Keys starting with gsk_ are auto-routed to Groq with a Groq default model.
 // Override with OPENAI_BASE_URL / OPENAI_MODEL if needed.
+//
+// Security: caller must be an authenticated FNAHS user (JWT), requests are
+// rate-limited (bump_rate), input is size-capped, client messages are forced
+// to user/assistant roles, and CORS is restricted to FLORENCE_ORIGINS.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+)
+
+const ALLOWED_ORIGINS = new Set(
+  (Deno.env.get('FLORENCE_ORIGINS') || Deno.env.get('SUPABASE_URL') || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
 )
 
 const SYSTEM_PROMPT = `You are Florence, the friendly AI assistant of FNAHS — the Faculty of Nursing and Allied Health Sciences student community platform. You are named after Florence Nightingale, the founder of modern nursing.
@@ -23,38 +35,77 @@ Keep answers concise, practical, and study-focused. You help nursing and allied 
 - general org questions about the community platform
 Be warm but professional. Use short markdown (bold, lists). Never invent drug doses or give medical advice that could be dangerous; when unsure, recommend consulting clinical instructors or official references.`
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+const baseHeaders = (origin: string) => ({
+  'Access-Control-Allow-Origin': origin || 'null',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  'Access-Control-Max-Age': '86400',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
+  'Cache-Control': 'no-store',
+  'X-Frame-Options': 'DENY',
+})
+
+const json = (body: unknown, status = 200, origin = '') =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...baseHeaders(origin), 'Content-Type': 'application/json' },
+  })
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  const origin = req.headers.get('Origin') || ''
+  const browserRequest = origin !== ''
+  if (browserRequest && !ALLOWED_ORIGINS.has(origin)) {
+    return json({ error: 'origin not allowed' }, 403, origin)
+  }
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { status: 204, headers: baseHeaders(origin) })
+  }
 
   try {
     const authHeader = req.headers.get('Authorization') || ''
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return json({ error: 'unauthorized' }, 401, origin)
+    }
+
+    // Rate limit: 20 calls per minute per user (Postgres-backed, via service role).
+    const { data: allowed, error: rateError } = await supabase.rpc('bump_rate', {
+      p_bucket: `florence:${user.id}`,
+      p_max: 20,
+      p_window_minutes: 1,
+    })
+    if (rateError || allowed === false) {
+      return json({ error: 'rate limited — slow down' }, 429, origin)
+    }
+
+    if (!req.headers.get('content-type')?.includes('application/json')) {
+      return json({ error: 'json body required' }, 415, origin)
     }
 
     const { messages } = await req.json()
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return new Response(JSON.stringify({ error: 'messages required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    if (!Array.isArray(messages) || messages.length === 0 || messages.length > 24) {
+      return json({ error: 'messages required (1–24)' }, 400, origin)
+    }
+
+    // Only user/assistant roles pass through — never trust a client-supplied system prompt.
+    const clean = messages
+      .filter((m) => m && (m.role === 'user' || m.role === 'assistant'))
+      .map((m) => ({ role: m.role, content: String(m.content ?? '').slice(0, 4000) }))
+    if (clean.length === 0) {
+      return json({ error: 'no usable messages' }, 400, origin)
+    }
+    const totalChars = clean.reduce((n, m) => n + m.content.length, 0)
+    if (totalChars > 16000) {
+      return json({ error: 'payload too large' }, 413, origin)
     }
 
     const apiKey = Deno.env.get('OPENAI_API_KEY')
     if (!apiKey) {
-      return new Response(
-        JSON.stringify({ reply: "Florence's brain isn't wired up yet — ask a staff member to set the OPENAI_API_KEY secret. 🧠" }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      return json(
+        { reply: "Florence's brain isn't wired up yet — ask a staff member to set the OPENAI_API_KEY secret. 🧠" },
+        200,
+        origin
       )
     }
 
@@ -71,7 +122,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model,
-        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...clean],
         max_tokens: 700,
       }),
     })
@@ -79,23 +130,15 @@ Deno.serve(async (req) => {
     if (!upstream.ok) {
       const detail = await upstream.text()
       console.error('upstream error', upstream.status, detail)
-      return new Response(JSON.stringify({ error: 'upstream failed' }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return json({ error: 'upstream failed' }, 502, origin)
     }
 
-    const json = await upstream.json()
-    const reply = json.choices?.[0]?.message?.content?.trim() || '…'
+    const out = await upstream.json()
+    const reply = out.choices?.[0]?.message?.content?.trim()?.slice(0, 2000) || '…'
 
-    return new Response(JSON.stringify({ reply }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return json({ reply }, 200, origin)
   } catch (err) {
     console.error('florence-ai error', err)
-    return new Response(JSON.stringify({ error: 'internal error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'internal error' }, 500, origin)
   }
 })

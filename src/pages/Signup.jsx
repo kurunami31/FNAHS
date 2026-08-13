@@ -49,7 +49,7 @@ export default function Signup() {
             <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>community platform</div>
           </div>
         </div>
-        <h1>Join <em>FNAHS</em></h1>
+        <h1 className="auth-title">Join <em>FNAHS</em></h1>
         <p className="auth-sub">One last step — then you're in.</p>
 
         {isDemo && (

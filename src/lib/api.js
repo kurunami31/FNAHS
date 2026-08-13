@@ -2,6 +2,25 @@ import { supabase, isSupabase, SUPABASE_ENABLED } from '../supabase'
 import { demoDb, DEMO_USER_ID, PROGRAMS, streamMockReply, seedFeeds } from './mock'
 import { uid } from './format'
 
+/* ---------------- input guards ---------------- */
+
+const MAX_TEXT = 4000
+
+function sanitizeText(value, max = MAX_TEXT) {
+  const text = String(value ?? '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim()
+  return text.slice(0, max)
+}
+
+function sanitizeUrl(value) {
+  if (!value) return null
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null
+  } catch {
+    return null
+  }
+}
+
 /* ---------------- demo store (localStorage) ---------------- */
 
 const LS_KEY = 'fnahs-db-v2'
@@ -38,6 +57,8 @@ function saveDb(db) {
 const db = loadDb()
 
 /* ---------------- demo auth ---------------- */
+
+const ADMIN_PASSWORD = 'dorsufnahs2026'
 
 function demoLogin(id) {
   localStorage.setItem('fnahs-user', id)
@@ -77,8 +98,8 @@ async function demoCreatePost({ content, image_url }) {
   const post = {
     id: uid(),
     user_id: me || DEMO_USER_ID,
-    content,
-    image_url: image_url || null,
+    content: sanitizeText(content, 2000),
+    image_url: sanitizeUrl(image_url),
     created_at: new Date().toISOString(),
     likes: [],
     comments: [],
@@ -102,7 +123,7 @@ async function demoAddComment(postId, content) {
   const me = demoCurrentUserId() || DEMO_USER_ID
   const post = db.posts.find((p) => p.id === postId)
   if (!post) return
-  post.comments.push({ id: uid(), user_id: me, content, created_at: new Date().toISOString() })
+  post.comments.push({ id: uid(), user_id: me, content: sanitizeText(content, 1000), created_at: new Date().toISOString() })
   saveDb(db)
   return post.comments
 }
@@ -236,22 +257,27 @@ export const api = {
   },
 
   /* auth */
-  async getSession() {
+  getSession() {
     if (!SUPABASE_ENABLED) {
       const id = demoCurrentUserId()
-      return { user: id ? await demoGetProfile(id) : null }
+      return Promise.resolve({ user: id ? db.profiles[id] || null : null })
     }
-    const { data } = await supabase.auth.getSession()
-    const session = data?.session
-    if (!session?.user) return { user: null }
-    const profile = await api.getProfile(session.user.id)
-    return { user: profile || { id: session.user.id, email: session.user.email } }
+    return supabase.auth.getSession().then(({ data }) => {
+      const session = data?.session
+      if (!session?.user) return { user: null }
+      return api.getProfile(session.user.id).then((profile) => ({
+        user: { ...(profile || {}), id: session.user.id, email: profile?.email || session.user.email },
+      }))
+    })
   },
 
   async signIn(email, password) {
     if (!SUPABASE_ENABLED) {
       // match by email so staff@fnahs.edu.ph maps to the staff account
       const found = Object.values(db.profiles).find((p) => p.email.toLowerCase() === email.toLowerCase())
+      if (found && found.role === 'superadmin' && password !== ADMIN_PASSWORD) {
+        throw new Error('Incorrect admin password — see the README.')
+      }
       if (!found) {
         // any other demo email works; create on the fly
         const id = uid()
@@ -296,7 +322,11 @@ export const api = {
   /* profiles */
   getProfile: SUPABASE_ENABLED
     ? async (id) => {
-        const { data, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle()
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, program, year_level, role, avatar_url, created_at')
+          .eq('id', id)
+          .maybeSingle()
         if (error || !data) return null
         return data
       }
@@ -304,11 +334,27 @@ export const api = {
 
   upsertProfile: SUPABASE_ENABLED
     ? async (p) => {
-        const { data, error } = await supabase.from('profiles').upsert(p).select().maybeSingle()
+        const patch = {
+          full_name: sanitizeText(p.full_name, 120),
+          program: sanitizeText(p.program, 120),
+          year_level: sanitizeText(p.year_level, 20),
+          avatar_url: sanitizeUrl(p.avatar_url),
+        }
+        if (p.id) patch.id = p.id
+        const { data, error } = await supabase
+          .from('profiles')
+          .upsert(patch, { onConflict: 'id' })
+          .select('id, full_name, program, year_level, role, avatar_url, created_at')
+          .maybeSingle()
         if (error) throw error
         return data
       }
-    : demoUpsertProfile,
+    : async (p) => {
+        const clean = { ...p, full_name: sanitizeText(p.full_name, 120), avatar_url: sanitizeUrl(p.avatar_url) }
+        db.profiles[p.id] = { ...db.profiles[p.id], ...clean }
+        saveDb(db)
+        return db.profiles[p.id]
+      },
 
   /* posts */
   getPosts: SUPABASE_ENABLED
@@ -330,13 +376,10 @@ export const api = {
         return posts.map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
       },
 
-  /* directory */
+  /* directory — served by the security-definer get_directory() RPC (no email, no RLS gaps) */
   getMembers: SUPABASE_ENABLED
     ? async () => {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, full_name, program, year_level, avatar_url, role')
-          .order('full_name')
+        const { data, error } = await supabase.rpc('get_directory').order('full_name')
         if (error) throw error
         return data || []
       }
@@ -346,7 +389,7 @@ export const api = {
     ? async ({ content, image_url }) => {
         const { data, error } = await supabase
           .from('posts')
-          .insert({ content, image_url: image_url || null })
+          .insert({ content: sanitizeText(content, 2000), image_url: sanitizeUrl(image_url) })
           .select()
           .single()
         if (error) throw error
@@ -367,7 +410,11 @@ export const api = {
 
   addComment: SUPABASE_ENABLED
     ? async (postId, content) => {
-        const { data, error } = await supabase.from('comments').insert({ post_id: postId, content }).select().single()
+        const { data, error } = await supabase
+          .from('comments')
+          .insert({ post_id: postId, content: sanitizeText(content, 1000) })
+          .select()
+          .single()
         if (error) throw error
         return data
       }
@@ -401,7 +448,8 @@ export const api = {
 
   getUsers: SUPABASE_ENABLED
     ? async () => {
-        const { data, error } = await supabase.from('profiles').select('*').order('full_name')
+        // security-definer RPC — only staff/superadmin may read profiles (incl. email)
+        const { data, error } = await supabase.rpc('admin_get_users')
         if (error) throw error
         return data || []
       }
@@ -435,7 +483,18 @@ export const api = {
 
   updateUser: SUPABASE_ENABLED
     ? async (id, patch) => {
-        const { data, error } = await supabase.from('profiles').update(patch).eq('id', id).select().single()
+        const clean = {}
+        if (patch.full_name !== undefined) clean.full_name = sanitizeText(patch.full_name, 120)
+        if (patch.program !== undefined) clean.program = sanitizeText(patch.program, 120)
+        if (patch.year_level !== undefined) clean.year_level = sanitizeText(patch.year_level, 20)
+        if (patch.role !== undefined) clean.role = sanitizeText(patch.role, 20)
+        if (patch.avatar_url !== undefined) clean.avatar_url = sanitizeUrl(patch.avatar_url)
+        const { data, error } = await supabase
+          .from('profiles')
+          .update(clean)
+          .eq('id', id)
+          .select('id, full_name, program, year_level, role, avatar_url, created_at')
+          .maybeSingle()
         if (error) throw error
         return data
       }

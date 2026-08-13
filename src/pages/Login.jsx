@@ -39,7 +39,7 @@ export default function Login() {
             <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>community platform</div>
           </div>
         </div>
-        <h1>Log <em>in</em></h1>
+        <h1 className="auth-title">Log <em>in</em></h1>
         <p className="auth-sub">Welcome back to the ward.</p>
 
         {isDemo && (
@@ -71,7 +71,7 @@ export default function Login() {
 
         <p className="auth-note">
           No account yet? <Link to="/signup" style={{ color: 'var(--accent)' }}>Join FNAHS</Link><br />
-          {isDemo ? 'Staff demo: staff@fnahs.edu.ph · Admin demo: fnahsadmin@fnahs.edu.ph' : 'Reserved for the students of the Faculty of Nursing and Allied Health Sciences.'}
+          {isDemo ? 'Staff demo: staff@fnahs.edu.ph · Admin demo: fnahsadmin@fnahs.edu.ph / dorsufnahs2026' : 'Reserved for the students of the Faculty of Nursing and Allied Health Sciences.'}
         </p>
       </div>
     </div>
