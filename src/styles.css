@@ -1,38 +1,39 @@
 /* ============================================================
    FNAHS — design system
-   Terminal-dark community platform in the style of bsitcodex.vercel.app,
-   built for the Faculty of Nursing and Allied Health Sciences.
-   Palette drawn from the FNAHS logo: deep navy, blue, magenta.
+   Community platform of the Faculty of Nursing and Allied Health
+   Sciences. Palette sampled directly from the FNAHS logo:
+   forest green (#008000 family), bright green (#00C060),
+   teal-cyan (#00E0E0) and the gold of the center emblem (#BF9100).
    ============================================================ */
 
 :root {
   /* ============================================================
-     Calm clinical palette — soft teal + light blue on clean white,
-     the modern nursing & healthcare look. Accents echo the FNAHS
-     logo's blue family; the logo itself supplies the brand colors.
-     Light is the default theme; dark is a calm deep-teal navy.
+     Calm clinical palette — logo greens and cyan on clean white,
+     with the logo's gold for ceremonial accents. Light is the
+     default theme; dark is a calm deep-forest green.
      ============================================================ */
-  --accent: #0e9f94;
-  --accent-2: #2f9fd6;
+  --accent: #0b8f45;
+  --accent-2: #0099a8;
+  --gold: #a07b10;
   --accent-ink: #ffffff;
-  --accent-glow: rgba(14, 159, 148, 0.22);
-  --accent-glow-soft: rgba(14, 159, 148, 0.08);
-  --accent-glow-secondary: rgba(47, 159, 214, 0.14);
-  --brand-grad: linear-gradient(135deg, #0d9488, #2f9fd6);
-  --bg: #eef4f5;
+  --accent-glow: rgba(11, 143, 69, 0.22);
+  --accent-glow-soft: rgba(11, 143, 69, 0.08);
+  --accent-glow-secondary: rgba(0, 153, 168, 0.14);
+  --brand-grad: linear-gradient(135deg, #00853d, #00a89a);
+  --bg: #f2f7f3;
   --deep: #ffffff;
   --paper: #ffffff;
-  --ink: #12343c;
-  --ink-soft: #45666e;
-  --muted: #759199;
-  --line: #dde9eb;
-  --line-strong: #bfd4d8;
+  --ink: #12352a;
+  --ink-soft: #3f6153;
+  --muted: #719085;
+  --line: #ddeae1;
+  --line-strong: #bdd2c3;
   --ok: #1f9d5f;
   --warn: #d98f1f;
   --danger: #e5484d;
-  --hn: #f97316;
-  --primary: #38bdf8;
-  --primary-2: #0e7490;
+  --hn: #d97706;
+  --primary: #00a89a;
+  --primary-2: #0b7a46;
   --f-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --f-display: 'Space Grotesk', 'Inter', sans-serif;
   --f-id: 'Archivo Black', 'Arial Black', sans-serif;
@@ -41,9 +42,9 @@
   --r-md: 14px;
   --r-lg: 20px;
   --r-xl: 26px;
-  --sh-sm: 0 1px 2px rgba(18, 52, 60, 0.05), 0 1px 3px rgba(18, 52, 60, 0.06);
-  --sh-md: 0 2px 6px rgba(18, 52, 60, 0.05), 0 8px 24px -12px rgba(18, 52, 60, 0.12);
-  --sh-lg: 0 12px 40px -12px rgba(18, 52, 60, 0.16);
+  --sh-sm: 0 1px 2px rgba(18, 46, 32, 0.05), 0 1px 3px rgba(18, 46, 32, 0.06);
+  --sh-md: 0 2px 6px rgba(18, 46, 32, 0.05), 0 8px 24px -12px rgba(18, 46, 32, 0.12);
+  --sh-lg: 0 12px 40px -12px rgba(18, 46, 32, 0.16);
   --sh-glow: 0 6px 24px -8px var(--accent-glow);
   --sh-glow-secondary: 0 6px 26px -8px var(--accent-glow-secondary);
   --sidebar-w: 248px;
@@ -52,26 +53,28 @@
 }
 
 html[data-theme='dark'] {
-  --accent: #2dd4bf;
-  --accent-2: #38bdf8;
-  --accent-ink: #06251f;
-  --accent-glow: rgba(45, 212, 191, 0.24);
-  --accent-glow-soft: rgba(45, 212, 191, 0.09);
-  --accent-glow-secondary: rgba(56, 189, 248, 0.16);
-  --bg: #0a1a20;
-  --deep: #0d1f26;
-  --paper: #122730;
-  --ink: #d9f1f2;
-  --ink-soft: #9fc4c9;
-  --muted: #6f969d;
-  --line: #1c3a43;
-  --line-strong: #2c5360;
+  --accent: #2fe07e;
+  --accent-2: #3fd6d6;
+  --gold: #f2c957;
+  --accent-ink: #062013;
+  --accent-glow: rgba(47, 224, 126, 0.24);
+  --accent-glow-soft: rgba(47, 224, 126, 0.09);
+  --accent-glow-secondary: rgba(63, 214, 214, 0.16);
+  --brand-grad: linear-gradient(135deg, #0faa57, #26c8c8);
+  --bg: #07150d;
+  --deep: #0a1a10;
+  --paper: #0f2416;
+  --ink: #d8f2e0;
+  --ink-soft: #9dc8ab;
+  --muted: #6e917a;
+  --line: #1c3a27;
+  --line-strong: #2c5238;
   --ok: #2bb673;
   --warn: #ffb84d;
   --danger: #ff6b70;
-  --hn: #ff8a4d;
-  --primary: #2dd4bf;
-  --primary-2: #0e7490;
+  --hn: #ff9a4d;
+  --primary: #3fd6d6;
+  --primary-2: #0e9f58;
   --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3);
   --sh-md: 0 2px 6px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
   --sh-lg: 0 12px 40px -12px rgba(0, 0, 0, 0.7);
@@ -340,7 +343,7 @@ html[data-theme='dark'] .topbar { background: rgba(10, 26, 32, 0.86); }
 .welcome-desc { color: var(--ink-soft); font-size: 1.02rem; line-height: 1.65; max-width: 520px; margin: 0 0 26px; }
 .welcome-desc b { color: var(--ink); }
 .welcome-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-.welcome-mascot { flex: none; width: 200px; height: 200px; border-radius: var(--r-lg); object-fit: cover; border: 1px solid var(--line-strong); box-shadow: var(--sh-glow); }
+.welcome-mascot { flex: none; width: 200px; height: 200px; border-radius: var(--r-lg); object-fit: cover; border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--line-strong)); box-shadow: var(--sh-glow); }
 .welcome-stats { display: flex; gap: 26px; margin-top: 30px; flex-wrap: wrap; }
 .stat b { font-family: var(--f-id); font-size: 1.3rem; display: block; color: var(--ink); }
 .stat span { font-family: var(--f-ocr); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
@@ -413,7 +416,7 @@ html[data-theme='dark'] .topbar { background: rgba(10, 26, 32, 0.86); }
   height: 3px;
 }
 .learn-card--health::before { background: linear-gradient(90deg, var(--accent), var(--primary)); }
-.learn-card--tips::before { background: linear-gradient(90deg, var(--accent-2), var(--primary)); }
+.learn-card--tips::before { background: linear-gradient(90deg, var(--gold), var(--accent-2)); }
 .learn-card--org::before { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
 .learn-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .learn-head h3 { margin: 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
@@ -615,11 +618,11 @@ html[data-theme='dark'] .topbar { background: rgba(10, 26, 32, 0.86); }
   height: 58px;
   background: var(--brand-grad);
 }
-.id-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(18, 52, 60, 0.06); pointer-events: none; }
+.id-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(16, 54, 32, 0.06); pointer-events: none; }
 .id-top { position: relative; display: flex; align-items: center; gap: 10px; padding: 14px 20px 10px; }
 .id-top img { width: 42px; height: 42px; border-radius: var(--r-sm); object-fit: cover; box-shadow: var(--sh-sm); }
-.id-top .id-org { font-family: var(--f-id); font-size: 0.9rem; color: #ffffff; line-height: 1.15; text-shadow: 0 1px 2px rgba(10, 45, 40, 0.25); }
-.id-top .id-org em { font-style: normal; color: #d9f6f3; }
+.id-top .id-org { font-family: var(--f-id); font-size: 0.9rem; color: #ffffff; line-height: 1.15; text-shadow: 0 1px 2px rgba(5, 42, 20, 0.25); }
+.id-top .id-org em { font-style: normal; color: #d6f5df; }
 .id-top .id-tag { font-family: var(--f-ocr); font-size: 0.55rem; letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.85); text-transform: uppercase; }
 .id-mid { flex: 1; display: flex; align-items: center; gap: 16px; padding: 14px 20px 10px; }
 .id-mid .qr { background: #fff; padding: 8px; border: 1px solid var(--line); border-radius: var(--r-sm); width: 96px; height: 96px; flex: none; }
@@ -630,7 +633,7 @@ html[data-theme='dark'] .topbar { background: rgba(10, 26, 32, 0.86); }
 .id-details .id-row b { color: var(--ink); font-weight: 400; }
 .id-bottom { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px 14px; border-top: 1px dashed var(--line-strong); }
 .id-bottom .id-num { font-family: var(--f-ocr); font-size: 0.72rem; color: var(--muted); letter-spacing: 0.18em; }
-.id-bottom .id-stamp { font-family: var(--f-display); font-size: 0.58rem; color: var(--accent); letter-spacing: 0.1em; font-weight: 700; }
+.id-bottom .id-stamp { font-family: var(--f-display); font-size: 0.58rem; color: var(--gold); letter-spacing: 0.1em; font-weight: 700; }
 
 /* ---------- auth ---------- */
 .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; }

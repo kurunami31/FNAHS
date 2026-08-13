@@ -1,19 +1,19 @@
 # FNAHS · Community Platform
 
-A community platform for the **Faculty of Nursing and Allied Health Sciences**, with a terminal-style design inspired by student-org community platforms — rebranded with the FNAHS logo and a blue/magenta palette drawn from it.
+A community platform for the **Faculty of Nursing and Allied Health Sciences**, with a clean clinical design — rebranded with the FNAHS logo and a green/cyan/gold palette drawn directly from it (sampled from the logo's own pixels).
 
 > One terminal for the FNAHS squad — attend org events with a scan, keep up with students, learn from live feeds, and get help from Florence, the in-house AI assistant.
 
 ## Features
 
-- **Home** — terminal-style welcome hero with the FNAHS logo, live Hacker News / GitHub / org-event feeds
+- **Home** — hero with the FNAHS logo and live health-content feeds
 - **Feed** — org posts with likes, comments, image attachments, archive & delete, search
 - **Events** — upcoming org events with RSVP and event creation
 - **Florence** — the org's in-house AI assistant, named after Florence Nightingale (chat with streaming replies)
 - **My ID** — digital student ID card with a QR code, scannable at events
 - **Staff tools** — camera-based QR scanner to log event attendance
 - **Settings** — profile, program/year level, dark/light theme
-- Dark terminal theme by default, light theme toggle, PWA-ready
+- Calm clinical light theme by default (green/cyan/gold from the logo), dark theme toggle, PWA-ready
 
 ## Run locally
 
