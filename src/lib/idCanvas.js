@@ -94,9 +94,9 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   try {
     const seal = await loadImage('/dorsu-logo.png')
     ctx.save()
-    rr(ctx, 28, 28, 76, 76, 16)
+    rr(ctx, 28, 28, 64, 64, 14)
     ctx.clip()
-    ctx.drawImage(seal, 28, 28, 76, 76)
+    ctx.drawImage(seal, 28, 28, 64, 64)
     ctx.restore()
     sealOk = true
   } catch {
@@ -104,22 +104,22 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   }
   if (!sealOk) {
     ctx.fillStyle = GOLD
-    rr(ctx, 28, 28, 76, 76, 16)
+    rr(ctx, 28, 28, 64, 64, 14)
     ctx.fill()
     ctx.fillStyle = '#fffdf6'
     ctx.font = `700 30px ${FACE}`
     ctx.textAlign = 'center'
-    ctx.fillText('D', 66, 76)
+    ctx.fillText('D', 60, 72)
     ctx.textAlign = 'left'
   }
 
   ctx.textAlign = 'right'
   ctx.fillStyle = GOLD_D
-  ctx.font = `700 26px ${OCR}`
-  ctx.fillText('FNAHS', l, 62)
+  ctx.font = `700 22px ${OCR}`
+  ctx.fillText('FNAHS', l, 52)
   ctx.fillStyle = MUT
   ctx.font = `12px ${OCR}`
-  ctx.fillText('FACULTY OF NURSING & ALLIED HEALTH SCIENCES', l, 86)
+  ctx.fillText('FACULTY OF NURSING & ALLIED HEALTH SCIENCES', l, 76)
   ctx.textAlign = 'left'
 
   const sy = 112
@@ -142,13 +142,14 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
     ''
   const surname = (profile?.surname || parts[parts.length - 1] || firstName).trim()
   const middleInitial = (profile?.middle_initial || '').trim().replace(/\.$/, '').toUpperCase()
-  const py = 156
+
+  // bsitcodex geometry: photo top-left, name/details column, QR right
+  const b = 162 // content top
+  const k = H - 64 // foot baseline row
+  const px = 36
+  const py = 170
   const pw = 150
   const ph = 187
-  const qy = py
-  const qs = 184
-  const px = cx - (pw + 26 + qs) / 2
-  const qx = px + pw + 26
   let photoOk = false
   if (avatarUrl) {
     try {
@@ -186,6 +187,9 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   rr(ctx, px, py, pw, ph, 16)
   ctx.stroke()
 
+  const qs = 170
+  const qx = l - qs
+  const qy = b + 6
   if (qr) {
     try {
       const qImg = await loadImage(qr)
@@ -201,29 +205,29 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   ctx.fillStyle = MUT
   ctx.font = `11px ${OCR}`
   ctx.textAlign = 'center'
-  ctx.fillText('SCAN ME', qx + qs / 2, qy + qs + 16)
+  ctx.fillText('SCAN ME', qx + qs / 2, qy + qs + 22)
   ctx.textAlign = 'left'
 
-  const nameBottom = py + ph + 12
+  const cx2 = px + pw + 26
+  const cw = qx - 30 - cx2
   ctx.fillStyle = MUT
   ctx.font = `11px ${OCR}`
-  ctx.textAlign = 'center'
-  ctx.fillText('NAME', cx, nameBottom)
+  ctx.fillText('NAME', cx2, b + 18)
 
   const smallName = `${firstName.toUpperCase()}${middleInitial ? ` ${middleInitial}.` : ''}`.trim()
   if (smallName) {
     ctx.fillStyle = INK
-    ctx.font = `14px ${OCR}`
-    ctx.fillText(ellipse(smallName, 34), cx, nameBottom + 22)
+    ctx.font = `13px ${OCR}`
+    ctx.fillText(ellipse(smallName, 40), cx2, b + 42)
   }
-  const ns = fitFont(ctx, surname.toUpperCase(), FACE, 42, 18, 480)
+  const ns = fitFont(ctx, surname.toUpperCase(), FACE, 38, 18, cw)
   ctx.font = `700 ${ns}px ${FACE}`
   ctx.fillStyle = INK
-  ctx.fillText(ellipse(surname.toUpperCase(), 26), cx, nameBottom + 54)
+  ctx.fillText(ellipse(surname.toUpperCase(), cw > 300 ? 26 : 20), cx2, b + 78)
 
   ctx.fillStyle = MUT
   ctx.font = `11px ${OCR}`
-  ctx.fillText('DETAILS', cx, nameBottom + 86)
+  ctx.fillText('DETAILS', cx2, b + 100)
 
   const rows = []
   if (profile?.program) rows.push(['PROGRAM', profile.program])
@@ -232,11 +236,10 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   if (profile?.role && profile.role !== 'student') rows.push(['ROLE', profile.role.replace(/^\w/, (ch) => ch.toUpperCase())])
   if (profile?.positions?.length) rows.push(['POSITION', profile.positions.join(' · ')])
 
-  ctx.font = `13px ${OCR}`
-  const rowY = nameBottom + 110
-  rows.forEach(([k, v], i) => {
+  ctx.font = `15px ${OCR}`
+  rows.forEach(([k2, v], i) => {
     ctx.fillStyle = ROW
-    ctx.fillText(`${k} : ${ellipse(String(v).toUpperCase(), 34)}`, cx, rowY + i * 18)
+    ctx.fillText(`${k2} : ${ellipse(String(v).toUpperCase(), 30)}`, cx2, b + 128 + i * 24)
   })
 
   const serial = String(profile?.id || 'demo').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12)
@@ -244,9 +247,9 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
 
   ctx.fillStyle = MUT
   ctx.font = `12px ${OCR}`
-  ctx.fillText('DAVAO ORIENTAL STATE UNIVERSITY', 44, H - 30)
+  ctx.fillText('DAVAO ORIENTAL STATE UNIVERSITY', 44, k + 24)
   ctx.fillStyle = GOLD_D
   ctx.textAlign = 'right'
-  ctx.fillText(`ID : ${idRef}`, l, H - 30)
+  ctx.fillText(`ID : ${idRef}`, l, k + 24)
   ctx.textAlign = 'left'
 }
