@@ -52,7 +52,7 @@ export default function Login() {
 
         <form onSubmit={submit}>
           <div className="field">
-            <label>FNAHS email</label>
+            <label>Email</label>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="student@fnahs.edu.ph" autoComplete="email" />
           </div>
           <div className="field">

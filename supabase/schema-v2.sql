@@ -420,8 +420,10 @@ language sql security definer set search_path = public as $$
 $$;
 
 -- ---------- 13 · grants ----------
-grant select (id, full_name, program, year_level, role, positions, avatar_url, created_at) on public.profiles to authenticated;
-grant update (id, full_name, program, year_level, role, positions, avatar_url, privacy_policy_accepted_at) on public.profiles to authenticated;
+-- (table-level: actual confidentiality comes from RLS policies + the
+--  security-definer get_directory()/admin_get_users() RPCs, not column ACLs)
+grant select on public.profiles to authenticated;
+grant update on public.profiles to authenticated;
 
 grant select, insert, update, delete on public.announcements to authenticated;
 grant select, update on public.notifications to authenticated;
