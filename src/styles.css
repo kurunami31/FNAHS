@@ -252,10 +252,10 @@ img { max-width: 100%; }
 /* ---------- main ---------- */
 .main {
   flex: 1;
-  margin-left: var(--rail-w);
+  margin-left: auto;
   margin-right: auto;
-  padding: calc(var(--topbar-h) + 30px) 34px 90px;
-  max-width: 1120px;
+  padding: calc(var(--topbar-h) + 30px) 34px 90px calc(var(--rail-w) + 34px);
+  max-width: calc(1120px + var(--rail-w));
   width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
@@ -298,8 +298,8 @@ img { max-width: 100%; }
   }
   .topbar .brand-mobile img { width: 30px; height: 30px; border-radius: 50%; object-fit: contain; background: var(--paper); border: 1px solid var(--gold); padding: 2px; }
   .topbar .top-ctx { display: none; }
-  .main {
-    margin-left: 0;
+.main {
+    margin: 0;
     padding: calc(var(--topbar-h) + env(safe-area-inset-top) + 20px) 16px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 24px);
     max-width: none;
   }
@@ -1315,16 +1315,16 @@ html[data-theme='dark'] .id-card {
 /* ============================================================
    AUTH � compact card, logo lockup, shorter form
    ============================================================ */
-.auth-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; }
+.auth-logo { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 16px; }
 .auth-logo img {
-  height: 64px;
+  height: 96px;
   width: auto;
   flex: none;
   object-fit: contain;
-  border-radius: 10px;
+  border-radius: 14px;
   background: var(--paper);
   border: 1px solid var(--gold);
-  box-shadow: 0 0 0 3px var(--paper), 0 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent);
+  box-shadow: 0 0 0 4px var(--paper), 0 0 0 5px color-mix(in srgb, var(--gold) 35%, transparent);
 }
 .auth-card { padding: 30px 32px 26px; }
 .auth-title { font-size: 1.5rem; margin-bottom: 4px; }
@@ -1343,6 +1343,7 @@ html[data-theme='dark'] .id-card {
 .page-c .page-title { justify-content: center; }
 .page-c .dir-tools { justify-content: center; }
 .page-c .dir-search { flex: 1 1 460px; max-width: 520px; }
+.page-c .member-count { text-align: center; }
 .events-head { text-align: center; }
 .events-head .page-sub { margin-bottom: 16px; }
 .events-head .btn { margin-bottom: 26px; }
