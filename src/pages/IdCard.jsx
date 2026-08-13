@@ -125,7 +125,7 @@ export default function IdCard() {
           <div className="id-foot">
             <div>
               <div className="id-qr-box">
-                <QRCodeSVG value={qrValue} size={70} level="M" />
+                <QRCodeSVG value={qrValue} size={96} level="M" />
               </div>
               <div className="id-qr-note">scan at events</div>
             </div>

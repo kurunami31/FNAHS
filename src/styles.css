@@ -1946,3 +1946,16 @@ html[data-theme='dark'] .sec-head::after {
   .id-qr-box { width: 66px; height: 66px; padding: 5px; }
   .id-ecg { margin-top: 6px; height: 11px; }
 }
+
+/* ID card — bigger QR, reorganized balance */
+.id-card { aspect-ratio: auto; min-height: 330px; }
+.id-photo { width: 88px; }
+.id-foot { align-items: center; }
+.id-qr-box { width: 112px; height: 112px; padding: 8px; }
+.id-foot-right { justify-content: center; }
+.id-qr-note { margin-top: 8px; }
+
+@media (max-width: 560px) {
+  .id-card { min-height: 0; }
+  .id-qr-box { width: 108px; height: 108px; padding: 6px; }
+}
