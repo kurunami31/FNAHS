@@ -1,7 +1,7 @@
 import { initials } from './format'
 
 export const ID_W = 856
-export const ID_H = 540
+export const ID_H = 430
 
 const INK = '#2b2410'
 const MUT = '#8a7d5c'
