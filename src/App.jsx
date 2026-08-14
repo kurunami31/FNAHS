@@ -5,6 +5,8 @@ import { useApp } from './context/AppContext'
 import Layout from './components/Layout'
 import ChatWidget from './components/ChatWidget'
 import PrivacyNotice from './components/PrivacyNotice'
+import MaintenanceScreen from './components/MaintenanceScreen'
+import { MAINTENANCE } from './lib/build'
 
 const Home = lazy(() => import('./pages/Home'))
 const Feed = lazy(() => import('./pages/Feed'))
@@ -21,6 +23,8 @@ const Signup = lazy(() => import('./pages/Signup'))
 export default function App() {
   const { user, toasts } = useApp()
   const consentPending = !!user && !user.privacy_policy_accepted_at
+
+  if (MAINTENANCE) return <MaintenanceScreen />
 
   return (
     <>
@@ -64,17 +68,29 @@ export default function App() {
   )
 }
 
+function LoadScreen({ small }) {
+  return (
+    <div
+      style={{
+        minHeight: small ? undefined : '100vh',
+        padding: small ? '70px 0' : undefined,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <img
+        src="/loading-animation.gif"
+        alt="Loading…"
+        style={{ width: small ? 140 : 220, maxWidth: '70vw', height: 'auto' }}
+      />
+    </div>
+  )
+}
+
 function Page({ children }) {
   return (
-    <Suspense
-      fallback={
-        <div style={{ padding: '70px 0', display: 'flex', justifyContent: 'center' }}>
-          <div className="typing">
-            <i /><i /><i />
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadScreen small />}>
       {children}
     </Suspense>
   )
@@ -83,13 +99,7 @@ function Page({ children }) {
 function RequireAuth({ children }) {
   const { user, authLoading } = useApp()
   if (authLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="typing" style={{ transform: 'scale(1.6)' }}>
-          <i /><i /><i />
-        </div>
-      </div>
-    )
+    return <LoadScreen />
   }
   if (!user) return <Navigate to="/login" replace />
   if (!user.privacy_policy_accepted_at) return <PrivacyNotice />
