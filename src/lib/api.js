@@ -1,6 +1,6 @@
 import { supabase, isSupabase, SUPABASE_ENABLED } from '../supabase'
 import { demoDb, DEMO_USER_ID, PROGRAMS, streamMockReply, seedFeeds } from './mock'
-import { uid } from './format'
+import { uid, fmtDateTime } from './format'
 
 /* ---------------- input guards ---------------- */
 
@@ -25,6 +25,17 @@ function sanitizeUrl(value) {
   } catch {
     return null
   }
+}
+
+function eventPostContent(ev) {
+  const lines = [`📅 New event: ${sanitizeText(ev.title, 200)}`]
+  const when = ev.starts_at ? fmtDateTime(ev.starts_at) : ''
+  const until = ev.ends_at && ev.ends_at !== ev.starts_at ? ` → ${fmtDateTime(ev.ends_at)}` : ''
+  if (when) lines.push(`🗓 ${when}${until}`)
+  if (ev.location) lines.push(`📍 ${sanitizeText(ev.location, 200)}`)
+  const desc = sanitizeText(ev.description, 300)
+  if (desc) lines.push('', desc)
+  return lines.join('\n')
 }
 
 function composeFullName({ first_name, middle_initial, surname, full_name }) {
@@ -189,6 +200,8 @@ async function demoCreateEvent(ev) {
     created_at: new Date().toISOString(),
   }
   db.events.push(event)
+  // Announce the event on the community feed too.
+  await demoCreatePost({ content: eventPostContent(ev) })
   saveDb(db)
   return event
 }
@@ -752,6 +765,15 @@ export const api = {
           .select()
           .single()
         if (error) throw error
+        // Announce the event on the community feed. A feed-post failure must
+        // not fail the event itself — the event is already created by now.
+        try {
+          await supabase
+            .from('posts')
+            .insert({ user_id: user.id, content: eventPostContent(ev) })
+        } catch (e) {
+          console.warn('Could not announce event on the feed:', e)
+        }
         return data
       }
     : demoCreateEvent,
