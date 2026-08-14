@@ -8,6 +8,7 @@ import PrivacyNotice from './components/PrivacyNotice'
 
 const Home = lazy(() => import('./pages/Home'))
 const Feed = lazy(() => import('./pages/Feed'))
+const Archive = lazy(() => import('./pages/Archive'))
 const Events = lazy(() => import('./pages/Events'))
 const HealthCentre = lazy(() => import('./pages/HealthCentre'))
 const Directory = lazy(() => import('./pages/Directory'))
@@ -36,6 +37,7 @@ export default function App() {
         >
           <Route index element={<Page><Home /></Page>} />
           <Route path="feed" element={<Page><Feed /></Page>} />
+          <Route path="archive" element={<Page><Archive /></Page>} />
           <Route path="events" element={<Page><Events /></Page>} />
           <Route path="health" element={<Page><HealthCentre /></Page>} />
           <Route path="directory" element={<Page><Directory /></Page>} />

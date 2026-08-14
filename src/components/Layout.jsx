@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home as HomeIcon,
   Newspaper,
+  Archive as ArchiveIcon,
   CalendarDays,
   HeartPulse,
   Users,
@@ -26,6 +27,7 @@ import NotificationsBell from './NotificationsBell'
 const NAV = [
   { to: '/app', label: 'Home', icon: HomeIcon, end: true },
   { to: '/app/feed', label: 'Feed', icon: Newspaper },
+  { to: '/app/archive', label: 'Archive', icon: ArchiveIcon },
   { to: '/app/events', label: 'Events', icon: CalendarDays },
   { to: '/app/health', label: 'Health', icon: HeartPulse },
   { to: '/app/directory', label: 'Directory', icon: Users },
@@ -34,6 +36,7 @@ const NAV = [
 
 const SECTION = [
   ['/app/feed', 'feed'],
+  ['/app/archive', 'archive'],
   ['/app/events', 'events'],
   ['/app/health', 'health centre'],
   ['/app/directory', 'directory'],

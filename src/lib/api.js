@@ -484,6 +484,31 @@ export const api = {
         return posts.map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
       },
 
+  getArchivedPosts: SUPABASE_ENABLED
+    ? async () => {
+        const { data, error } = await supabase
+          .from('posts')
+          .select('*, comments(*), post_likes(user_id), profiles!posts_user_id_fkey(full_name, avatar_url, program)')
+          .not('archived_at', 'is', null)
+          .order('archived_at', { ascending: false })
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
+        return (data || []).map((p) => ({
+          ...p,
+          likes: (p.post_likes || []).map((l) => l.user_id),
+          author: p.profiles,
+        }))
+      }
+    : async () => {
+        const posts = [...db.posts]
+          .filter((p) => p.archived_at)
+          .sort((a, b) => new Date(b.archived_at) - new Date(a.archived_at))
+        return posts.map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
+      },
+
   /* directory — served by the security-definer get_directory() RPC (no email, no RLS gaps) */
   getMembers: SUPABASE_ENABLED
     ? async () => {
