@@ -2011,7 +2011,7 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 
 /* ID card — canvas-rendered preview (bsitcodex-style artifact) */
 .id-preview { width: min(430px, 100%); height: auto; border-radius: var(--r-lg); box-shadow: var(--sh-lg); display: block; margin: 0 auto; background: #fff; }
-.id-card-loading { width: min(430px, 100%); aspect-ratio: 856 / 430; border-radius: var(--r-lg); border: 1.5px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: var(--f-ocr); font-size: 0.8rem; letter-spacing: 0.1em; text-align: center; margin: 0 auto; background: var(--paper); }
+.id-card-loading { width: min(430px, 100%); aspect-ratio: 680 / 430; border-radius: var(--r-lg); border: 1.5px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: var(--f-ocr); font-size: 0.8rem; letter-spacing: 0.1em; text-align: center; margin: 0 auto; background: var(--paper); }
 
 /* FNAHS logo — bigger everywhere so the org marks are clearly seen */
 .seal { width: 64px; height: 64px; padding: 5px; }

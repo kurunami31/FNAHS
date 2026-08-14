@@ -1,6 +1,6 @@
 import { initials } from './format'
 
-export const ID_W = 856
+export const ID_W = 680
 export const ID_H = 430
 
 const INK = '#2b2410'
@@ -146,10 +146,10 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   // bsitcodex geometry: photo top-left, name/details column, QR right
   const b = 162 // content top
   const k = H - 64 // foot baseline row
-  const px = 36
-  const py = 170
-  const pw = 150
-  const ph = 187
+  const px = 30
+  const py = 168
+  const pw = 140
+  const ph = 180
   let photoOk = false
   if (avatarUrl) {
     try {
@@ -187,7 +187,7 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   rr(ctx, px, py, pw, ph, 16)
   ctx.stroke()
 
-  const qs = 170
+  const qs = 150
   const qx = l - qs
   const qy = b + 6
   if (qr) {
@@ -239,7 +239,7 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   ctx.font = `15px ${OCR}`
   rows.forEach(([k2, v], i) => {
     ctx.fillStyle = ROW
-    ctx.fillText(`${k2} : ${ellipse(String(v).toUpperCase(), 30)}`, cx2, b + 128 + i * 24)
+    ctx.fillText(`${k2} : ${ellipse(String(v).toUpperCase(), 26)}`, cx2, b + 128 + i * 24)
   })
 
   const serial = String(profile?.id || 'demo').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12)
