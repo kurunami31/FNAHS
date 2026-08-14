@@ -2,7 +2,7 @@
    FNAHS — "The Clinic" · v2 identity
    Faculty of Nursing and Allied Health Sciences community platform.
    Identity rebuilt from the institutional seal:
-   gold (#C09000 family) Ã— white in light mode,
+   gold (#C09000 family) × white in light mode,
    seal-night navy-black (#0A0A14) in dark mode.
    Fraunces serif wordmarks, Instrument Sans body, Share Tech Mono data.
    ============================================================ */
@@ -1254,7 +1254,7 @@ html[data-theme='dark'] .id-card {
   line-height: 1.5;
 }
 .chat-input-row textarea:focus { border-color: var(--gold); box-shadow: var(--sh-glow); }
-.stream-caret::after { content: 'â–Š'; color: var(--accent); animation: blink 1s steps(1) infinite; }
+.stream-caret::after { content: '▊'; color: var(--accent); animation: blink 1s steps(1) infinite; }
 
 @media (max-width: 900px) {
   .chat-fab {
