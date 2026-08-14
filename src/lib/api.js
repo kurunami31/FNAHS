@@ -736,7 +736,21 @@ export const api = {
 
   createEvent: SUPABASE_ENABLED
     ? async (ev) => {
-        const { data, error } = await supabase.from('events').insert(ev).select().single()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        // RLS requires auth.uid() = created_by, so the creator must be recorded.
+        const { data, error } = await supabase
+          .from('events')
+          .insert({
+            title: sanitizeText(ev.title, 200),
+            description: sanitizeText(ev.description, 2000),
+            location: sanitizeText(ev.location, 200),
+            starts_at: ev.starts_at,
+            ends_at: ev.ends_at,
+            created_by: user.id,
+          })
+          .select()
+          .single()
         if (error) throw error
         return data
       }
