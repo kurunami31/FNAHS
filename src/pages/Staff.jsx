@@ -176,16 +176,15 @@ export default function Staff() {
         <div className="panel-head">
           <h2 className="panel-title"><QrCode size={16} /> Scanner</h2>
         </div>
-        <div
-          className="scan-box"
-          id="fnahs-scan-box"
-          ref={scanBoxRef}
-          style={!scanning ? { background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}}
-        >
+        {/* html5-qrcode must own the scan-box DOM (it wipes innerHTML on start and
+            appends video/canvas). React children live in the stage as siblings so
+            re-renders can never fight the library over the container. */}
+        <div className="scan-stage">
+          <div className="scan-box" id="fnahs-scan-box" ref={scanBoxRef} />
           {!scanning && (
-            <span style={{ color: 'var(--muted)', fontSize: '0.85rem', textAlign: 'center', padding: 20 }}>
+            <div className="scan-placeholder">
               Camera off<br /><br />Press start to scan IDs
-            </span>
+            </div>
           )}
           {scanning && <div className="scan-overlay" />}
         </div>
