@@ -12,7 +12,7 @@ export default function Staff() {
   const [eventId, setEventId] = useState('')
   const [attendance, setAttendance] = useState([])
   const [scanning, setScanning] = useState(false)
-  const [scanner, setScanner] = useState(null)
+  const scannerRef = useRef(null)
   const [last, setLast] = useState(null)
   const [tallies, setTallies] = useState([])
   const scanBoxRef = useRef(null)
@@ -68,11 +68,17 @@ export default function Staff() {
     loadAttendance()
   }, [loadAttendance, eventId])
 
+  // Stop the camera when leaving the page, but never on the stopScan state
+  // change — calling stop() twice throws synchronously and would crash React.
   useEffect(() => {
     return () => {
-      scanner?.stop().catch(() => {})
+      try {
+        scannerRef.current?.stop().catch(() => {})
+      } catch {
+        /* already stopped */
+      }
     }
-  }, [scanner])
+  }, [])
 
   const startScan = async () => {
     if (!eventId) {
@@ -87,7 +93,7 @@ export default function Staff() {
         (decoded) => handleScan(decoded),
         () => {}
       )
-      setScanner(h5)
+      scannerRef.current = h5
       setScanning(true)
     } catch (e) {
       console.error(e)
@@ -96,14 +102,16 @@ export default function Staff() {
   }
 
   const stopScan = async () => {
-    if (!scanner) return
-    try {
-      await scanner.stop()
-      scanner.clear()
-    } catch {
-      /* ignore */
+    const h5 = scannerRef.current
+    scannerRef.current = null
+    if (h5) {
+      try {
+        await h5.stop()
+        h5.clear()
+      } catch {
+        /* ignore */
+      }
     }
-    setScanner(null)
     setScanning(false)
   }
 
