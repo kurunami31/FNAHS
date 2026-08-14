@@ -407,6 +407,25 @@ export const api = {
     return dbStatus
   },
 
+  /* ---------------- maintenance mode (admin-toggled) ---------------- */
+  getMaintenance: SUPABASE_ENABLED
+    ? async () => {
+        const { data, error } = await supabase.rpc('get_maintenance_mode')
+        if (error) throw error
+        return !!data
+      }
+    : async () => localStorage.getItem('fnahs-maintenance') === '1',
+
+  setMaintenance: SUPABASE_ENABLED
+    ? async (on) => {
+        const { error } = await supabase.rpc('set_maintenance_mode', { p_on: !!on })
+        if (error) throw error
+      }
+    : async (on) => {
+        if (on) localStorage.setItem('fnahs-maintenance', '1')
+        else localStorage.removeItem('fnahs-maintenance')
+      },
+
   /* auth */
   getSession() {
     if (!SUPABASE_ENABLED) {

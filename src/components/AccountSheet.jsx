@@ -6,7 +6,7 @@ import { roleLabel, positionLabel, can } from '../rbac'
 import { api } from '../lib/api'
 import { initials } from '../lib/format'
 import { PROGRAMS, ORG_FULL } from '../lib/mock'
-import { BUILD_ID } from '../lib/build'
+import { BUILD_ID, DEVELOPER } from '../lib/build'
 
 export default function AccountSheet({ onClose, onLogout }) {
   const { user, setUser, toast } = useApp()
@@ -304,6 +304,12 @@ export default function AccountSheet({ onClose, onLogout }) {
           <LogOut size={15} /> Sign out
         </button>
         <div className="mm-pic-hint" style={{ textAlign: 'center', marginTop: 14 }}>build {BUILD_ID}</div>
+        <div className="mm-pic-hint" style={{ textAlign: 'center', marginTop: 4 }}>
+          Developed by{' '}
+          <a href={DEVELOPER.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>
+            {DEVELOPER.name}
+          </a>
+        </div>
       </div>
     </div>
   )

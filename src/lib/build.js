@@ -2,6 +2,8 @@
 // login page so stale PWA caches are easy to spot.
 export const BUILD_ID = 'p240814b'
 
-// Flip to true to take the app down for rework — everyone gets the
-// maintenance screen instead of the app.
-export const MAINTENANCE = true
+// Developer credit — shown on the login page, account sheet, and maintenance screen.
+export const DEVELOPER = {
+  name: 'Christopher Lyod B. Mercado',
+  url: 'https://kurunami31.github.io/Portfolio/',
+}

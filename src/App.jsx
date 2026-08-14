@@ -1,12 +1,12 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { CheckCircle2, AlertCircle, Info } from 'lucide-react'
 import { useApp } from './context/AppContext'
+import { can } from './rbac'
 import Layout from './components/Layout'
 import ChatWidget from './components/ChatWidget'
 import PrivacyNotice from './components/PrivacyNotice'
 import MaintenanceScreen from './components/MaintenanceScreen'
-import { MAINTENANCE } from './lib/build'
 
 const Home = lazy(() => import('./pages/Home'))
 const Feed = lazy(() => import('./pages/Feed'))
@@ -21,10 +21,16 @@ const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
 
 export default function App() {
-  const { user, toasts } = useApp()
+  const { user, toasts, maintenance, authLoading } = useApp()
+  const location = useLocation()
   const consentPending = !!user && !user.privacy_policy_accepted_at
 
-  if (MAINTENANCE) return <MaintenanceScreen />
+  // Maintenance mode blocks everyone except console officers. Login and
+  // signup stay reachable so officers can still authenticate.
+  const maintenanceActive = maintenance && !can(user, 'console.access')
+  if (maintenanceActive && !authLoading && location.pathname !== '/login' && location.pathname !== '/signup') {
+    return <MaintenanceScreen />
+  }
 
   return (
     <>

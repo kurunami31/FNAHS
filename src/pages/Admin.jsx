@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ShieldAlert, Users, Newspaper, CalendarDays, Plus, Pencil, Trash2, X, Search } from 'lucide-react'
+import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can, POSITIONS, positionLabel } from '../rbac'
 import { api } from '../lib/api'
@@ -9,8 +9,9 @@ import { PROGRAMS } from '../lib/mock'
 const ROLES = ['student', 'moderator', 'superadmin']
 
 export default function Admin() {
-  const { user, toast } = useApp()
+  const { user, toast, maintenance, setMaintenanceFlag } = useApp()
   const [tab, setTab] = useState('members')
+  const [saving, setSaving] = useState(false)
   const [members, setMembers] = useState([])
   const [posts, setPosts] = useState([])
   const [events, setEvents] = useState([])
@@ -128,6 +129,9 @@ export default function Admin() {
         <button className={`tab-btn${tab === 'events' ? ' tab-btn--on' : ''}`} onClick={() => setTab('events')}>
           <CalendarDays size={15} /> Events
         </button>
+        <button className={`tab-btn${tab === 'maintenance' ? ' tab-btn--on' : ''}`} onClick={() => setTab('maintenance')}>
+          <Wrench size={15} /> Maintenance
+        </button>
       </div>
 
       {tab === 'members' && (
@@ -240,6 +244,52 @@ export default function Admin() {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {tab === 'maintenance' && (
+        <section className="panel">
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem' }}>Maintenance mode</h3>
+              <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.85rem', lineHeight: 1.7 }}>
+                When on, students and visitors see the maintenance page instead of the app.
+                Officers with console access can still get in to manage things.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <label className="switch" aria-label="Toggle maintenance mode">
+                <input
+                  type="checkbox"
+                  checked={maintenance}
+                  disabled={saving}
+                  onChange={async (e) => {
+                    setSaving(true)
+                    try {
+                      await setMaintenanceFlag(e.target.checked)
+                      toast(
+                        e.target.checked
+                          ? 'Maintenance is ON — students see the maintenance page'
+                          : 'Maintenance is OFF — the app is live again'
+                      )
+                    } catch (err) {
+                      console.error(err)
+                      toast('Could not update maintenance mode', 'err')
+                    } finally {
+                      setSaving(false)
+                    }
+                  }}
+                />
+                <span className="switch-slider" />
+              </label>
+              <b style={{ fontSize: '0.95rem' }}>{maintenance ? 'On' : 'Off'}</b>
+            </div>
+          </div>
+          {maintenance && (
+            <div className="form-ok" style={{ marginTop: 16 }}>
+              Students are currently seeing the maintenance page. You can still use the app.
+            </div>
+          )}
         </section>
       )}
 

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, LogIn, Info } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
+import { DEVELOPER } from '../lib/build'
 
 export default function Login() {
   const { login, toast, isDemo } = useApp()
@@ -74,6 +75,12 @@ export default function Login() {
         <p className="auth-note">
           No account yet? <Link to="/signup" style={{ color: 'var(--accent)' }}>Join FNAHS PULSO</Link><br />
           {isDemo ? 'Staff demo: staff@fnahs.edu.ph · Admin demo: fnahsadmin@fnahs.edu.ph / dorsufnahs2026' : 'Reserved for the students of the Faculty of Nursing and Allied Health Sciences.'}
+        </p>
+        <p className="auth-note" style={{ marginTop: 10 }}>
+          Developed by{' '}
+          <a href={DEVELOPER.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>
+            {DEVELOPER.name}
+          </a>
         </p>
       </div>
     </div>

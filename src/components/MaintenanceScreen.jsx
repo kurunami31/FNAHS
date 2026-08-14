@@ -1,6 +1,10 @@
+import { Link } from 'react-router-dom'
+import { useApp } from '../context/AppContext'
+import { DEVELOPER } from '../lib/build'
 import Ecg from './Ecg'
 
 export default function MaintenanceScreen() {
+  const { user } = useApp()
   return (
     <div
       className="auth-wrap"
@@ -45,6 +49,19 @@ export default function MaintenanceScreen() {
         >
           FNAHS PULSO is currently being reworked. New features are on the way — please check back
           soon.
+        </p>
+
+        {!user && (
+          <p className="auth-note">
+            Are you an officer?{' '}
+            <Link to="/login" style={{ color: 'var(--accent)' }}>Sign in</Link>
+          </p>
+        )}
+        <p className="auth-note" style={{ marginTop: 12 }}>
+          Developed by{' '}
+          <a href={DEVELOPER.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>
+            {DEVELOPER.name}
+          </a>
         </p>
       </div>
     </div>

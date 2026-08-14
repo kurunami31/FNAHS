@@ -11,12 +11,37 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [toasts, setToasts] = useState([])
+  const [maintenance, setMaintenance] = useState(false)
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     localStorage.setItem(THEME_KEY, theme)
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#000000' : '#faf7ee')
   }, [theme])
+
+  // Maintenance mode is an admin-toggled flag in the database. Read it on
+  // boot and re-poll so users get bounced to the maintenance screen shortly
+  // after an officer flips it on.
+  const refreshMaintenance = useCallback(async () => {
+    try {
+      const on = await api.getMaintenance()
+      setMaintenance(!!on)
+    } catch (e) {
+      console.warn('Could not read maintenance flag:', e)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshMaintenance()
+    const id = setInterval(refreshMaintenance, 60_000)
+    return () => clearInterval(id)
+  }, [refreshMaintenance])
+
+  const setMaintenanceFlag = useCallback(async (on) => {
+    await api.setMaintenance(on)
+    setMaintenance(!!on)
+    return !!on
+  }, [])
 
   useEffect(() => {
     let alive = true
@@ -69,6 +94,8 @@ export function AppProvider({ children }) {
       user,
       setUser,
       authLoading,
+      maintenance,
+      setMaintenanceFlag,
       toasts,
       toast,
       login,
@@ -78,7 +105,7 @@ export function AppProvider({ children }) {
       isDemo: !api.isSupabase,
       orgFull: ORG_FULL,
     }),
-    [theme, user, authLoading, toasts, toast, login, signup, logout, refreshUser]
+    [theme, user, authLoading, maintenance, setMaintenanceFlag, toasts, toast, login, signup, logout, refreshUser]
   )
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
