@@ -25,10 +25,14 @@ export default function App() {
   const location = useLocation()
   const consentPending = !!user && !user.privacy_policy_accepted_at
 
-  // Maintenance mode blocks everyone except console officers. Login and
-  // signup stay reachable so officers can still authenticate.
+  // Maintenance mode blocks everyone except console officers. It covers
+  // login and signup too, so students see the maintenance page before any
+  // form. Officers reach the login form via /login?officer=1 (linked from
+  // the maintenance screen) and bypass the gate once signed in.
   const maintenanceActive = maintenance && !can(user, 'console.access')
-  if (maintenanceActive && !authLoading && location.pathname !== '/login' && location.pathname !== '/signup') {
+  const officerLogin =
+    location.pathname === '/login' && new URLSearchParams(location.search).get('officer') === '1'
+  if (maintenanceActive && !authLoading && !officerLogin) {
     return <MaintenanceScreen />
   }
 

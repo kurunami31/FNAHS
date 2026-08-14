@@ -54,7 +54,7 @@ export default function MaintenanceScreen() {
         {!user && (
           <p className="auth-note">
             Are you an officer?{' '}
-            <Link to="/login" style={{ color: 'var(--accent)' }}>Sign in</Link>
+            <Link to="/login?officer=1" style={{ color: 'var(--accent)' }}>Sign in</Link>
           </p>
         )}
         <p className="auth-note" style={{ marginTop: 12 }}>
