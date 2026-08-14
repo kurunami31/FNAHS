@@ -287,6 +287,108 @@ create trigger notify_announcement
   after insert on public.announcements
   for each row execute function public.notify_announcement();
 
+-- fan-out to members when a new event is posted (creator excluded)
+create or replace function public.notify_event()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.notifications (user_id, kind, title, body, link)
+  select id, 'event', 'New event: ' || new.title,
+         to_char(new.starts_at, 'Mon DD at HH24:MI'), '/app/events'
+  from public.profiles
+  where id is distinct from new.created_by;
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_event on public.events;
+create trigger notify_event
+  after insert on public.events
+  for each row execute function public.notify_event();
+
+-- notify the member the moment their ID is scanned in at an event
+create or replace function public.notify_attendance()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_title text;
+begin
+  select title into v_title from public.events where id = new.event_id;
+  insert into public.notifications (user_id, kind, title, body, link)
+  values (new.user_id, 'attendance', 'Checked in!',
+          coalesce(v_title, 'Your event') || ' — attendance recorded.', '/app/events');
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_attendance on public.attendance;
+create trigger notify_attendance
+  after insert on public.attendance
+  for each row execute function public.notify_attendance();
+
+-- notify the post author when someone comments (skip self-comments)
+create or replace function public.notify_comment()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_author uuid;
+  v_name text;
+begin
+  select user_id into v_author from public.posts where id = new.post_id;
+  if v_author is null or v_author = new.user_id then
+    return new;
+  end if;
+  select full_name into v_name from public.profiles where id = new.user_id;
+  insert into public.notifications (user_id, kind, title, body, link)
+  values (v_author, 'mention', coalesce(v_name, 'A member') || ' commented on your post',
+          left(new.content, 120), '/app/feed');
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_comment on public.comments;
+create trigger notify_comment
+  after insert on public.comments
+  for each row execute function public.notify_comment();
+
+-- notify the post author when someone likes their post (skip self-likes)
+create or replace function public.notify_like()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_author uuid;
+  v_name text;
+begin
+  select user_id into v_author from public.posts where id = new.post_id;
+  if v_author is null or v_author = new.user_id then
+    return new;
+  end if;
+  select full_name into v_name from public.profiles where id = new.user_id;
+  insert into public.notifications (user_id, kind, title, body, link)
+  values (v_author, 'mention', coalesce(v_name, 'A member') || ' liked your post',
+          '', '/app/feed');
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_like on public.post_likes;
+create trigger notify_like
+  after insert on public.post_likes
+  for each row execute function public.notify_like();
+
+-- notify event-goers when a poll is added to an event they're attending
+create or replace function public.notify_poll()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.notifications (user_id, kind, title, body, link)
+  select r.user_id, 'poll', 'New poll: ' || new.question, '', '/app/events'
+  from public.rsvps r
+  where r.event_id = new.event_id and r.status = 'going';
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_poll on public.event_polls;
+create trigger notify_poll
+  after insert on public.event_polls
+  for each row execute function public.notify_poll();
+
 -- ---------- 8 · event polls ----------
 create table if not exists public.event_polls (
   id uuid primary key default gen_random_uuid(),

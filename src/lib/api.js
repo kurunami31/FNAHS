@@ -129,6 +129,14 @@ async function demoGetProfile(id) {
   return db.profiles[id] || null
 }
 
+/* demo notifications live in their own localStorage list (same shape as the
+   Supabase rows) so the bell works without a backend too. */
+function demoNotify(rows) {
+  const all = JSON.parse(localStorage.getItem('fnahs-demo-notifs') || '[]')
+  all.push(...rows)
+  localStorage.setItem('fnahs-demo-notifs', JSON.stringify(all))
+}
+
 /* ---------------- posts ---------------- */
 
 async function demoGetPosts() {
@@ -157,8 +165,26 @@ async function demoToggleLike(postId) {
   const me = demoCurrentUserId() || DEMO_USER_ID
   const post = db.posts.find((p) => p.id === postId)
   if (!post) return
-  if (post.likes.includes(me)) post.likes = post.likes.filter((l) => l !== me)
-  else post.likes.push(me)
+  if (post.likes.includes(me)) {
+    post.likes = post.likes.filter((l) => l !== me)
+  } else {
+    post.likes.push(me)
+    if (post.user_id && post.user_id !== me) {
+      const liker = db.profiles[me]
+      demoNotify([
+        {
+          id: uid(),
+          user_id: post.user_id,
+          kind: 'mention',
+          title: `${liker?.full_name || 'A member'} liked your post`,
+          body: '',
+          link: '/app/feed',
+          read_at: null,
+          created_at: new Date().toISOString(),
+        },
+      ])
+    }
+  }
   saveDb(db)
   return post.likes
 }
@@ -168,6 +194,21 @@ async function demoAddComment(postId, content) {
   const post = db.posts.find((p) => p.id === postId)
   if (!post) return
   post.comments.push({ id: uid(), user_id: me, content: sanitizeText(content, 1000), created_at: new Date().toISOString() })
+  if (post.user_id && post.user_id !== me) {
+    const author = db.profiles[me]
+    demoNotify([
+      {
+        id: uid(),
+        user_id: post.user_id,
+        kind: 'mention',
+        title: `${author?.full_name || 'A member'} commented on your post`,
+        body: sanitizeText(content, 120),
+        link: '/app/feed',
+        read_at: null,
+        created_at: new Date().toISOString(),
+      },
+    ])
+  }
   saveDb(db)
   return post.comments
 }
@@ -202,6 +243,21 @@ async function demoCreateEvent(ev) {
   db.events.push(event)
   // Announce the event on the community feed too.
   await demoCreatePost({ content: eventPostContent(ev) })
+  // Fan out a notification to every member except the creator.
+  demoNotify(
+    Object.values(db.profiles)
+      .filter((p) => p.id !== me)
+      .map((p) => ({
+        id: uid(),
+        user_id: p.id,
+        kind: 'event',
+        title: `New event: ${ev.title}`,
+        body: ev.starts_at ? fmtDateTime(ev.starts_at) : '',
+        link: '/app/events',
+        read_at: null,
+        created_at: new Date().toISOString(),
+      }))
+  )
   saveDb(db)
   return event
 }
@@ -223,6 +279,19 @@ async function demoGetAttendance(eventId) {
 async function demoMarkAttendance(eventId, userId) {
   db.attendance[eventId] = db.attendance[eventId] || {}
   db.attendance[eventId][userId] = new Date().toISOString()
+  const ev = db.events.find((e) => e.id === eventId)
+  demoNotify([
+    {
+      id: uid(),
+      user_id: userId,
+      kind: 'attendance',
+      title: 'Checked in!',
+      body: `${ev?.title || 'Your event'} — attendance recorded.`,
+      link: '/app/events',
+      read_at: null,
+      created_at: new Date().toISOString(),
+    },
+  ])
   saveDb(db)
 }
 
@@ -970,7 +1039,14 @@ export const api = {
         await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('user_id', user.id).is('read_at', null)
       }
     : async () => {
-        markNotificationRead()
+        const me = demoCurrentUserId()
+        if (!me) return
+        const all = JSON.parse(localStorage.getItem('fnahs-demo-notifs') || '[]')
+        const now = new Date().toISOString()
+        all.forEach((n) => {
+          if (n.user_id === me && !n.read_at) n.read_at = now
+        })
+        localStorage.setItem('fnahs-demo-notifs', JSON.stringify(all))
       },
 
   /* ---------------- event polls ---------------- */
