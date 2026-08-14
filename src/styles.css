@@ -8,6 +8,9 @@
    ============================================================ */
 
 :root {
+  /* native controls (date/calendar icon, pickers, selects) follow the theme */
+  color-scheme: light;
+
   /* seal gold */
   --accent: #c09000;
   --accent-2: #d9a514;
@@ -60,6 +63,9 @@
 }
 
 html[data-theme='dark'] {
+  /* dark calendar icon + native picker popup in dark mode */
+  color-scheme: dark;
+
   --accent: #f0c948;
   --accent-2: #e6b800;
   --gold: #f0c948;
