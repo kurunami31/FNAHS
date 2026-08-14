@@ -602,7 +602,7 @@ export const api = {
         setDbStatus('ok')
         return (data || []).filter((m) => m.role !== 'superadmin')
       }
-    : () => Object.values(db.profiles).filter((m) => m.role !== 'superadmin'),
+    : async () => Object.values(db.profiles).filter((m) => m.role !== 'superadmin'),
 
   createPost: SUPABASE_ENABLED
     ? async ({ content, image_url }) => {
@@ -680,7 +680,7 @@ export const api = {
         setDbStatus('ok')
         return data || []
       }
-    : () => Object.values(db.profiles),
+    : async () => Object.values(db.profiles),
 
   createUser: SUPABASE_ENABLED
     ? async (p) => {
