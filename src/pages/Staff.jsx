@@ -16,6 +16,11 @@ export default function Staff() {
   const [last, setLast] = useState(null)
   const [tallies, setTallies] = useState([])
   const scanBoxRef = useRef(null)
+  // Mirrors the current eventId so the scan handler never goes stale mid-scan.
+  const eventIdRef = useRef('')
+  // html5-qrcode fires the success callback on every decoded frame while a QR
+  // stays in view, so dedupe repeated reads of the same card.
+  const lastScanRef = useRef({ id: null, at: 0 })
 
   const isStaff = can(user, 'attendance.scan')
 
@@ -45,18 +50,23 @@ export default function Staff() {
     loadEvents()
   }, [loadEvents])
 
+  useEffect(() => {
+    eventIdRef.current = eventId
+  }, [eventId])
+
   const loadAttendance = useCallback(async () => {
-    if (!eventId) return
+    const id = eventIdRef.current
+    if (!id) return
     try {
-      setAttendance(await api.getAttendance(eventId))
+      setAttendance(await api.getAttendance(id))
     } catch (e) {
       toast('Could not load attendance', 'err')
     }
-  }, [eventId, toast])
+  }, [toast])
 
   useEffect(() => {
     loadAttendance()
-  }, [loadAttendance])
+  }, [loadAttendance, eventId])
 
   useEffect(() => {
     return () => {
@@ -105,9 +115,15 @@ export default function Staff() {
     } catch {
       /* raw id text */
     }
+    // The scanner decodes ~10x/sec while the card is held in frame — record
+    // the same card at most once per 3s to avoid duplicate upserts/toasts.
+    const now = Date.now()
+    const prev = lastScanRef.current
+    if (prev.id === userId && now - prev.at < 3000) return
+    lastScanRef.current = { id: userId, at: now }
     setLast({ id: userId, at: new Date().toISOString() })
     try {
-      await api.markAttendance(eventId, userId)
+      await api.markAttendance(eventIdRef.current, userId)
       toast('Attendance recorded')
       await loadAttendance()
     } catch (e) {
