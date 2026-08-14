@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera, Archive, HeartPulse, Users, Settings2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { roleLabel, positionLabel } from '../rbac'
+import { roleLabel, positionLabel, can } from '../rbac'
 import { api } from '../lib/api'
 import { initials } from '../lib/format'
 import { PROGRAMS, ORG_FULL } from '../lib/mock'
@@ -9,6 +10,12 @@ import { BUILD_ID } from '../lib/build'
 
 export default function AccountSheet({ onClose, onLogout }) {
   const { user, setUser, toast } = useApp()
+  const navigate = useNavigate()
+
+  const go = (to) => {
+    onClose()
+    navigate(to)
+  }
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const fileRef = useRef(null)
@@ -235,6 +242,31 @@ export default function AccountSheet({ onClose, onLogout }) {
             {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save profile
           </button>
         )}
+      </div>
+
+      <div className="sheet-sec">
+        <h4>More</h4>
+        <div className="sheet-links">
+          <button className="sheet-link" onClick={() => go('/app/archive')}>
+            <Archive size={16} /> Archive
+          </button>
+          <button className="sheet-link" onClick={() => go('/app/health')}>
+            <HeartPulse size={16} /> Health Centre
+          </button>
+          <button className="sheet-link" onClick={() => go('/app/directory')}>
+            <Users size={16} /> Directory
+          </button>
+          {can(user, 'attendance.scan') && (
+            <button className="sheet-link" onClick={() => go('/app/staff')}>
+              <ShieldCheck size={16} /> Staff tools
+            </button>
+          )}
+          {can(user, 'console.access') && (
+            <button className="sheet-link" onClick={() => go('/app/admin')}>
+              <Settings2 size={16} /> Admin console
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="sheet-sec">

@@ -46,6 +46,15 @@ const SECTION = [
   ['/app', 'home'],
 ]
 
+// Mobile keeps only the five core destinations; the rest live in the account
+// sheet's "More" section so the bottom bar stays uncluttered.
+const MOBILE_TABS = [
+  { to: '/app', label: 'Home', icon: HomeIcon, end: true },
+  { to: '/app/feed', label: 'Feed', icon: Newspaper },
+  { to: '/app/events', label: 'Events', icon: CalendarDays },
+  { to: '/app/idcard', label: 'My ID', icon: CreditCard },
+]
+
 export default function Layout() {
   const { user, theme, setTheme, logout, toast } = useApp()
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -174,25 +183,13 @@ export default function Layout() {
       </main>
 
       <nav className="tabbar" aria-label="Primary">
-        {NAV.map(({ to, label, icon: Icon, end }) => (
+        {MOBILE_TABS.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
             <Icon size={21} />
             <span>{label}</span>
           </NavLink>
         ))}
-        {canScan && (
-          <NavLink to="/app/staff" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
-            <ShieldCheck size={21} />
-            <span>Staff</span>
-          </NavLink>
-        )}
-        {canConsole && (
-          <NavLink to="/app/admin" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
-            <Settings2 size={21} />
-            <span>Admin</span>
-          </NavLink>
-        )}
-        <button className="tab" onClick={() => setSheetOpen(true)} aria-label="Account settings">
+        <button className="tab" onClick={() => setSheetOpen(true)} aria-label="Account & more" title="Account & more">
           <span className="avatar tab-avatar">
             {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
           </span>

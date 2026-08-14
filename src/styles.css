@@ -426,6 +426,25 @@ img { max-width: 100%; }
 .sheet-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 2px; border-bottom: 1px solid var(--line); }
 .sheet-row:last-child { border-bottom: none; }
 .sheet-row .sr-txt h5 { margin: 0 0 2px; font-size: 0.94rem; font-weight: 600; }
+.sheet-links { display: flex; flex-direction: column; gap: 2px; }
+.sheet-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.sheet-link svg { color: var(--gold); flex: none; }
+.sheet-link:hover { background: var(--accent-glow-soft); color: var(--ink); }
 .sheet-row .sr-txt p { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.45; }
 .avatar {
   width: 42px; height: 42px;
@@ -663,13 +682,13 @@ display: flex;
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   padding: 12px 14px;
-  max-width: 560px;
+  max-width: 600px;
   margin: 0 auto 24px;
   box-shadow: var(--sh-sm);
 }
 .composer .avatar { width: 38px; height: 38px; }
 .composer textarea {
-  flex: 1;
+  width: 100%;
   resize: none;
   min-height: 40px;
   max-height: 150px;
