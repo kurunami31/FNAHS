@@ -744,11 +744,18 @@ display: flex;
 .post-action--on { color: var(--accent); background: var(--accent-glow-soft); }
 
 .comment { display: flex; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 0.87rem; }
+.comment--reply { margin-left: 26px; }
 .comment .c-body { flex: 1; line-height: 1.5; min-width: 0; }
-.comment .c-author { font-weight: 600; margin-right: 6px; }
+.comment .c-author { font-weight: 600; margin-right: 2px; }
 .c-top { display: flex; align-items: center; gap: 6px; }
 .c-actions { display: inline-flex; gap: 2px; margin-left: 4px; }
 .c-actions .icon-btn { width: 24px; height: 24px; }
+.c-reply-btn { background: none; border: none; color: var(--accent); font-size: 0.75rem; font-weight: 600; cursor: pointer; padding: 0; font-family: inherit; }
+.c-reply-btn:hover { text-decoration: underline; }
+.c-reply-to { color: var(--muted); font-size: 0.8em; margin-right: 6px; }
+.c-replying { display: flex; align-items: center; gap: 8px; padding: 6px 12px; margin-bottom: 4px; background: var(--accent-glow-soft); border: 1px solid var(--line); border-radius: var(--r-sm); font-size: 0.8rem; color: var(--muted); }
+.c-replying b { color: var(--ink); font-weight: 600; }
+.c-replying .icon-btn { width: 20px; height: 20px; }
 .comment-edit { margin: 6px 0 4px; display: flex; flex-direction: column; gap: 8px; }
 .comment-edit textarea {
   width: 100%;

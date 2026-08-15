@@ -189,26 +189,42 @@ async function demoToggleLike(postId) {
   return post.likes
 }
 
-async function demoAddComment(postId, content, imageUrl) {
+async function demoAddComment(postId, content, imageUrl, parentId) {
   const me = demoCurrentUserId() || DEMO_USER_ID
   const post = db.posts.find((p) => p.id === postId)
   if (!post) return
-  post.comments.push({ id: uid(), user_id: me, content: sanitizeText(content, 1000), image_url: imageUrl || null, created_at: new Date().toISOString() })
+  post.comments.push({ id: uid(), user_id: me, parent_id: parentId || null, content: sanitizeText(content, 1000), image_url: imageUrl || null, created_at: new Date().toISOString() })
+  const notes = []
   if (post.user_id && post.user_id !== me) {
     const author = db.profiles[me]
-    demoNotify([
-      {
+    notes.push({
+      id: uid(),
+      user_id: post.user_id,
+      kind: 'mention',
+      title: `${author?.full_name || 'A member'} commented on your post`,
+      body: sanitizeText(content, 120),
+      link: '/app/feed',
+      read_at: null,
+      created_at: new Date().toISOString(),
+    })
+  }
+  if (parentId) {
+    const parent = post.comments.find((c) => c.id === parentId)
+    if (parent && parent.user_id && parent.user_id !== me) {
+      const author = db.profiles[me]
+      notes.push({
         id: uid(),
-        user_id: post.user_id,
+        user_id: parent.user_id,
         kind: 'mention',
-        title: `${author?.full_name || 'A member'} commented on your post`,
+        title: `${author?.full_name || 'A member'} replied to your comment`,
         body: sanitizeText(content, 120),
         link: '/app/feed',
         read_at: null,
         created_at: new Date().toISOString(),
-      },
-    ])
+      })
+    }
   }
+  if (notes.length) demoNotify(notes)
   saveDb(db)
   return post.comments
 }
@@ -676,12 +692,12 @@ export const api = {
     : demoToggleLike,
 
   addComment: SUPABASE_ENABLED
-    ? async (postId, content, imageUrl) => {
+    ? async (postId, content, imageUrl, parentId) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in to comment.')
         const { data, error } = await supabase
           .from('comments')
-          .insert({ post_id: postId, user_id: user.id, content: sanitizeText(content, 1000), image_url: imageUrl || null })
+          .insert({ post_id: postId, user_id: user.id, parent_id: parentId || null, content: sanitizeText(content, 1000), image_url: imageUrl || null })
           .select()
           .single()
         if (error) throw error

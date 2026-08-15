@@ -148,6 +148,7 @@ create table if not exists public.comments (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts (id) on delete cascade,
   user_id uuid not null default auth.uid() references public.profiles (id) on delete cascade,
+  parent_id uuid references public.comments (id) on delete cascade,
   content text not null,
   image_url text,
   created_at timestamptz not null default now()
