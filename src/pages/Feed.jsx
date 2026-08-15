@@ -90,7 +90,8 @@ export default function Feed() {
       toast(parentId ? 'Reply posted' : 'Comment posted')
       await load()
     } catch (e) {
-      toast('Could not comment', 'err')
+      console.error('comment failed', e)
+      toast(e?.message ? `Could not comment: ${e.message}` : 'Could not comment', 'err')
     }
   }
 
