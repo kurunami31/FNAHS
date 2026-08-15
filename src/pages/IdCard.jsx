@@ -13,6 +13,8 @@ export default function IdCard() {
   const [preview, setPreview] = useState(null)
   const [err, setErr] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [format, setFormat] = useState('png')
+  const [saveImage, setSaveImage] = useState(null)
   const [history, setHistory] = useState([])
 
   useEffect(() => {
@@ -82,36 +84,47 @@ export default function IdCard() {
     if (!c || saving) return
     setSaving(true)
     try {
-      const blob = await new Promise((res) => c.toBlob(res, 'image/png'))
-      if (!blob) throw new Error('Could not render the PNG.')
+      const isJpeg = format === 'jpeg'
+      const mime = isJpeg ? 'image/jpeg' : 'image/png'
+      const ext = isJpeg ? 'jpg' : 'png'
+      const fileName = `FNAHS-ID.${ext}`
+
+      const blob = await new Promise((res) => c.toBlob(res, mime, 0.92))
+      if (!blob) throw new Error('Could not render the image.')
       const url = URL.createObjectURL(blob)
-      const file = new File([blob], 'FNAHS-ID.png', { type: 'image/png' })
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '')
+      const file = new File([blob], fileName, { type: mime })
+      const ua = navigator.userAgent || ''
+      const isIOS = /iPad|iPhone|iPod/.test(ua)
+      const isSafari = /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg|OPR/.test(ua)
+
+      const revokeLater = (ms = 60_000) => setTimeout(() => URL.revokeObjectURL(url), ms)
 
       const saveToDownloads = () => {
         const a = document.createElement('a')
         a.href = url
-        a.download = 'FNAHS-ID.png'
+        a.download = fileName
         a.rel = 'noopener'
+        document.body.appendChild(a)
         a.click()
-        setTimeout(() => URL.revokeObjectURL(url), 4000)
-        toast('Saved — check your downloads folder')
+        a.remove()
+        revokeLater()
+        toast(`Saved — check your downloads folder (${ext.toUpperCase()})`)
       }
 
-      // Mobile path: native share sheet (Save to Files / Save Image on iOS, Share on Android).
-      // Desktop path: file share sheet if supported (Chromium/Edge), else direct download.
+      // Mobile / Safari: native share sheet when supported, otherwise show the image
+      // full-screen so it can be long-pressed / right-clicked to save.
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: 'FNAHS PULSO ID', text: 'My FNAHS PULSO digital ID.' })
-          setTimeout(() => URL.revokeObjectURL(url), 4000)
+          revokeLater()
         } catch (shareErr) {
-          if (shareErr.name !== 'AbortError') saveToDownloads()
+          if (shareErr.name !== 'AbortError') {
+            if (isIOS || isSafari) setSaveImage(url)
+            else saveToDownloads()
+          }
         }
-      } else if (isIOS) {
-        // iOS without file sharing: open the image so the user can long-press → Save Image.
-        window.open(url, '_blank')
-        setTimeout(() => URL.revokeObjectURL(url), 60_000)
-        toast('Tap and hold the image to save it')
+      } else if (isIOS || isSafari) {
+        setSaveImage(url)
       } else {
         saveToDownloads()
       }
@@ -140,8 +153,16 @@ export default function IdCard() {
         )}
 
         <div className="id-actions">
+          <div className="id-format" role="group" aria-label="Image format">
+            <button type="button" className={format === 'png' ? 'is-on' : ''} onClick={() => setFormat('png')} disabled={saving}>
+              PNG
+            </button>
+            <button type="button" className={format === 'jpeg' ? 'is-on' : ''} onClick={() => setFormat('jpeg')} disabled={saving}>
+              JPEG
+            </button>
+          </div>
           <button className="btn btn--primary" onClick={download} disabled={saving || !preview}>
-            {saving ? <Loader2 size={16} className="spin" /> : <Download size={16} />} Save as image
+            {saving ? <Loader2 size={16} className="spin" /> : <Download size={16} />} Save as {format === 'jpeg' ? 'JPEG' : 'PNG'}
           </button>
           {isStaff && (
             <span className="chip chip--ok">
@@ -150,6 +171,20 @@ export default function IdCard() {
           )}
         </div>
       </div>
+
+      {saveImage && (
+        <div className="id-save-overlay" role="dialog" aria-modal="true" onClick={() => setSaveImage(null)}>
+          <div className="id-save-pop" onClick={(e) => e.stopPropagation()}>
+            <img src={saveImage} alt="Your FNAHS digital ID — press and hold to save" />
+            <p>
+              <b>Press and hold</b> the image, then choose <b>Save Image</b> or <b>Add to Photos</b>.
+            </p>
+            <button type="button" className="btn" onClick={() => setSaveImage(null)}>
+              Done
+            </button>
+          </div>
+        </div>
+      )}
 
       <section className="sec" aria-labelledby="h-history" style={{ maxWidth: 640, margin: '34px auto 0', width: '100%' }}>
         <div className="sec-head">

@@ -1014,7 +1014,51 @@ html[data-theme='dark'] .id-card {
   transform: rotate(-5deg);
   background: color-mix(in srgb, var(--gold) 9%, transparent);
 }
-.id-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.id-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.id-format {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+}
+.id-format button {
+  border: none;
+  background: transparent;
+  color: var(--mut);
+  font: 700 11px var(--f-ocr, var(--f-body));
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.id-format button:hover:not(:disabled) { color: var(--ink); }
+.id-format button.is-on { background: var(--gold, #c09000); color: #fff; }
+.id-format button:disabled { opacity: 0.5; cursor: default; }
+.id-save-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(8, 8, 8, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+}
+.id-save-pop {
+  background: var(--paper, #fff);
+  border-radius: var(--r-lg, 16px);
+  padding: 18px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--sh-lg, 0 18px 50px rgba(0, 0, 0, 0.35));
+}
+.id-save-pop img { width: 100%; height: auto; border-radius: 10px; display: block; }
+.id-save-pop p { margin: 14px 0; color: var(--mut); font-size: 0.92rem; }
+
 
 /* ============================================================
    STAFF — rounds ledger
