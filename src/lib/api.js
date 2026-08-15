@@ -240,6 +240,13 @@ async function demoArchivePost(postId) {
   saveDb(db)
 }
 
+async function demoUnarchivePost(postId) {
+  const post = db.posts.find((p) => p.id === postId)
+  if (!post) return
+  post.archived_at = null
+  saveDb(db)
+}
+
 async function demoDeletePost(postId) {
   db.posts = db.posts.filter((p) => p.id !== postId)
   saveDb(db)
@@ -710,6 +717,13 @@ export const api = {
         if (error) throw error
       }
     : demoArchivePost,
+
+  unarchivePost: SUPABASE_ENABLED
+    ? async (postId) => {
+        const { error } = await supabase.from('posts').update({ archived_at: null }).eq('id', postId)
+        if (error) throw error
+      }
+    : demoUnarchivePost,
 
   deletePost: SUPABASE_ENABLED
     ? async (postId) => {

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Archive as ArchiveIcon, Clock3, Inbox } from 'lucide-react'
+import { Archive as ArchiveIcon, Clock3, Inbox, RotateCcw, Trash2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { can } from '../rbac'
 import { api } from '../lib/api'
 import { initials, timeAgo, monthDay } from '../lib/format'
 
 export default function Archive() {
-  const { toast } = useApp()
+  const { user, toast, isDemo } = useApp()
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [lightbox, setLightbox] = useState(null)
@@ -24,6 +25,29 @@ export default function Archive() {
   useEffect(() => {
     load()
   }, [load])
+
+  const onUnarchive = async (p) => {
+    try {
+      await api.unarchivePost(p.id)
+      toast('Post restored to the feed')
+      setPosts((ps) => ps.filter((x) => x.id !== p.id))
+    } catch (e) {
+      console.error(e)
+      toast('Could not restore the post', 'err')
+    }
+  }
+
+  const onDelete = async (p) => {
+    if (!window.confirm('Permanently delete this post and its comments?')) return
+    try {
+      await api.deletePost(p.id)
+      toast('Post permanently deleted')
+      setPosts((ps) => ps.filter((x) => x.id !== p.id))
+    } catch (e) {
+      console.error(e)
+      toast('Could not delete the post', 'err')
+    }
+  }
 
   return (
     <div className="page-c">
@@ -64,6 +88,17 @@ export default function Archive() {
           <p className="post-body">{p.content}</p>
           {p.image_url && (
             <img className="post-img" src={p.image_url} alt="Post attachment" onClick={() => setLightbox(p.image_url)} />
+          )}
+
+          {(isDemo || user?.id === p.user_id || can(user, 'feed.moderate')) && (
+            <div className="post-actions">
+              <button className="post-action" title="Restore to the feed" onClick={() => onUnarchive(p)}>
+                <RotateCcw size={16} /> Unarchive
+              </button>
+              <button className="post-action" title="Delete permanently" onClick={() => onDelete(p)}>
+                <Trash2 size={16} /> Delete permanently
+              </button>
+            </div>
           )}
         </article>
       ))}
