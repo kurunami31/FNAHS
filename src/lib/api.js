@@ -213,6 +213,26 @@ async function demoAddComment(postId, content, imageUrl) {
   return post.comments
 }
 
+async function demoUpdateComment(commentId, content, imageUrl) {
+  for (const post of db.posts) {
+    const c = post.comments?.find((x) => x.id === commentId)
+    if (c) {
+      c.content = sanitizeText(content, 1000)
+      c.image_url = imageUrl || null
+      saveDb(db)
+      return c
+    }
+  }
+}
+
+async function demoDeleteComment(commentId) {
+  for (const post of db.posts) {
+    const before = post.comments?.length || 0
+    post.comments = (post.comments || []).filter((c) => c.id !== commentId)
+    if (post.comments.length !== before) saveDb(db)
+  }
+}
+
 async function demoArchivePost(postId) {
   const post = db.posts.find((p) => p.id === postId)
   if (!post) return
@@ -661,6 +681,28 @@ export const api = {
         return data
       }
     : demoAddComment,
+
+  updateComment: SUPABASE_ENABLED
+    ? async (commentId, content, imageUrl) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { data, error } = await supabase
+          .from('comments')
+          .update({ content: sanitizeText(content, 1000), image_url: imageUrl || null })
+          .eq('id', commentId)
+          .select()
+          .single()
+        if (error) throw error
+        return data
+      }
+    : demoUpdateComment,
+
+  deleteComment: SUPABASE_ENABLED
+    ? async (commentId) => {
+        const { error } = await supabase.from('comments').delete().eq('id', commentId)
+        if (error) throw error
+      }
+    : demoDeleteComment,
 
   archivePost: SUPABASE_ENABLED
     ? async (postId) => {

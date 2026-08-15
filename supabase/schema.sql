@@ -175,6 +175,14 @@ create policy "authors or staff can delete comments"
     or (select role from public.profiles where id = auth.uid()) in ('staff', 'moderator', 'superadmin')
   );
 
+drop policy if exists "authors or staff can update comments" on public.comments;
+create policy "authors or staff can update comments"
+  on public.comments for update
+  using (
+    auth.uid() = user_id
+    or (select role from public.profiles where id = auth.uid()) in ('staff', 'moderator', 'superadmin')
+  );
+
 -- ---------- post_likes ----------
 create table if not exists public.post_likes (
   post_id uuid not null references public.posts (id) on delete cascade,
@@ -373,7 +381,7 @@ grant delete on public.profiles to authenticated;
 
 -- content tables (RLS policies decide who may write)
 grant select, insert, update, delete on public.posts to authenticated;
-grant select, insert, delete on public.comments to authenticated;
+grant select, insert, update, delete on public.comments to authenticated;
 grant select, insert, delete on public.post_likes to authenticated;
 grant select, insert, update, delete on public.events to authenticated;
 grant select, insert, update, delete on public.rsvps to authenticated;

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  Heart, MessageCircle, Archive, Trash2, ImagePlus, Send, ChevronDown, ChevronUp, Newspaper,
+  Heart, MessageCircle, Archive, Trash2, ImagePlus, Send, ChevronDown, ChevronUp, Newspaper, Pencil, X,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
@@ -94,6 +94,30 @@ export default function Feed() {
     }
   }
 
+  const onEditComment = async (id, text, image) => {
+    if (!text.trim()) return
+    try {
+      await api.updateComment(id, text.trim(), image)
+      toast('Comment updated')
+      await load()
+    } catch (e) {
+      console.error(e)
+      toast('Could not update comment', 'err')
+    }
+  }
+
+  const onDeleteComment = async (c) => {
+    if (!window.confirm('Delete this comment?')) return
+    try {
+      await api.deleteComment(c.id)
+      toast('Comment deleted')
+      await load()
+    } catch (e) {
+      console.error(e)
+      toast('Could not delete comment', 'err')
+    }
+  }
+
   const onArchive = async (id) => {
     try {
       await api.archivePost(id)
@@ -178,6 +202,8 @@ export default function Feed() {
           canModerate={isDemo || user?.id === p.user_id || can(user, 'feed.moderate')}
           onLike={onLike}
           onComment={onComment}
+          onEditComment={onEditComment}
+          onDeleteComment={onDeleteComment}
           onArchive={onArchive}
           onDelete={onDelete}
           onZoom={setLightbox}
@@ -193,14 +219,49 @@ export default function Feed() {
   )
 }
 
-function PostCard({ post, meId, canModerate, onLike, onComment, onArchive, onDelete, onZoom }) {
+function PostCard({ post, meId, canModerate, onLike, onComment, onEditComment, onDeleteComment, onArchive, onDelete, onZoom }) {
   const { toast } = useApp()
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [comment, setComment] = useState('')
   const [commentImg, setCommentImg] = useState(null)
   const [commentImgName, setCommentImgName] = useState(null)
   const commentFileRef = useRef(null)
+  const [editingId, setEditingId] = useState(null)
+  const [editText, setEditText] = useState('')
+  const [editImg, setEditImg] = useState(null)
+  const [editImgName, setEditImgName] = useState(null)
+  const [editRemoveImg, setEditRemoveImg] = useState(false)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const editFileRef = useRef(null)
   const liked = post.likes?.includes(meId)
+
+  const startEdit = (c) => {
+    setEditingId(c.id)
+    setEditText(c.content || '')
+    setEditImg(null)
+    setEditImgName(null)
+    setEditRemoveImg(false)
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditText('')
+    setEditImg(null)
+    setEditImgName(null)
+    setEditRemoveImg(false)
+  }
+
+  const saveEdit = async (c) => {
+    if (!editText.trim() || savingEdit) return
+    setSavingEdit(true)
+    try {
+      const image = editImg || (editRemoveImg ? null : c.image_url)
+      await onEditComment(c.id, editText.trim(), image)
+      cancelEdit()
+    } finally {
+      setSavingEdit(false)
+    }
+  }
 
   return (
     <article className="post-card">
@@ -241,21 +302,85 @@ function PostCard({ post, meId, canModerate, onLike, onComment, onArchive, onDel
 
       {commentsOpen && (
         <div style={{ marginTop: 8 }}>
-          {post.comments?.map((c) => (
-            <div className="comment" key={c.id}>
-              <div className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>
-                {initials(c.user_id === meId ? 'You' : c.user_id?.slice(0, 1))}
+          {post.comments?.map((c) => {
+            const isMine = c.user_id === meId
+            const editing = editingId === c.id
+            return (
+              <div className="comment" key={c.id}>
+                <div className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>
+                  {initials(isMine ? 'You' : c.user_id?.slice(0, 1))}
+                </div>
+                <div className="c-body">
+                  <div className="c-top">
+                    <span className="c-author">{isMine ? 'You' : 'Member'}</span>
+                    {(isMine || canModerate) && !editing && (
+                      <span className="c-actions">
+                        {isMine && (
+                          <button className="icon-btn" title="Edit" onClick={() => startEdit(c)}>
+                            <Pencil size={12} />
+                          </button>
+                        )}
+                        <button className="icon-btn icon-btn--danger" title="Delete" onClick={() => onDeleteComment(c)}>
+                          <Trash2 size={12} />
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                  {editing ? (
+                    <div className="comment-edit">
+                      <textarea value={editText} onChange={(e) => setEditText(e.target.value)} />
+                      <div className="comment-edit-row">
+                        <input
+                          ref={editFileRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          hidden
+                          onChange={(e) => {
+                            pickImageFile(e.target.files?.[0], toast, (dataUrl, name) => {
+                              setEditImg(dataUrl)
+                              setEditImgName(name)
+                              setEditRemoveImg(false)
+                            })
+                            e.target.value = ''
+                          }}
+                        />
+                        <button type="button" className="icon-btn" title="Attach a photo" onClick={() => editFileRef.current?.click()}>
+                          <ImagePlus size={14} />
+                        </button>
+                        {editImgName ? (
+                          <span className="chip chip--accent" style={{ fontSize: 11, padding: '2px 8px' }}>
+                            📎 {editImgName}
+                          </span>
+                        ) : c.image_url && !editRemoveImg ? (
+                          <span className="chip chip--accent" style={{ fontSize: 11, padding: '2px 8px' }}>
+                            📷 has photo
+                            <button className="icon-btn" style={{ width: 18, height: 18 }} onClick={() => setEditRemoveImg(true)}>
+                              <X size={11} />
+                            </button>
+                          </span>
+                        ) : editRemoveImg && !editImg ? (
+                          <span className="chip chip--archived" style={{ fontSize: 11, padding: '2px 8px' }}>photo removed</span>
+                        ) : null}
+                        <span style={{ flex: 1 }} />
+                        <button type="button" className="btn btn--ghost btn--sm" onClick={cancelEdit}>Cancel</button>
+                        <button type="button" className="btn btn--primary btn--sm" disabled={savingEdit || !editText.trim()} onClick={() => saveEdit(c)}>
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {c.content}
+                      {c.image_url && (
+                        <img className="comment-img" src={c.image_url} alt="Comment attachment" onClick={() => onZoom(c.image_url)} />
+                      )}
+                    </>
+                  )}
+                  <div className="c-time">{timeAgo(c.created_at)}</div>
+                </div>
               </div>
-              <div className="c-body">
-                <span className="c-author">{c.user_id === meId ? 'You' : 'Member'}</span>
-                {c.content}
-                {c.image_url && (
-                  <img className="comment-img" src={c.image_url} alt="Comment attachment" onClick={() => onZoom(c.image_url)} />
-                )}
-                <div className="c-time">{timeAgo(c.created_at)}</div>
-              </div>
-            </div>
-          ))}
+            )
+          })}
           {commentImgName && (
             <span className="chip chip--accent" style={{ marginTop: 8 }}>
               📎 {commentImgName}
