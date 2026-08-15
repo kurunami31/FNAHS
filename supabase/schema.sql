@@ -149,6 +149,7 @@ create table if not exists public.comments (
   post_id uuid not null references public.posts (id) on delete cascade,
   user_id uuid not null default auth.uid() references public.profiles (id) on delete cascade,
   content text not null,
+  image_url text,
   created_at timestamptz not null default now()
 );
 

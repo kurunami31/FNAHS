@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
-import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import QRCode from 'qrcode'
+import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can, POSITIONS, positionLabel } from '../rbac'
 import { api } from '../lib/api'
 import { initials, timeAgo, monthDay } from '../lib/format'
 import { PROGRAMS } from '../lib/mock'
+import { drawIdCanvas, ID_W, ID_H } from '../lib/idCanvas'
 
 const ROLES = ['student', 'moderator', 'superadmin']
 
@@ -17,6 +19,7 @@ export default function Admin() {
   const [events, setEvents] = useState([])
   const [q, setQ] = useState('')
   const [memberModal, setMemberModal] = useState(null)
+  const [idModal, setIdModal] = useState(null)
   const [postModal, setPostModal] = useState(null)
   const [eventModal, setEventModal] = useState(null)
 
@@ -175,6 +178,9 @@ export default function Admin() {
                   ))}
                 </select>
                 <div className="admin-actions">
+                  <button className="icon-btn" title="View digital ID" onClick={() => setIdModal(m)}>
+                    <IdCard size={15} />
+                  </button>
                   <button className="icon-btn" title="Edit" onClick={() => setMemberModal({ mode: 'edit', m })}>
                     <Pencil size={15} />
                   </button>
@@ -309,6 +315,7 @@ export default function Admin() {
           }}
         />
       )}
+      {idModal && <MemberIdModal member={idModal} onClose={() => setIdModal(null)} />}
       {postModal && (
         <PostEditModal
           post={postModal}
@@ -331,6 +338,94 @@ export default function Admin() {
           }}
         />
       )}
+    </div>
+  )
+}
+
+function MemberIdModal({ member, onClose }) {
+  const { toast } = useApp()
+  const canvasRef = useRef(null)
+  const [preview, setPreview] = useState(null)
+  const [err, setErr] = useState(null)
+
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      try {
+        await Promise.allSettled([
+          document.fonts.load('700 40px Fraunces'),
+          document.fonts.load('700 26px "Share Tech Mono"'),
+          document.fonts.load('700 14px "Share Tech Mono"'),
+        ])
+      } catch {
+        /* fonts optional */
+      }
+      if (alive) await draw()
+    })()
+    return () => {
+      alive = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [member.id])
+
+  const draw = async () => {
+    const c = document.createElement('canvas')
+    c.width = ID_W
+    c.height = ID_H
+    try {
+      const qr = await QRCode.toDataURL(
+        JSON.stringify({ t: 'fnahs-id', id: member.id, n: member.full_name || '', v: 1 }),
+        { width: 480, margin: 1, color: { dark: '#2b2410', light: '#ffffff' }, errorCorrectionLevel: 'M' }
+      )
+      await drawIdCanvas(c, { profile: member, avatarUrl: member.avatar_url, qr })
+      canvasRef.current = c
+      setPreview(c.toDataURL('image/png'))
+      setErr(null)
+    } catch (e) {
+      console.error(e)
+      setErr('Could not render the ID card.')
+    }
+  }
+
+  const download = () => {
+    const c = canvasRef.current
+    if (!c) return
+    try {
+      const a = document.createElement('a')
+      a.href = c.toDataURL('image/png')
+      a.download = `FNAHS-ID-${(member.full_name || 'member').replace(/\s+/g, '-')}.png`
+      a.rel = 'noopener'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      toast(`Saved — ${a.download}`)
+    } catch (e) {
+      console.error(e)
+      toast('Could not export the ID image', 'err')
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h2>
+          DIGITAL ID <span className="page-kicker">{member.full_name || 'Member'}</span>
+        </h2>
+        <p className="modal-sub" style={{ margin: '-10px 0 16px', color: 'var(--muted)', fontSize: '0.82rem' }}>
+          {member.email} · {member.program || '—'} · YR {member.year_level || '—'}
+        </p>
+        {preview ? (
+          <img src={preview} alt={`Digital ID of ${member.full_name || 'member'}`} className="id-preview" />
+        ) : (
+          <div className="id-card-loading">{err || 'Rendering ID…'}</div>
+        )}
+        <div className="modal-actions">
+          <button className="btn btn--ghost" onClick={onClose}>Close</button>
+          <button className="btn btn--primary" disabled={!preview} onClick={download}>
+            Save PNG
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

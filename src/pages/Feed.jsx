@@ -6,6 +6,7 @@ import {
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
+import { pickImageFile } from '../lib/image'
 import { initials, timeAgo } from '../lib/format'
 
 export default function Feed() {
@@ -66,49 +67,11 @@ export default function Feed() {
   }
 
   const pickImage = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    if (!allowed.includes(file.type)) {
-      toast('Only JPEG, PNG, WebP or GIF images', 'err')
-      e.target.value = ''
-      return
-    }
-    if (file.size > 4 * 1024 * 1024) {
-      toast('Image too large (max 4MB)', 'err')
-      e.target.value = ''
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      // Animated GIFs pass through untouched; everything else is re-encoded
-      // to a ≤1200px JPEG so the stored data URL stays lean.
-      const accept = (dataUrl) => {
-        if (dataUrl.length > 2_500_000) {
-          toast('Image too large — try a smaller photo', 'err')
-          return
-        }
-        setImageData(dataUrl)
-        setImage(file.name)
-      }
-      if (file.type === 'image/gif') {
-        accept(reader.result)
-        return
-      }
-      const img = new Image()
-      img.onload = () => {
-        const MAX = 1200
-        const scale = Math.min(1, MAX / Math.max(img.width, img.height))
-        const canvas = document.createElement('canvas')
-        canvas.width = Math.round(img.width * scale)
-        canvas.height = Math.round(img.height * scale)
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
-        accept(canvas.toDataURL('image/jpeg', 0.82))
-      }
-      img.onerror = () => accept(reader.result)
-      img.src = reader.result
-    }
-    reader.readAsDataURL(file)
+    pickImageFile(e.target.files?.[0], toast, (dataUrl, name) => {
+      setImageData(dataUrl)
+      setImage(name)
+    })
+    e.target.value = ''
   }
 
   const onLike = async (id) => {
@@ -120,10 +83,10 @@ export default function Feed() {
     }
   }
 
-  const onComment = async (id, text) => {
-    if (!text.trim()) return
+  const onComment = async (id, text, image) => {
+    if (!text.trim() && !image) return
     try {
-      await api.addComment(id, text.trim())
+      await api.addComment(id, text.trim(), image)
       toast('Comment posted')
       await load()
     } catch (e) {
@@ -231,8 +194,12 @@ export default function Feed() {
 }
 
 function PostCard({ post, meId, canModerate, onLike, onComment, onArchive, onDelete, onZoom }) {
+  const { toast } = useApp()
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [comment, setComment] = useState('')
+  const [commentImg, setCommentImg] = useState(null)
+  const [commentImgName, setCommentImgName] = useState(null)
+  const commentFileRef = useRef(null)
   const liked = post.likes?.includes(meId)
 
   return (
@@ -282,20 +249,50 @@ function PostCard({ post, meId, canModerate, onLike, onComment, onArchive, onDel
               <div className="c-body">
                 <span className="c-author">{c.user_id === meId ? 'You' : 'Member'}</span>
                 {c.content}
+                {c.image_url && (
+                  <img className="comment-img" src={c.image_url} alt="Comment attachment" onClick={() => onZoom(c.image_url)} />
+                )}
                 <div className="c-time">{timeAgo(c.created_at)}</div>
               </div>
             </div>
           ))}
+          {commentImgName && (
+            <span className="chip chip--accent" style={{ marginTop: 8 }}>
+              📎 {commentImgName}
+              <button className="icon-btn" style={{ width: 22, height: 22 }} onClick={() => { setCommentImg(null); setCommentImgName(null) }}>
+                <Trash2 size={13} />
+              </button>
+            </span>
+          )}
           <form
             className="comment-input"
             onSubmit={(e) => {
               e.preventDefault()
-              onComment(post.id, comment)
+              if (!comment.trim() && !commentImg) return
+              onComment(post.id, comment, commentImg)
               setComment('')
+              setCommentImg(null)
+              setCommentImgName(null)
             }}
           >
             <input placeholder="Write a comment…" value={comment} onChange={(e) => setComment(e.target.value)} />
-            <button className="btn btn--primary btn--sm" disabled={!comment.trim()}>
+            <input
+              ref={commentFileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              hidden
+              onChange={(e) => {
+                pickImageFile(e.target.files?.[0], toast, (dataUrl, name) => {
+                  setCommentImg(dataUrl)
+                  setCommentImgName(name)
+                })
+                e.target.value = ''
+              }}
+            />
+            <button type="button" className="icon-btn" title="Attach a photo" onClick={() => commentFileRef.current?.click()}>
+              <ImagePlus size={16} />
+            </button>
+            <button className="btn btn--primary btn--sm" disabled={!comment.trim() && !commentImg}>
               <Send size={13} />
             </button>
           </form>

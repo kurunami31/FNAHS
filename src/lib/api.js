@@ -189,11 +189,11 @@ async function demoToggleLike(postId) {
   return post.likes
 }
 
-async function demoAddComment(postId, content) {
+async function demoAddComment(postId, content, imageUrl) {
   const me = demoCurrentUserId() || DEMO_USER_ID
   const post = db.posts.find((p) => p.id === postId)
   if (!post) return
-  post.comments.push({ id: uid(), user_id: me, content: sanitizeText(content, 1000), created_at: new Date().toISOString() })
+  post.comments.push({ id: uid(), user_id: me, content: sanitizeText(content, 1000), image_url: imageUrl || null, created_at: new Date().toISOString() })
   if (post.user_id && post.user_id !== me) {
     const author = db.profiles[me]
     demoNotify([
@@ -649,12 +649,12 @@ export const api = {
     : demoToggleLike,
 
   addComment: SUPABASE_ENABLED
-    ? async (postId, content) => {
+    ? async (postId, content, imageUrl) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in to comment.')
         const { data, error } = await supabase
           .from('comments')
-          .insert({ post_id: postId, user_id: user.id, content: sanitizeText(content, 1000) })
+          .insert({ post_id: postId, user_id: user.id, content: sanitizeText(content, 1000), image_url: imageUrl || null })
           .select()
           .single()
         if (error) throw error

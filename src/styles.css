@@ -746,6 +746,7 @@ display: flex;
 .comment { display: flex; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 0.87rem; }
 .comment .c-body { flex: 1; line-height: 1.5; }
 .comment .c-author { font-weight: 600; margin-right: 6px; }
+.comment-img { border-radius: var(--r-sm); border: 1px solid var(--line); max-height: 200px; width: 100%; object-fit: cover; cursor: zoom-in; margin-top: 8px; }
 .comment .c-time { font-family: var(--f-ocr); font-size: 0.58rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
 .comment-input { display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
 .comment-input input {
