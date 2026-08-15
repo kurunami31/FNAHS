@@ -30,8 +30,10 @@ export default function App() {
   // form. Officers reach the login form via /login?officer=1 (linked from
   // the maintenance screen) and bypass the gate once signed in.
   const maintenanceActive = maintenance && !can(user, 'console.access')
+  // The officer=1 escape only applies to a signed-out visitor on the login
+  // page — once signed in, a non-officer is back on the maintenance gate.
   const officerLogin =
-    location.pathname === '/login' && new URLSearchParams(location.search).get('officer') === '1'
+    !user && location.pathname === '/login' && new URLSearchParams(location.search).get('officer') === '1'
   if (maintenanceActive && !authLoading && !officerLogin) {
     return <MaintenanceScreen />
   }

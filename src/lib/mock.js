@@ -30,7 +30,7 @@ export function seedProfiles() {
       email: 'staff@fnahs.edu.ph',
       program: 'Faculty',
       year_level: '—',
-      role: 'staff',
+      role: 'moderator',
       avatar_url: null,
       created_at: new Date(now - 90 * d).toISOString(),
     },
@@ -153,6 +153,43 @@ export function seedFeeds() {
       { id: 't2', title: 'Take blood pressure with the cuff at heart level after 5 minutes of seated rest', meta: 'vital signs' },
       { id: 't3', title: 'Sleep 7–9 hours a night — immunity and memory consolidate while you rest', meta: 'wellness' },
       { id: 't4', title: 'Hydrate before you feel thirsty; mild dehydration already impairs focus', meta: 'hydration' },
+    ],
+    news: [
+      {
+        id: 'n1',
+        title: 'WHO releases updated guidance on safe maternal and newborn care',
+        url: 'https://www.who.int/news-room',
+        source: 'WHO',
+        created_at: new Date(now - 3 * h).toISOString(),
+      },
+      {
+        id: 'n2',
+        title: 'Global immunization drives restore coverage lost during the pandemic',
+        url: 'https://www.who.int/news-room',
+        source: 'WHO',
+        created_at: new Date(now - 9 * h).toISOString(),
+      },
+      {
+        id: 'n3',
+        title: 'Study: nurse-led follow-up calls cut hospital readmission rates by a fifth',
+        url: 'https://www.who.int/news-room',
+        source: 'Nursing Times',
+        created_at: new Date(now - 22 * h).toISOString(),
+      },
+      {
+        id: 'n4',
+        title: 'New antimicrobial resistance action plan announced for the Western Pacific',
+        url: 'https://www.who.int/news-room',
+        source: 'WHO',
+        created_at: new Date(now - 30 * h).toISOString(),
+      },
+      {
+        id: 'n5',
+        title: 'Health workers urged to watch for heat-related illness as summers warm',
+        url: 'https://www.who.int/news-room',
+        source: 'WHO',
+        created_at: new Date(now - 2 * d).toISOString(),
+      },
     ],
   }
 }

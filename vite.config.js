@@ -50,7 +50,7 @@ export default defineConfig({
     securityMetaTags(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['FNAHS.png', 'favicon.svg', 'favicon.ico'],
+      includeAssets: ['FNAHS.png', 'favicon.ico'],
       manifest: false,
     }),
   ],

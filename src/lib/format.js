@@ -3,7 +3,16 @@ export function timeAgo(dateStr) {
   const then = new Date(dateStr).getTime()
   const diff = Date.now() - then
   const s = Math.floor(diff / 1000)
-  if (s < 45) return 'just now'
+  if (s < 45) {
+    if (s >= 0) return 'just now'
+    // Future timestamps (upcoming events) read as "in Xh" instead of "just now".
+    const a = Math.floor(-s / 60)
+    if (a < 60) return `in ${a}m`
+    const b = Math.floor(a / 60)
+    if (b < 24) return `in ${b}h`
+    const c = Math.floor(b / 24)
+    return `in ${c}d`
+  }
   const m = Math.floor(s / 60)
   if (m < 60) return `${m}m ago`
   const h = Math.floor(m / 60)

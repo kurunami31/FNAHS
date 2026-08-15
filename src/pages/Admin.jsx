@@ -20,9 +20,11 @@ export default function Admin() {
   const [postModal, setPostModal] = useState(null)
   const [eventModal, setEventModal] = useState(null)
 
+  const isSuperadmin = user?.role === 'superadmin'
+
   const load = useCallback(async () => {
     try {
-      const [ms, ps, evs] = await Promise.all([api.getUsers(), api.getPosts(), api.getEvents()])
+      const [ms, ps, evs] = await Promise.all([api.getUsers(), api.getPosts(), api.getAllEvents()])
       setMembers(ms)
       setPosts(ps)
       setEvents(evs)
@@ -168,7 +170,7 @@ export default function Admin() {
                   aria-label={`Role of ${m.full_name}`}
                   onChange={(e) => changeRole(m, e.target.value)}
                 >
-                  {ROLES.map((r) => (
+                  {ROLES.filter((r) => r !== 'superadmin' || isSuperadmin).map((r) => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
@@ -176,9 +178,11 @@ export default function Admin() {
                   <button className="icon-btn" title="Edit" onClick={() => setMemberModal({ mode: 'edit', m })}>
                     <Pencil size={15} />
                   </button>
-                  <button className="icon-btn icon-btn--danger" title="Delete" onClick={() => removeMember(m)}>
-                    <Trash2 size={15} />
-                  </button>
+                  {isSuperadmin && (
+                    <button className="icon-btn icon-btn--danger" title="Delete" onClick={() => removeMember(m)}>
+                      <Trash2 size={15} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -332,18 +336,23 @@ export default function Admin() {
 }
 
 function MemberFormModal({ mode, member, onClose, onSaved }) {
-  const { toast } = useApp()
+  const { toast, user } = useApp()
   const [form, setForm] = useState(() =>
     mode === 'edit'
       ? { full_name: member.full_name || '', email: member.email || '', program: member.program || PROGRAMS[0], year_level: member.year_level || '1', role: member.role || 'student', positions: member.positions || [] }
-      : { full_name: '', email: '', program: PROGRAMS[0], year_level: '1', role: 'student', positions: [] }
+      : { full_name: '', email: '', password: '', program: PROGRAMS[0], year_level: '1', role: 'student', positions: [] }
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const isSuperadmin = user?.role === 'superadmin'
 
   const submit = async () => {
     if (!form.full_name.trim() || !form.email.trim()) {
       setError('Name and email are required.')
+      return
+    }
+    if (mode === 'create' && (form.password || '').length < 6) {
+      setError('Password must be at least 6 characters — the member signs in with it.')
       return
     }
     setSaving(true)
@@ -381,6 +390,12 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
           <label>Email</label>
           <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="student@fnahs.edu.ph" />
         </div>
+        {mode === 'create' && (
+          <div className="field">
+            <label>Password <span className="field-hint">(min 6 chars — the member signs in with this)</span></label>
+            <input type="text" value={form.password || ''} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" autoComplete="new-password" />
+          </div>
+        )}
         <div className="field">
           <label>Program</label>
           <select value={form.program} onChange={(e) => setForm({ ...form, program: e.target.value })}>
@@ -397,34 +412,38 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
             ))}
           </select>
         </div>
-        <div className="field">
-          <label>Role</label>
-          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-            {ROLES.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label>Positions <span className="field-hint">(what tools the member gets — pick none for a plain member)</span></label>
-          <div className="pos-grid">
-            {POSITIONS.map((p) => {
-              const on = form.positions?.includes(p)
-              return (
-                <button
-                  key={p}
-                  type="button"
-                  className={`pos-chip${on ? ' pos-chip--on' : ''}`}
-                  onClick={() =>
-                    setForm((f) => ({ ...f, positions: on ? f.positions.filter((x) => x !== p) : [...(f.positions || []), p] }))
-                  }
-                >
-                  {positionLabel(p)}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        {isSuperadmin && (
+          <>
+            <div className="field">
+              <label>Role</label>
+              <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+                {ROLES.map((r) => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Positions <span className="field-hint">(what tools the member gets — pick none for a plain member)</span></label>
+              <div className="pos-grid">
+                {POSITIONS.map((p) => {
+                  const on = form.positions?.includes(p)
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      className={`pos-chip${on ? ' pos-chip--on' : ''}`}
+                      onClick={() =>
+                        setForm((f) => ({ ...f, positions: on ? f.positions.filter((x) => x !== p) : [...(f.positions || []), p] }))
+                      }
+                    >
+                      {positionLabel(p)}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </>
+        )}
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn--primary" disabled={saving} onClick={submit}>

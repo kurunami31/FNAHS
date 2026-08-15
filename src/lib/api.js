@@ -303,7 +303,7 @@ let feedCacheAt = 0
 async function getFeeds() {
   // Memoize for the session so page visits don't refetch every time.
   if (feedCache && Date.now() - feedCacheAt < 15 * 60e3) return feedCache
-  const out = { health: seedFeeds().health, tips: seedFeeds().tips, news: seedFeeds().health }
+  const out = { health: seedFeeds().health, tips: seedFeeds().tips, news: seedFeeds().news }
   try {
     const res = await fetch(
       `https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.who.int/rss-feeds/news-english.xml')}`,
@@ -703,13 +703,22 @@ export const api = {
 
   createUser: SUPABASE_ENABLED
     ? async (p) => {
-        const { data, error } = await supabase
-          .from('profiles')
-          .insert({ ...p, created_at: new Date().toISOString() })
-          .select()
-          .single()
+        // Member creation goes through the security-definer create_member()
+        // RPC: it creates the auth user (so the new member can actually log
+        // in), lets the signup trigger make the profile row, and only then
+        // applies the requested role/positions as postgres. A plain insert
+        // would be rejected by RLS and could never grant login access.
+        const { data: created, error } = await supabase.rpc('create_member', {
+          p_email: p.email,
+          p_password: p.password,
+          p_full_name: p.full_name,
+          p_role: p.role || 'student',
+          p_positions: p.positions || [],
+          p_program: p.program,
+          p_year_level: p.year_level,
+        })
         if (error) throw error
-        return data
+        return created
       }
     : async (p) => {
         const row = {
@@ -834,6 +843,28 @@ export const api = {
         }))
       }
     : demoGetEvents,
+
+  /* all events — past included (admin console needs to manage old events) */
+  getAllEvents: SUPABASE_ENABLED
+    ? async () => {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*, rsvps(*)')
+          .order('starts_at', { ascending: true })
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
+        return (data || []).map((e) => ({
+          ...e,
+          rsvps: Object.fromEntries((e.rsvps || []).map((r) => [r.user_id, r.status])),
+        }))
+      }
+    : async () => {
+        const evs = await demoGetEvents()
+        return evs.map((e) => ({ ...e, rsvps: e.rsvps || {} }))
+      },
 
   createEvent: SUPABASE_ENABLED
     ? async (ev) => {
