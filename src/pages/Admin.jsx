@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard } from 'lucide-react'
+import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can, POSITIONS, positionLabel } from '../rbac'
 import { api } from '../lib/api'
@@ -128,6 +128,9 @@ export default function Admin() {
         <button className={`tab-btn${tab === 'members' ? ' tab-btn--on' : ''}`} onClick={() => setTab('members')}>
           <Users size={15} /> Members
         </button>
+        <button className={`tab-btn${tab === 'ids' ? ' tab-btn--on' : ''}`} onClick={() => setTab('ids')}>
+          <IdCard size={15} /> Digital IDs
+        </button>
         <button className={`tab-btn${tab === 'posts' ? ' tab-btn--on' : ''}`} onClick={() => setTab('posts')}>
           <Newspaper size={15} /> Posts
         </button>
@@ -192,6 +195,27 @@ export default function Admin() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {tab === 'ids' && (
+        <section className="panel">
+          <div className="admin-toolbar">
+            <p className="page-sub" style={{ margin: 0 }}>
+              Digital IDs of all registered members — click Save PNG to export each card.
+            </p>
+          </div>
+          <div className="id-grid">
+            {members.filter((m) => m.role !== 'superadmin').map((m) => (
+              <MemberIdCard key={m.id} member={m} />
+            ))}
+            {!members.some((m) => m.role !== 'superadmin') && (
+              <div className="empty-state">
+                <Users size={40} />
+                <h3>No members yet</h3>
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -342,7 +366,7 @@ export default function Admin() {
   )
 }
 
-function MemberIdModal({ member, onClose }) {
+function MemberIdCard({ member }) {
   const { toast } = useApp()
   const canvasRef = useRef(null)
   const [preview, setPreview] = useState(null)
@@ -406,6 +430,25 @@ function MemberIdModal({ member, onClose }) {
   }
 
   return (
+    <div className="id-card-cell">
+      {preview ? (
+        <img src={preview} alt={`Digital ID of ${member.full_name || 'member'}`} className="id-preview" />
+      ) : (
+        <div className="id-card-loading">{err || 'Rendering ID…'}</div>
+      )}
+      <div className="id-card-name">{member.full_name || '—'}</div>
+      <div className="id-card-meta">
+        {member.email} · {member.program || '—'} · YR {member.year_level || '—'}
+      </div>
+      <button className="btn btn--ghost btn--sm" disabled={!preview} onClick={download}>
+        <Download size={14} /> Save PNG
+      </button>
+    </div>
+  )
+}
+
+function MemberIdModal({ member, onClose }) {
+  return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h2>
@@ -414,16 +457,9 @@ function MemberIdModal({ member, onClose }) {
         <p className="modal-sub" style={{ margin: '-10px 0 16px', color: 'var(--muted)', fontSize: '0.82rem' }}>
           {member.email} · {member.program || '—'} · YR {member.year_level || '—'}
         </p>
-        {preview ? (
-          <img src={preview} alt={`Digital ID of ${member.full_name || 'member'}`} className="id-preview" />
-        ) : (
-          <div className="id-card-loading">{err || 'Rendering ID…'}</div>
-        )}
+        <MemberIdCard member={member} />
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Close</button>
-          <button className="btn btn--primary" disabled={!preview} onClick={download}>
-            Save PNG
-          </button>
         </div>
       </div>
     </div>

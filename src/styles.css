@@ -2144,6 +2144,13 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 /* ID card — canvas-rendered preview (bsitcodex-style artifact) */
 .id-preview { width: min(430px, 100%); height: auto; border-radius: var(--r-lg); box-shadow: var(--sh-lg); display: block; margin: 0 auto; background: #fff; }
 .id-card-loading { width: min(430px, 100%); aspect-ratio: 680 / 430; border-radius: var(--r-lg); border: 1.5px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: var(--f-ocr); font-size: 0.8rem; letter-spacing: 0.1em; text-align: center; margin: 0 auto; background: var(--paper); }
+.id-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px; padding: 4px; }
+.id-card-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.id-card-cell .id-preview { width: 100%; height: auto; border-radius: var(--r-lg); box-shadow: var(--sh-md); background: #fff; }
+.id-card-cell .id-card-loading { width: 100%; }
+.id-card-name { font-weight: 600; font-size: 0.92rem; margin-top: 4px; }
+.id-card-meta { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+.id-card-cell .btn { margin-top: 6px; }
 
 /* FNAHS logo — bigger everywhere so the org marks are clearly seen */
 .seal { width: 64px; height: 64px; padding: 5px; }
