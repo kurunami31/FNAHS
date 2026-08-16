@@ -79,6 +79,7 @@ export default function Login() {
             <div className="auth-brand-sub">Proactive &amp; United Legion of Student Nurses</div>
           </div>
         </div>
+        <h2 className="auth-title">Log <em>in</em></h2>
         <p className="auth-sub">Welcome back to the ward.</p>
         <Ecg className="auth-ecg" />
 
