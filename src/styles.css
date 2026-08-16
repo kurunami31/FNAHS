@@ -1233,11 +1233,11 @@ html[data-theme='dark'] .id-card {
 }
 .auth-card {
   position: relative;
-  width: min(400px, calc(100vw - 32px));
+  width: min(460px, calc(100vw - 32px));
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
-  padding: 38px 32px;
+  padding: 44px 40px;
   box-shadow: var(--sh-lg);
   animation: card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -1246,11 +1246,11 @@ html[data-theme='dark'] .id-card {
   to { opacity: 1; transform: none; }
 }
 
-/* ---------- auth gate (welcome page) ---------- */
-.auth-card--gate { text-align: center; padding: 42px 34px 30px; }
-.gate-seals { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 22px; }
+/* ---------- auth gate (full-page welcome) ---------- */
+.welcome-inner { text-align: center; animation: card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.welcome-seals { display: flex; align-items: center; justify-content: center; gap: 28px; margin-bottom: 28px; }
 .gate-seal {
-  width: 94px; height: 94px;
+  width: 104px; height: 104px;
   border-radius: 50%;
   padding: 6px;
   background: var(--paper);
@@ -1259,39 +1259,30 @@ html[data-theme='dark'] .id-card {
   display: flex; align-items: center; justify-content: center;
   animation: seal-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.gate-seal:nth-of-type(1) { animation-delay: 0.06s; }
-.gate-seal:nth-of-type(3) { animation-delay: 0.16s; }
+.gate-seal:nth-of-type(2) { animation-delay: 0.12s; }
 .gate-seal img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
 @keyframes seal-in {
   from { opacity: 0; transform: translateY(12px) scale(0.9); }
   to { opacity: 1; transform: none; }
 }
-.gate-link { width: 54px; height: 18px; flex: none; margin: 0 2px; }
-.gate-link path { stroke-width: 1.6; }
 .gate-eyebrow {
   font-family: var(--f-ocr); font-size: 0.62rem; letter-spacing: 0.3em;
   text-transform: uppercase; color: var(--gold); margin: 0 0 8px;
-  animation: rise-in 0.6s ease-out 0.24s both;
+  animation: rise-in 0.6s ease-out 0.2s both;
 }
 .gate-name {
-  font-family: var(--f-display); font-weight: 700; font-size: 2.5rem;
+  font-family: var(--f-display); font-weight: 700; font-size: 3.1rem;
   line-height: 1.04; letter-spacing: 0.01em; margin: 0 0 8px;
-  animation: rise-in 0.6s ease-out 0.32s both;
+  animation: rise-in 0.6s ease-out 0.28s both;
 }
 .gate-name em { font-style: italic; color: var(--gold); }
 .gate-fac {
   font-family: var(--f-ocr); font-size: 0.58rem; letter-spacing: 0.22em;
-  text-transform: uppercase; color: var(--muted); margin: 0 0 4px;
-  animation: rise-in 0.6s ease-out 0.4s both;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 26px;
+  animation: rise-in 0.6s ease-out 0.36s both;
 }
-.gate-pulse { max-width: 210px; margin: 6px auto 12px; animation: rise-in 0.6s ease-out 0.48s both; }
-.gate-sub {
-  font-size: 0.9rem; color: var(--ink-soft); line-height: 1.6;
-  margin: 0 0 22px;
-  animation: rise-in 0.6s ease-out 0.56s both;
-}
-.auth-card--gate .btn { animation: rise-in 0.6s ease-out 0.64s both; }
-.auth-card--gate .auth-note { animation: rise-in 0.6s ease-out 0.72s both; }
+.welcome-inner .btn { animation: rise-in 0.6s ease-out 0.44s both; }
+.welcome-inner .auth-note { animation: rise-in 0.6s ease-out 0.52s both; }
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: none; }
@@ -2050,7 +2041,7 @@ html[data-theme='dark'] .id-card {
 }
 
 .hero-ecg { max-width: 320px; margin: 18px auto 2px; }
-.auth-ecg { max-width: 200px; margin: 0 auto 4px; }
+.auth-ecg { max-width: 200px; margin: 0 auto 14px; }
 .hc-ecg { max-width: 260px; margin: -14px auto 6px; }
 
 /* monitor-tape divider under section headers */

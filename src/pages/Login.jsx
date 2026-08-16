@@ -33,12 +33,11 @@ export default function Login() {
   if (gate) {
     return (
       <div className="auth-wrap">
-        <div className="auth-card auth-card--gate">
-          <div className="gate-seals">
+        <div className="welcome-inner">
+          <div className="welcome-seals">
             <div className="gate-seal">
               <img src="/FNAHS.png" alt="FNAHS seal" />
             </div>
-            <Ecg className="gate-link" />
             <div className="gate-seal">
               <img src="/dorsu-logo.png" alt="Davao Oriental State University seal" />
             </div>
@@ -49,11 +48,9 @@ export default function Login() {
             FNAHS <em>PULSO</em>
           </h1>
           <p className="gate-fac">Faculty of Nursing and Allied Health Sciences</p>
-          <Ecg className="gate-pulse" />
-          <p className="gate-sub">Events, rounds, and the ward feed — all behind one door.</p>
 
-          <button className="btn btn--primary btn--block btn--lg" onClick={() => setGate(false)}>
-            Enter the portal <ArrowRight size={17} />
+          <button className="btn btn--primary btn--lg" onClick={() => setGate(false)}>
+            Log in <ArrowRight size={17} />
           </button>
 
           <p className="auth-note">
@@ -73,9 +70,9 @@ export default function Login() {
         <div className="auth-seal">
           <img src="/FNAHS.png" alt="FNAHS seal" />
         </div>
-        <Ecg className="auth-ecg" />
         <h1 className="auth-title">Log <em>in</em></h1>
         <p className="auth-sub">Welcome back to the ward.</p>
+        <Ecg className="auth-ecg" />
 
         {isDemo && (
           <div className="form-ok" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
