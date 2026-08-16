@@ -99,6 +99,7 @@ export default function Layout() {
 
   return (
     <div className="app-shell">
+      <div className="fold-panels" aria-hidden="true" />
       {dbNotice && (
         <div className="db-banner" role="alert">
           <AlertTriangle size={16} />
