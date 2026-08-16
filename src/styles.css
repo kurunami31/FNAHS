@@ -23,6 +23,12 @@
   --brand-grad: linear-gradient(135deg, #d9a514, #c09000);
   --metal: linear-gradient(135deg, #f0d070 0%, #c09000 45%, #7d5a00 100%);
 
+  /* folded-paper auth backdrop — gold monochrome */
+  --fold-a: rgba(192, 144, 0, 0.05);
+  --fold-b: rgba(192, 144, 0, 0.1);
+  --fold-edge: rgba(192, 144, 0, 0.16);
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.753 0 0 0 0 0.565 0 0 0 0 0 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+
   /* seal navy + ink */
   --navy: #100e60;
   --navy-2: #1e2b8a;
@@ -76,6 +82,12 @@ html[data-theme='dark'] {
   --accent-glow-secondary: rgba(230, 184, 0, 0.14);
   --brand-grad: linear-gradient(135deg, #e6b800, #c09000);
   --metal: linear-gradient(135deg, #ffd95c 0%, #c09000 45%, #7d5a00 100%);
+
+  /* folded-paper auth backdrop — gold monochrome (dark) */
+  --fold-a: rgba(240, 201, 72, 0.04);
+  --fold-b: rgba(240, 201, 72, 0.09);
+  --fold-edge: rgba(240, 201, 72, 0.13);
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.941 0 0 0 0 0.788 0 0 0 0 0.282 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 
   /* seal night */
   --navy: #141a6e;
@@ -1209,8 +1221,10 @@ html[data-theme='dark'] .id-card {
   justify-content: center;
   padding: 24px 16px;
   background:
-    radial-gradient(700px 380px at 82% -12%, var(--accent-glow-soft), transparent 60%),
-    radial-gradient(620px 340px at -10% 115%, var(--accent-glow-secondary), transparent 55%),
+    repeating-linear-gradient(101deg, transparent 0 88px, var(--fold-edge) 88px 89px, transparent 89px 262px),
+    radial-gradient(760px 420px at 82% -12%, var(--accent-glow-soft), transparent 60%),
+    radial-gradient(640px 360px at -8% 115%, var(--accent-glow-secondary), transparent 55%),
+    var(--paper-grain),
     var(--bg);
 }
 .auth-card {
@@ -2030,18 +2044,34 @@ html[data-theme='dark'] .sec-head::after {
   box-shadow: 0 0 0 3px var(--accent-glow-soft);
 }
 
-/* hospital-cross texture behind auth screens */
+/* monochromatic folded-paper backdrop behind auth screens: two rotated
+   fold panels with a soft crease seam, over the paper-grain base above */
 .auth-wrap { position: relative; overflow: hidden; }
-.auth-wrap::before {
+.auth-wrap::before,
+.auth-wrap::after {
   content: '';
   position: absolute;
-  inset: 0;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Cpath d='M11 4v14M4 11h14' stroke='%23c09000' stroke-width='1.1'/%3E%3C/svg%3E");
-  background-size: 22px 22px;
-  opacity: 0.07;
-  mask-image: radial-gradient(620px 340px at 50% 0%, #000 25%, transparent 75%);
-  -webkit-mask-image: radial-gradient(620px 340px at 50% 0%, #000 25%, transparent 75%);
+}
+.auth-wrap::before {
+  top: -24%;
+  right: -18%;
+  width: 72%;
+  height: 148%;
+  background: var(--fold-b);
+  transform: rotate(9deg);
+  transform-origin: top right;
+  box-shadow: -12px 0 26px -8px var(--fold-edge);
+}
+.auth-wrap::after {
+  bottom: -26%;
+  left: -20%;
+  width: 68%;
+  height: 146%;
+  background: var(--fold-a);
+  transform: rotate(-7deg);
+  transform-origin: bottom left;
+  box-shadow: 12px 0 26px -8px var(--fold-edge);
 }
 
 /* ID card — static ECG printout strip (safe for image export) */

@@ -7,7 +7,6 @@ import { initials, monthDay, fmtDateTime } from '../lib/format'
 
 export default function EventModal({ event, onClose, onChanged }) {
   const { user, toast } = useApp()
-  const [members, setMembers] = useState([])
   const [scanned, setScanned] = useState(null)
   const [busy, setBusy] = useState(false)
   const [polls, setPolls] = useState(null)
@@ -17,7 +16,6 @@ export default function EventModal({ event, onClose, onChanged }) {
   const canPoll = canAny(user, ['polls.manage', 'events.manage'])
 
   useEffect(() => {
-    api.getMembers().then(setMembers).catch(() => {})
     api
       .getAttendance(event.id)
       .then((rows) => setScanned(rows.length))
@@ -70,7 +68,7 @@ export default function EventModal({ event, onClose, onChanged }) {
   const goingIds = Object.entries(event.rsvps || {})
     .filter(([, s]) => s === 'going')
     .map(([id]) => id)
-  const byName = Object.fromEntries(members.map((m) => [m.id, m]))
+  const byName = event.attendees || {}
   const goingList = goingIds.map((id) => byName[id]).filter(Boolean)
   const mine = event.rsvps?.[user?.id]
 

@@ -253,9 +253,11 @@ export default function AccountSheet({ onClose, onLogout }) {
           <button className="sheet-link" onClick={() => go('/app/health')}>
             <HeartPulse size={16} /> Health Centre
           </button>
-          <button className="sheet-link" onClick={() => go('/app/directory')}>
-            <Users size={16} /> Directory
-          </button>
+          {can(user, 'directory.view') && (
+            <button className="sheet-link" onClick={() => go('/app/directory')}>
+              <Users size={16} /> Directory
+            </button>
+          )}
           {can(user, 'attendance.scan') && (
             <button className="sheet-link" onClick={() => go('/app/staff')}>
               <ShieldCheck size={16} /> Staff tools

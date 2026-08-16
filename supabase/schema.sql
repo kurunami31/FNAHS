@@ -329,16 +329,33 @@ end;
 $$;
 
 -- ---------- directory RPC (no emails, no RLS gaps) ----------
+-- Viewers only: superadmin/moderator roles (officer positions are added by
+-- schema-v2.sql, which replaces this function with the fuller variant).
 create or replace function public.get_directory()
 returns table (id uuid, full_name text, program text, year_level text, role text, avatar_url text, created_at timestamptz)
-language sql
+language plpgsql
 security definer
 set search_path = public
 as $$
-  select id, full_name, program, year_level, role, avatar_url, created_at
-  from public.profiles
-  where role is distinct from 'superadmin'
-  order by full_name;
+begin
+  if not exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role in ('moderator', 'superadmin')
+  ) then
+    raise exception 'insufficient privileges';
+  end if;
+  return query
+    select id, full_name, program, year_level, role, avatar_url, created_at
+    from public.profiles
+    where role is distinct from 'superadmin'
+    order by full_name;
+end;
+$$;
+
+-- lightweight member count — safe for everyone (no names, no emails)
+create or replace function public.get_member_count()
+returns bigint language sql security definer set search_path = public as $$
+  select count(*) from public.profiles where role is distinct from 'superadmin';
 $$;
 
 -- ---------- admin RPC (staff+ only; includes emails) ----------
@@ -390,6 +407,7 @@ grant select, insert, update, delete on public.attendance to authenticated;
 
 -- RPCs: directory + admin are reachable by authenticated; bump_rate is service-role only
 grant execute on function public.get_directory() to authenticated;
+grant execute on function public.get_member_count() to authenticated;
 grant execute on function public.admin_get_users() to authenticated;
 grant execute on function public.bump_rate(text, int, int) to service_role;
 

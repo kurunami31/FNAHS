@@ -467,7 +467,7 @@ function MemberIdModal({ member, onClose }) {
 }
 
 function MemberFormModal({ mode, member, onClose, onSaved }) {
-  const { toast, user } = useApp()
+  const { user } = useApp()
   const [form, setForm] = useState(() =>
     mode === 'edit'
       ? { full_name: member.full_name || '', email: member.email || '', program: member.program || PROGRAMS[0], year_level: member.year_level || '1', role: member.role || 'student', positions: member.positions || [] }

@@ -88,7 +88,6 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   }
 
   const l = W - 28
-  const cx = W / 2
 
   let sealOk = false
   try {

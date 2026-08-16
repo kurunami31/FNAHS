@@ -1,5 +1,3 @@
-import { uid } from './format'
-
 export const ORG_NAME = 'FNAHS · PULSO'
 export const ORG_SUB = 'Proactive and United Legion of Student nurses Organization'
 export const ORG_FULL = 'Faculty of Nursing and Allied Health Sciences'
@@ -199,7 +197,7 @@ export function seedFeeds() {
 const AI_REPLIES = [
   {
     match: /nclex|board exam|study plan|review/i,
-    reply: (q) =>
+    reply: () =>
       `Here's a simple NCLEX-style study plan:\n\n1. **Content blocks** — group by system (cardio, neuro, pharm) and do one block per week.\n2. **Daily 30–50 practice questions** with rationales, not just answers.\n3. **Missed-question log** — revisit your wrong answers every 3 days.\n4. **Weekly full-length practice test** (75–145 questions, timed).\n5. **Rest**: sleep and short walks are part of the plan too.\n\nWant me to break this down by week, or focus on a specific subject?`,
   },
   {

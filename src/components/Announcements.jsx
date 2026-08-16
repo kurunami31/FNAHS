@@ -24,7 +24,6 @@ export default function Announcements() {
 
   useEffect(() => {
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (items === null) return null

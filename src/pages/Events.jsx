@@ -36,8 +36,8 @@ export default function Events() {
     try {
       await api.setRsvp(id, status)
       toast(status === 'none' ? 'RSVP cancelled' : 'Marked as going')
-      await load()
-    } catch (e) {
+await load()
+    } catch {
       toast('RSVP failed', 'err')
     }
   }
@@ -48,7 +48,7 @@ export default function Events() {
       toast('Event created')
       setModal(false)
       await load()
-    } catch (e) {
+    } catch {
       toast('Could not create event', 'err')
     }
   }

@@ -46,12 +46,13 @@ export const SCOPE_LABELS = {
   'attendance.export': 'Export attendance & tallies',
   'members.edit': 'Edit member profiles & positions',
   'console.access': 'Open the admin console',
+  'directory.view': 'Browse the member directory',
   'settings.superadmin': 'Registrar: roles, positions, structure',
 }
 
 export const ROLE_SCOPES = {
   superadmin: ['*'],
-  moderator: ['feed.moderate'],
+  moderator: ['feed.moderate', 'directory.view'],
   student: [],
 }
 
@@ -65,6 +66,7 @@ export const POSITION_SCOPES = {
     'attendance.export',
     'members.edit',
     'console.access',
+    'directory.view',
   ],
   'v-governor': [
     'feed.moderate',
@@ -75,18 +77,19 @@ export const POSITION_SCOPES = {
     'attendance.export',
     'members.edit',
     'console.access',
+    'directory.view',
   ],
   pio: ['announcements.post', 'events.manage', 'feed.moderate'],
   'assoc-pio': ['announcements.post', 'feed.moderate'],
   'v-gov-internal': ['announcements.post', 'events.manage', 'attendance.scan'],
   'v-gov-external': ['announcements.post', 'events.manage', 'attendance.scan'],
-  secretary: ['announcements.post', 'events.manage', 'attendance.scan', 'members.edit', 'console.access'],
+  secretary: ['announcements.post', 'events.manage', 'attendance.scan', 'members.edit', 'console.access', 'directory.view'],
   'assoc-secretary': ['events.manage', 'attendance.scan'],
-  treasurer: ['events.manage', 'attendance.scan', 'attendance.export', 'console.access'],
+  treasurer: ['events.manage', 'attendance.scan', 'attendance.export', 'console.access', 'directory.view'],
   'assoc-treasurer': ['attendance.scan', 'attendance.export'],
-  auditor: ['feed.moderate', 'attendance.export', 'console.access'],
+  auditor: ['feed.moderate', 'attendance.export', 'console.access', 'directory.view'],
   'assoc-auditor': ['attendance.export'],
-  'business-manager': ['events.manage', 'attendance.scan', 'attendance.export', 'console.access'],
+  'business-manager': ['events.manage', 'attendance.scan', 'attendance.export', 'console.access', 'directory.view'],
   'assoc-business-manager': ['attendance.scan'],
   committees: [],
 }

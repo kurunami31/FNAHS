@@ -32,10 +32,9 @@ export default function Home() {
     api.getFeeds().then(setFeeds).catch(() => {})
     reloadRounds()
     api
-      .getMembers()
-      .then((m) => setMemberCount(m.length))
+      .getMemberCount()
+      .then(setMemberCount)
       .catch(() => {})
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const stats = [

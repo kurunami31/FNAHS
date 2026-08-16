@@ -9,11 +9,11 @@ A community platform for the **Faculty of Nursing and Allied Health Sciences**, 
 - **Home** — seal hero with the FNAHS logo, live WHO health news wire, curated clinical feeds, and the next events on the rounds
 - **Feed** — org posts with likes, comments, image attachments, archive & delete, search
 - **Events** — upcoming org events with RSVP and event creation; click any ticket for full details and the attendee list
-- **Directory** — searchable member directory of students and faculty, filterable by program; click any member for their profile (recent posts, events going)
+- **Directory** — searchable member directory of students and faculty, filterable by program; click any member for their profile (recent posts, events going). Visible only to moderators, superadmins, and console officers
 - **Florence** — the org's in-house AI assistant, named after Florence Nightingale, now a floating chat bubble available on every page (chat with streaming replies)
 - **My ID** — digital student ID card with a QR code, scannable at events (exportable as an image), plus your attendance history
 - **Staff tools** — camera-based QR scanner to log event attendance, per-event tallies, and live scanned counts on event details
-- **Admin console** — moderation hub for superadmins, staff, and moderators: manage members (roles, edit, delete), posts (edit, archive, delete), and events (edit, delete)
+- **Admin console** — moderation hub for superadmins and moderators: manage members (roles, edit, delete), posts (edit, archive, delete), and events (edit, delete)
 - **Account sheet** — profile, program/year level, dark/light theme, sign out (slide-over from the avatar)
 - **Search** — Ctrl+K command search across posts and members
 - Institutional gold &amp; white house style (the logo's two colors, maroon-tinted gold with a printed-circuit grid), PWA-ready
@@ -35,7 +35,7 @@ npm run build      # production build
 3. Create `.env.local` (see `.env.example`) with your project URL + anon key.
 4. Promote your first staff account — must run in the SQL editor (postgres bypasses RLS):
    `update public.profiles set role = 'superadmin' where id = (select id from auth.users where email = '<your email>');`
-   From then on, staff/superadmins manage roles through the Admin console.
+   From then on, moderators/superadmins manage roles through the Admin console.
 
 ## Florence (AI assistant)
 
@@ -50,7 +50,7 @@ npm run build      # production build
 ## Security
 
 - **Row-level security is on everywhere.** The `anon` role is fully locked out; only authenticated users can read/post, staff/moderator/superadmin can moderate, and the `rate_limits` table is service-role only.
-- **Emails stay private.** Profiles expose only public columns to members; the full row (incl. email) is served by the `admin_get_users()` RPC, which only staff/mod/superadmin may call. Directory data goes through `get_directory()`.
+- **Emails stay private.** Profiles expose only public columns to members; the full row (incl. email) is served by the `admin_get_users()` RPC, which only moderators/superadmins may call. The directory `get_directory()` RPC is likewise restricted to moderators, superadmins, and console-officer positions; everyone else gets only the member count.
 - **Role integrity:** members can never change their own role server-side, and the last superadmin can never be demoted or deleted (trigger).
 - **Florence** validates JWTs, is rate-limited (20 calls/min/user via `bump_rate()`), caps payloads, strips client-supplied system roles, and answers only from `FLORENCE_ORIGINS`.
 - **Transport:** CSP (script-src 'self', no unsafe-eval), `X-Frame-Options: DENY`, `nosniff`, `no-referrer`, strict `Permissions-Policy`, HSTS, and `upgrade-insecure-requests` — via inlined build-time CSP meta and `public/_headers`/`vercel.json` for hosting headers. Dev mode is intentionally excluded so Vite HMR keeps working.

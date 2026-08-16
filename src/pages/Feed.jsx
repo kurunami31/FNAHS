@@ -20,11 +20,14 @@ export default function Feed() {
   const [imageData, setImageData] = useState(null)
   const [posting, setPosting] = useState(false)
   const [lightbox, setLightbox] = useState(null)
+  const [hasMore, setHasMore] = useState(false)
   const fileRef = useRef(null)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (start = 0, append = false) => {
     try {
-      setPosts(await api.getPosts())
+      const rows = await api.getPosts({ from: start, to: start + 59 })
+      setPosts((prev) => (append ? [...prev, ...rows] : rows))
+      setHasMore(rows.length === 60)
     } catch (e) {
       console.error(e)
       toast('Could not load the feed', 'err')
@@ -124,7 +127,7 @@ export default function Feed() {
       await api.archivePost(id)
       toast('Archived')
       await load()
-    } catch (e) {
+    } catch {
       toast('Could not archive', 'err')
     }
   }
@@ -134,7 +137,7 @@ export default function Feed() {
       await api.deletePost(id)
       toast('Deleted')
       await load()
-    } catch (e) {
+    } catch {
       toast('Could not delete', 'err')
     }
   }
@@ -210,6 +213,14 @@ export default function Feed() {
           onZoom={setLightbox}
         />
       ))}
+
+      {hasMore && !q && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 18 }}>
+          <button className="btn btn--ghost" onClick={() => load(posts.length, true)}>
+            Load older posts
+          </button>
+        </div>
+      )}
 
       {lightbox && (
         <div className="lightbox" onClick={() => setLightbox(null)}>

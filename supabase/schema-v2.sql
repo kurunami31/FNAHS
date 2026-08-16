@@ -121,6 +121,20 @@ returns boolean language sql security definer set search_path = public as $$
   );
 $$;
 
+-- directory viewers: superadmin/moderator roles + console-officer positions
+-- (mirrors rbac.js 'directory.view' scope)
+create or replace function public.is_directory_viewer()
+returns boolean language sql security definer set search_path = public as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and (role in ('moderator', 'superadmin') or positions && array[
+        'governor', 'v-governor', 'secretary', 'treasurer',
+        'auditor', 'business-manager'
+      ]::text[])
+  );
+$$;
+
 -- ---------- 4 · role/position RPCs (superadmin only) ----------
 create or replace function public.change_role(p_target uuid, p_new_role text)
 returns void language plpgsql security definer set search_path = public as $$
@@ -547,15 +561,28 @@ create policy "superadmin deletes member profiles"
   on public.profiles for delete
   using ((select role from public.profiles where id = auth.uid()) = 'superadmin');
 
--- ---------- 12 · directory includes positions ----------
+-- ---------- 12 · directory (viewers only) + member count ----------
+-- get_directory() is restricted to superadmin/moderator + console officers;
+-- regular members get only the lightweight count via get_member_count().
 drop function if exists public.get_directory();
 create or replace function public.get_directory()
 returns table (id uuid, full_name text, program text, year_level text, role text, positions text[], avatar_url text, created_at timestamptz)
-language sql security definer set search_path = public as $$
-  select id, full_name, program, year_level, role, positions, avatar_url, created_at
-  from public.profiles
-  where role is distinct from 'superadmin'
-  order by full_name;
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_directory_viewer() then
+    raise exception 'insufficient privileges';
+  end if;
+  return query
+    select p.id, p.full_name, p.program, p.year_level, p.role, p.positions, p.avatar_url, p.created_at
+    from public.profiles p
+    where p.role is distinct from 'superadmin'
+    order by p.full_name;
+end;
+$$;
+
+create or replace function public.get_member_count()
+returns bigint language sql security definer set search_path = public as $$
+  select count(*) from public.profiles where role is distinct from 'superadmin';
 $$;
 
 -- ---------- 13 · grants ----------
@@ -574,6 +601,7 @@ grant select, insert on public.chat_messages to authenticated;
 grant execute on function public.change_role(uuid, text) to authenticated;
 grant execute on function public.set_positions(uuid, text[]) to authenticated;
 grant execute on function public.get_directory() to authenticated;
+grant execute on function public.get_member_count() to authenticated;
 
 -- ---------- 14 · maintenance mode ----------
 -- Single-row settings table. The flag is read by everyone (via the

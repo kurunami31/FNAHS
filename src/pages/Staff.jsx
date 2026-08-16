@@ -41,7 +41,7 @@ export default function Staff() {
       const evs = await api.getEvents()
       setEvents(evs)
       if (!eventId && evs.length) setEventId(evs[0].id)
-    } catch (e) {
+    } catch {
       toast('Could not load events', 'err')
     }
   }, [toast, eventId])
@@ -59,7 +59,7 @@ export default function Staff() {
     if (!id) return
     try {
       setAttendance(await api.getAttendance(id))
-    } catch (e) {
+    } catch {
       toast('Could not load attendance', 'err')
     }
   }, [toast])
@@ -134,7 +134,7 @@ export default function Staff() {
       await api.markAttendance(eventIdRef.current, userId)
       toast('Attendance recorded')
       await loadAttendance()
-    } catch (e) {
+    } catch {
       toast('Could not record attendance', 'err')
     }
   }

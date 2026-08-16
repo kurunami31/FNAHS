@@ -56,7 +56,7 @@ export default function App() {
           <Route path="archive" element={<Page><Archive /></Page>} />
           <Route path="events" element={<Page><Events /></Page>} />
           <Route path="health" element={<Page><HealthCentre /></Page>} />
-          <Route path="directory" element={<Page><Directory /></Page>} />
+          <Route path="directory" element={<Page><RequireScope scope="directory.view"><Directory /></RequireScope></Page>} />
           <Route path="idcard" element={<Page><IdCard /></Page>} />
           <Route path="staff" element={<Page><Staff /></Page>} />
           <Route path="admin" element={<Page><Admin /></Page>} />
@@ -115,5 +115,11 @@ function RequireAuth({ children }) {
   }
   if (!user) return <Navigate to="/login" replace />
   if (!user.privacy_policy_accepted_at) return <PrivacyNotice />
+  return children
+}
+
+function RequireScope({ scope, children }) {
+  const { user } = useApp()
+  if (!can(user, scope)) return <Navigate to="/app" replace />
   return children
 }

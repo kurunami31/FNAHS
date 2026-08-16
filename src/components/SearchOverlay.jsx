@@ -3,8 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { initials } from '../lib/format'
+import { useApp } from '../context/AppContext'
+import { can } from '../rbac'
 
 export default function SearchOverlay({ onClose }) {
+  const { user } = useApp()
+  const canDirectory = can(user, 'directory.view')
   const [q, setQ] = useState('')
   const [results, setResults] = useState({ posts: [], members: [] })
   const inputRef = useRef(null)
@@ -24,7 +28,7 @@ export default function SearchOverlay({ onClose }) {
     const timer = setTimeout(() => {
       Promise.all([
         api.getPosts().catch(() => []),
-        api.getMembers().catch(() => []),
+        canDirectory ? api.getMembers().catch(() => []) : Promise.resolve([]),
       ]).then(([posts, members]) => {
         if (!alive) return
         setResults({
@@ -41,7 +45,7 @@ export default function SearchOverlay({ onClose }) {
       alive = false
       clearTimeout(timer)
     }
-  }, [q])
+  }, [q, canDirectory])
 
   const go = (to) => {
     onClose()
@@ -58,7 +62,7 @@ export default function SearchOverlay({ onClose }) {
           ref={inputRef}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search posts, members, programs…"
+          placeholder={canDirectory ? 'Search posts, members, programs…' : 'Search posts, events, programs…'}
           aria-label="Search the community"
         />
         <button className="icon-btn" onClick={onClose} aria-label="Close search">

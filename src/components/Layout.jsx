@@ -64,7 +64,8 @@ export default function Layout() {
 
   const canScan = can(user, 'attendance.scan')
   const canConsole = can(user, 'console.access')
-  const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || [, 'FNAHS PULSO'])[1]
+  const canDirectory = can(user, 'directory.view')
+  const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || ['', 'FNAHS PULSO'])[1]
   const [dbNotice, setDbNotice] = useState(false)
 
   useEffect(() => {
@@ -115,7 +116,7 @@ export default function Layout() {
           <img src="/FNAHS.png" alt="FNAHS seal" />
         </NavLink>
         <nav className="rail-nav" aria-label="Primary">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+          {NAV.filter(({ to }) => to !== '/app/directory' || canDirectory).map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}

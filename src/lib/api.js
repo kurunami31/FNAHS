@@ -7,6 +7,7 @@ import { uid, fmtDateTime } from './format'
 const MAX_TEXT = 4000
 
 function sanitizeText(value, max = MAX_TEXT) {
+  // eslint-disable-next-line no-control-regex
   const text = String(value ?? '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim()
   return text.slice(0, max)
 }
@@ -137,7 +138,19 @@ function demoNotify(rows) {
   localStorage.setItem('fnahs-demo-notifs', JSON.stringify(all))
 }
 
+/* Mirrors the is_directory_viewer() SQL helper — demo mode only. */
+const CONSOLE_POSITIONS = ['governor', 'v-governor', 'secretary', 'treasurer', 'auditor', 'business-manager']
+
+function demoCanViewDirectory() {
+  const me = demoCurrentUserId() ? db.profiles[demoCurrentUserId()] : null
+  if (!me) return false
+  if (me.role === 'superadmin' || me.role === 'moderator') return true
+  return (me.positions || []).some((p) => CONSOLE_POSITIONS.includes(p))
+}
+
 /* ---------------- posts ---------------- */
+
+const FEED_PAGE = 60
 
 async function demoGetPosts() {
   return [...db.posts]
@@ -606,12 +619,13 @@ export const api = {
 
   /* posts */
   getPosts: SUPABASE_ENABLED
-    ? async () => {
+    ? async ({ from = 0, to = FEED_PAGE - 1 } = {}) => {
         const { data, error } = await supabase
           .from('posts')
           .select('*, comments(*), post_likes(user_id), profiles!posts_user_id_fkey(full_name, avatar_url, program)')
           .is('archived_at', null)
           .order('created_at', { ascending: false })
+          .range(from, to)
         if (error) {
           markDbError(error)
           throw error
@@ -623,18 +637,19 @@ export const api = {
           author: p.profiles,
         }))
       }
-    : async () => {
+    : async ({ from = 0, to = FEED_PAGE - 1 } = {}) => {
         const posts = await demoGetPosts()
-        return posts.map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
+        return posts.slice(from, to + 1).map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
       },
 
   getArchivedPosts: SUPABASE_ENABLED
-    ? async () => {
+    ? async ({ from = 0, to = 99 } = {}) => {
         const { data, error } = await supabase
           .from('posts')
           .select('*, comments(*), post_likes(user_id), profiles!posts_user_id_fkey(full_name, avatar_url, program)')
           .not('archived_at', 'is', null)
           .order('archived_at', { ascending: false })
+          .range(from, to)
         if (error) {
           markDbError(error)
           throw error
@@ -646,14 +661,15 @@ export const api = {
           author: p.profiles,
         }))
       }
-    : async () => {
+    : async ({ from = 0, to = 99 } = {}) => {
         const posts = [...db.posts]
           .filter((p) => p.archived_at)
           .sort((a, b) => new Date(b.archived_at) - new Date(a.archived_at))
-        return posts.map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
+        return posts.slice(from, to + 1).map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
       },
 
-  /* directory — served by the security-definer get_directory() RPC (no email, no RLS gaps) */
+  /* directory — served by the security-definer get_directory() RPC (no email,
+     no RLS gaps); viewers only: superadmin/moderator + console officers */
   getMembers: SUPABASE_ENABLED
     ? async () => {
         const { data, error } = await supabase.rpc('get_directory').order('full_name')
@@ -664,7 +680,23 @@ export const api = {
         setDbStatus('ok')
         return (data || []).filter((m) => m.role !== 'superadmin')
       }
-    : async () => Object.values(db.profiles).filter((m) => m.role !== 'superadmin'),
+    : async () => {
+        if (!demoCanViewDirectory()) throw new Error('insufficient privileges')
+        return Object.values(db.profiles).filter((m) => m.role !== 'superadmin')
+      },
+
+  /* member count — lightweight count only, visible to everyone */
+  getMemberCount: SUPABASE_ENABLED
+    ? async () => {
+        const { data, error } = await supabase.rpc('get_member_count')
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
+        return Number(data || 0)
+      }
+    : async () => Object.values(db.profiles).filter((m) => m.role !== 'superadmin').length,
 
   createPost: SUPABASE_ENABLED
     ? async ({ content, image_url }) => {
@@ -901,7 +933,7 @@ export const api = {
     ? async () => {
         const { data, error } = await supabase
           .from('events')
-          .select('*, rsvps(*)')
+          .select('*, rsvps(*, profiles(full_name, avatar_url, program))')
           .gte('ends_at', new Date(Date.now() - 24 * 3600e3).toISOString())
           .order('starts_at', { ascending: true })
         if (error) {
@@ -909,12 +941,25 @@ export const api = {
           throw error
         }
         setDbStatus('ok')
-        return (data || []).map((e) => ({
-          ...e,
-          rsvps: Object.fromEntries((e.rsvps || []).map((r) => [r.user_id, r.status])),
-        }))
+        return (data || []).map((e) => {
+          const attendees = {}
+          for (const r of e.rsvps || []) attendees[r.user_id] = r.profiles || null
+          return {
+            ...e,
+            rsvps: Object.fromEntries((e.rsvps || []).map((r) => [r.user_id, r.status])),
+            attendees,
+          }
+        })
       }
-    : demoGetEvents,
+    : async () => {
+        const events = await demoGetEvents()
+        return events.map((e) => ({
+          ...e,
+          attendees: Object.fromEntries(
+            Object.keys(e.rsvps || {}).map((id) => [id, db.profiles[id] || null])
+          ),
+        }))
+      },
 
   /* all events — past included (admin console needs to manage old events) */
   getAllEvents: SUPABASE_ENABLED
