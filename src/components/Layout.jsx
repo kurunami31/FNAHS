@@ -189,6 +189,9 @@ export default function Layout() {
         <a href="https://www.facebook.com/fnahspulsodorsu" target="_blank" rel="noreferrer" className="app-foot-link">
           <Facebook size={15} /> FNAHS PULSO on Facebook
         </a>
+        <span className="app-foot-legal">
+          © {new Date().getFullYear()} Faculty of Nursing and Allied Health Sciences · DOrSU
+        </span>
       </footer>
 
       <nav className="tabbar" aria-label="Primary">

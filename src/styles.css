@@ -324,8 +324,11 @@ img { max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 14px;
   padding: 12px 22px 26px;
   margin-left: var(--rail-w);
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 .app-foot-link {
   display: inline-flex;
