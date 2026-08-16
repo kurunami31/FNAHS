@@ -1141,7 +1141,15 @@ html[data-theme='dark'] .id-card {
   text-align: center;
   padding: 20px;
 }
-.scan-overlay { position: absolute; inset: 0; pointer-events: none; border: 3px solid var(--accent); border-radius: var(--r-lg); box-shadow: inset 0 0 40px var(--accent-glow); }
+.scan-overlay {
+  position: absolute;
+  top: 15%; bottom: 15%;
+  left: 30.3%; right: 30.3%;
+  pointer-events: none;
+  border: 3px solid var(--accent);
+  border-radius: 12px;
+  box-shadow: inset 0 0 40px var(--accent-glow);
+}
 
 .panel { border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--paper); box-shadow: var(--sh-sm); padding: 20px; margin-bottom: 18px; }
 .panel-head { margin-bottom: 14px; }
