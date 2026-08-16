@@ -190,6 +190,12 @@ export default function Layout() {
             <span>{label}</span>
           </NavLink>
         ))}
+        {canScan && (
+          <NavLink to="/app/staff" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+            <ShieldCheck size={21} />
+            <span>Staff</span>
+          </NavLink>
+        )}
         <button className="tab" onClick={() => setSheetOpen(true)} aria-label="Account & more" title="Account & more">
           <span className="avatar tab-avatar">
             {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
