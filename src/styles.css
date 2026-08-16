@@ -1239,8 +1239,63 @@ html[data-theme='dark'] .id-card {
   border-radius: var(--r-xl);
   padding: 38px 32px;
   box-shadow: var(--sh-lg);
+  animation: card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.auth-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--metal); border-radius: var(--r-xl) var(--r-xl) 0 0; }
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- auth gate (welcome page) ---------- */
+.auth-card--gate { text-align: center; padding: 42px 34px 30px; }
+.gate-seals { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 22px; }
+.gate-seal {
+  width: 94px; height: 94px;
+  border-radius: 50%;
+  padding: 6px;
+  background: var(--paper);
+  border: 1px solid var(--gold);
+  box-shadow: 0 0 0 3px var(--paper), 0 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  animation: seal-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.gate-seal:nth-of-type(1) { animation-delay: 0.06s; }
+.gate-seal:nth-of-type(3) { animation-delay: 0.16s; }
+.gate-seal img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+@keyframes seal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+.gate-link { width: 54px; height: 18px; flex: none; margin: 0 2px; }
+.gate-link path { stroke-width: 1.6; }
+.gate-eyebrow {
+  font-family: var(--f-ocr); font-size: 0.62rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--gold); margin: 0 0 8px;
+  animation: rise-in 0.6s ease-out 0.24s both;
+}
+.gate-name {
+  font-family: var(--f-display); font-weight: 700; font-size: 2.5rem;
+  line-height: 1.04; letter-spacing: 0.01em; margin: 0 0 8px;
+  animation: rise-in 0.6s ease-out 0.32s both;
+}
+.gate-name em { font-style: italic; color: var(--gold); }
+.gate-fac {
+  font-family: var(--f-ocr); font-size: 0.58rem; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 4px;
+  animation: rise-in 0.6s ease-out 0.4s both;
+}
+.gate-pulse { max-width: 210px; margin: 6px auto 12px; animation: rise-in 0.6s ease-out 0.48s both; }
+.gate-sub {
+  font-size: 0.9rem; color: var(--ink-soft); line-height: 1.6;
+  margin: 0 0 22px;
+  animation: rise-in 0.6s ease-out 0.56s both;
+}
+.auth-card--gate .btn { animation: rise-in 0.6s ease-out 0.64s both; }
+.auth-card--gate .auth-note { animation: rise-in 0.6s ease-out 0.72s both; }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
 .auth-seal {
   width: 74px; height: 74px;
   margin: 0 auto 16px;

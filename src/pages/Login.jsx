@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, LogIn, Info } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Info, ArrowRight } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
 import { DEVELOPER } from '../lib/build'
@@ -8,6 +8,7 @@ import { DEVELOPER } from '../lib/build'
 export default function Login() {
   const { login, toast, isDemo } = useApp()
   const navigate = useNavigate()
+  const [gate, setGate] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
@@ -29,17 +30,48 @@ export default function Login() {
     }
   }
 
+  if (gate) {
+    return (
+      <div className="auth-wrap">
+        <div className="auth-card auth-card--gate">
+          <div className="gate-seals">
+            <div className="gate-seal">
+              <img src="/FNAHS.png" alt="FNAHS seal" />
+            </div>
+            <Ecg className="gate-link" />
+            <div className="gate-seal">
+              <img src="/dorsu-logo.png" alt="Davao Oriental State University seal" />
+            </div>
+          </div>
+
+          <p className="gate-eyebrow">Davao Oriental State University</p>
+          <h1 className="gate-name">
+            FNAHS <em>PULSO</em>
+          </h1>
+          <p className="gate-fac">Faculty of Nursing and Allied Health Sciences</p>
+          <Ecg className="gate-pulse" />
+          <p className="gate-sub">Events, rounds, and the ward feed — all behind one door.</p>
+
+          <button className="btn btn--primary btn--block btn--lg" onClick={() => setGate(false)}>
+            Enter the portal <ArrowRight size={17} />
+          </button>
+
+          <p className="auth-note">
+            No account yet?{' '}
+            <Link to="/signup" style={{ color: 'var(--accent)' }}>
+              Join FNAHS PULSO
+            </Link>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-logo">
-          <img src="/FNAHS.png" alt="FNAHS logo" />
-          <div>
-            <div style={{ fontFamily: 'var(--f-id)', fontSize: '1.3rem', lineHeight: 1.1 }}>
-              FNAHS <span style={{ color: 'var(--gold)', fontStyle: 'italic' }}>PULSO</span>
-            </div>
-            <div style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.6rem', letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase' }}>proactive &amp; united legion of student nurses</div>
-          </div>
+        <div className="auth-seal">
+          <img src="/FNAHS.png" alt="FNAHS seal" />
         </div>
         <Ecg className="auth-ecg" />
         <h1 className="auth-title">Log <em>in</em></h1>
