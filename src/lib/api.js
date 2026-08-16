@@ -1,5 +1,5 @@
 import { supabase, isSupabase, SUPABASE_ENABLED } from '../supabase'
-import { demoDb, DEMO_USER_ID, PROGRAMS, streamMockReply, seedFeeds, seedAnnouncements } from './mock'
+import { demoDb, DEMO_USER_ID, DEMO_STAFF_ID, PROGRAMS, streamMockReply, seedFeeds, seedAnnouncements } from './mock'
 import { uid, fmtDateTime } from './format'
 
 /* ---------------- input guards ---------------- */
