@@ -67,10 +67,18 @@ export default function Login() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-seal">
-          <img src="/FNAHS.png" alt="FNAHS seal" />
+        <div className="auth-lockup">
+          <div className="auth-seal">
+            <img src="/FNAHS.png" alt="FNAHS seal" />
+          </div>
+          <div>
+            <h1 className="auth-brand">
+              FNAHS<span className="auth-bullet">•</span>
+              <em>PULSO</em>
+            </h1>
+            <div className="auth-brand-sub">Proactive &amp; United Legion of Student Nurses</div>
+          </div>
         </div>
-        <h1 className="auth-title">Log <em>in</em></h1>
         <p className="auth-sub">Welcome back to the ward.</p>
         <Ecg className="auth-ecg" />
 
