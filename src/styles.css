@@ -1110,20 +1110,24 @@ html[data-theme='dark'] .id-card {
 
 .scan-stage {
   position: relative;
-  width: min(320px, 100%);
+  width: min(340px, 100%);
   aspect-ratio: 1;
+  min-height: 280px;
   margin: 0 auto;
 }
 .scan-box {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   border-radius: var(--r-lg);
   overflow: hidden;
   border: 2px solid var(--line-strong);
   background: #000;
 }
-.scan-box video { width: 100%; height: 100%; object-fit: cover; }
+.scan-box video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
 .scan-placeholder {
   position: absolute;
   inset: 0;
