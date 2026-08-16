@@ -39,6 +39,18 @@ function eventPostContent(ev) {
   return lines.join('\n')
 }
 
+/* plain-text body for the announcement mirror of an event */
+function eventAnnouncementBody(ev) {
+  const lines = []
+  const when = ev.starts_at ? fmtDateTime(ev.starts_at) : ''
+  const until = ev.ends_at && ev.ends_at !== ev.starts_at ? ` → ${fmtDateTime(ev.ends_at)}` : ''
+  if (when) lines.push(`When: ${when}${until}`)
+  if (ev.location) lines.push(`Where: ${sanitizeText(ev.location, 200)}`)
+  const desc = sanitizeText(ev.description, 2000)
+  if (desc) lines.push(desc)
+  return lines.join('\n')
+}
+
 function composeFullName({ first_name, middle_initial, surname, full_name }) {
   const first = sanitizeText(first_name, 60)
   const surnameClean = sanitizeText(surname, 60)
@@ -299,6 +311,23 @@ async function demoCreateEvent(ev) {
   db.events.push(event)
   // Announce the event on the community feed too.
   await demoCreatePost({ content: eventPostContent(ev) })
+  // Mirror it onto the announcements board as well.
+  try {
+    const meProfile = db.profiles[me] || {}
+    const annList = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
+    annList.unshift({
+      id: uid(),
+      title: sanitizeText(ev.title, 200),
+      body: eventAnnouncementBody(ev),
+      pinned: false,
+      author_id: me,
+      created_at: new Date().toISOString(),
+      profiles: { full_name: meProfile.full_name || 'FNAHS', avatar_url: meProfile.avatar_url || null },
+    })
+    localStorage.setItem('fnahs-demo-announcements', JSON.stringify(annList))
+  } catch (e) {
+    console.warn('Could not mirror event onto announcements:', e)
+  }
   // Fan out a notification to every member except the creator.
   demoNotify(
     Object.values(db.profiles)
