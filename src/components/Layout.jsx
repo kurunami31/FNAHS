@@ -15,6 +15,7 @@ import {
   Sun,
   AlertTriangle,
   X,
+  Facebook,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
@@ -183,6 +184,15 @@ export default function Layout() {
       <main className="main">
         <Outlet />
       </main>
+
+      <footer className="app-foot">
+        <a href="https://www.facebook.com/fnahspulsodorsu" target="_blank" rel="noreferrer" className="app-foot-link">
+          <Facebook size={15} /> FNAHS PULSO on Facebook
+        </a>
+        <span className="app-foot-legal">
+          © {new Date().getFullYear()} Faculty of Nursing and Allied Health Sciences · DOrSU
+        </span>
+      </footer>
 
       <nav className="tabbar" aria-label="Primary">
         {MOBILE_TABS.map(({ to, label, icon: Icon, end }) => (
