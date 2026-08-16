@@ -191,6 +191,9 @@ img { max-width: 100%; }
   align-items: center;
   padding: 20px 0 16px;
   background: var(--deep);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  backdrop-filter: blur(18px) saturate(1.15);
+  background: color-mix(in srgb, var(--deep) 55%, transparent);
   border-right: 1px solid var(--line);
   z-index: 60;
 }
@@ -213,7 +216,7 @@ img { max-width: 100%; }
   width: 46px; height: 46px;
   border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  color: var(--muted);
+  color: var(--ink-soft);
   transition: background 0.18s ease, color 0.18s ease;
 }
 .rail-link:hover { background: var(--accent-glow-soft); color: var(--ink); }
@@ -253,7 +256,9 @@ img { max-width: 100%; }
   gap: 12px;
   padding: 0 22px;
   background: color-mix(in srgb, var(--deep) 86%, transparent);
-  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  background: color-mix(in srgb, var(--deep) 60%, transparent);
   border-bottom: 1px solid var(--line);
   z-index: 50;
 }
@@ -263,11 +268,12 @@ img { max-width: 100%; }
   font-size: 0.62rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink-soft);
   white-space: nowrap;
 }
 .top-ctx b { color: var(--gold); font-weight: 400; }
 .topbar .spacer { flex: 1; }
+.topbar .icon-btn { color: var(--ink-soft); }
 
 .search-box {
   flex: 1;
@@ -347,6 +353,7 @@ img { max-width: 100%; }
     font-weight: 700;
     font-size: 1.06rem;
     letter-spacing: 0.02em;
+    color: var(--ink);
   }
   .topbar .brand-mobile img { width: 30px; height: 30px; border-radius: 50%; object-fit: contain; background: var(--paper); border: 1px solid var(--gold); padding: 2px; }
   .topbar .top-ctx { display: none; }
@@ -363,7 +370,9 @@ img { max-width: 100%; }
     height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
     background: color-mix(in srgb, var(--deep) 90%, transparent);
-    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    backdrop-filter: blur(18px) saturate(1.15);
+    background: color-mix(in srgb, var(--deep) 62%, transparent);
     border-top: 1px solid var(--line);
   }
   .tab {
@@ -375,7 +384,7 @@ img { max-width: 100%; }
     justify-content: center;
     gap: 3px;
     min-height: 44px;
-    color: var(--muted);
+    color: var(--ink-soft);
     font-family: var(--f-ocr);
     font-size: 0.55rem;
     letter-spacing: 0.1em;
