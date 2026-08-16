@@ -165,7 +165,7 @@ img { max-width: 100%; }
 /* ============================================================
    SHELL — seal rail + topbar + main
    ============================================================ */
-.app-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
+.app-shell { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
 .db-banner {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -322,14 +322,10 @@ img { max-width: 100%; }
 /* ---------- footer ---------- */
 .app-foot {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 8px 18px;
   padding: 12px 22px 26px;
   margin-left: var(--rail-w);
-  color: var(--muted);
-  font-size: 0.78rem;
 }
 .app-foot-link {
   display: inline-flex;
@@ -345,7 +341,6 @@ img { max-width: 100%; }
   transition: color 0.18s ease, border-color 0.18s ease;
 }
 .app-foot-link:hover { color: var(--accent); border-color: var(--gold-soft); }
-.app-foot-legal { letter-spacing: 0.02em; }
 .page-title {
   display: flex;
   align-items: baseline;
