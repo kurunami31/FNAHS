@@ -89,7 +89,7 @@ export default function Staff() {
       const h5 = new Html5Qrcode('fnahs-scan-box')
       await h5.start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 220, height: 220 } },
+        { fps: 10, qrbox: (vw, vh) => ({ width: Math.round(Math.min(vw, vh) * 0.7), height: Math.round(Math.min(vw, vh) * 0.7) }) },
         (decoded) => handleScan(decoded),
         () => {}
       )
