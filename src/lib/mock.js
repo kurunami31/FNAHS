@@ -247,6 +247,34 @@ export async function streamMockReply(question, onChunk) {
 export const DEMO_USER_ID = 'demo'
 export const DEMO_STAFF_ID = 'staff'
 
+export function seedAnnouncements() {
+  const now = Date.now()
+  const d = 86400e3
+  return [
+    {
+      title: 'Welcome to the new FNAHS portal',
+      body: 'Your digital ID, attendance records, and org announcements now live in one place. Keep your ID ready for event check-ins!',
+      pinned: true,
+      daysAgo: 2,
+      created_at: new Date(now - 2 * d).toISOString(),
+    },
+    {
+      title: 'Clinical duty schedules are out',
+      body: 'Check the upcoming events tab for the latest duty rotation schedules. Contact the secretary if your name is missing.',
+      pinned: false,
+      daysAgo: 5,
+      created_at: new Date(now - 5 * d).toISOString(),
+    },
+    {
+      title: 'ID validation week',
+      body: 'Stray cats and late registrants: bring your signed form to the student lounge, 8 AM–5 PM, all week.',
+      pinned: false,
+      daysAgo: 9,
+      created_at: new Date(now - 9 * d).toISOString(),
+    },
+  ]
+}
+
 export function demoDb() {
   const profiles = seedProfiles()
   const posts = seedPosts()

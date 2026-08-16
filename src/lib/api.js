@@ -1,5 +1,5 @@
 import { supabase, isSupabase, SUPABASE_ENABLED } from '../supabase'
-import { demoDb, DEMO_USER_ID, PROGRAMS, streamMockReply, seedFeeds } from './mock'
+import { demoDb, DEMO_USER_ID, PROGRAMS, streamMockReply, seedFeeds, seedAnnouncements } from './mock'
 import { uid, fmtDateTime } from './format'
 
 /* ---------------- input guards ---------------- */
@@ -1152,6 +1152,20 @@ export const api = {
       }
     : async () => {
         const list = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
+        if (!list.length) {
+          const staff = db.profiles[DEMO_STAFF_ID] || {}
+          const seeded = seedAnnouncements().map((a) => ({
+            id: uid(),
+            title: a.title,
+            body: a.body,
+            pinned: !!a.pinned,
+            author_id: DEMO_STAFF_ID,
+            created_at: a.created_at,
+            profiles: { full_name: staff.full_name || 'FNAHS', avatar_url: staff.avatar_url || null },
+          }))
+          localStorage.setItem('fnahs-demo-announcements', JSON.stringify(seeded))
+          return seeded
+        }
         return list.sort((a, b) => (b.pinned - a.pinned) || (new Date(b.created_at) - new Date(a.created_at)))
       },
 
