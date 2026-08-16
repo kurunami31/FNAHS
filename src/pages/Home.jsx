@@ -40,7 +40,6 @@ export default function Home() {
   const stats = [
     { value: memberCount ? memberCount.toLocaleString() : '1K+', label: memberCount ? 'members' : 'students' },
     { value: `${Math.max(PROGRAMS.length, 1)}`, label: PROGRAMS.length > 1 ? 'programs' : 'program' },
-    { value: '40+', label: 'events / yr' },
     { value: '24/7', label: 'ai assistant' },
   ]
 
