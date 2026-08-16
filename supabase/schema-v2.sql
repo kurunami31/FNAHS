@@ -312,7 +312,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   insert into public.notifications (user_id, kind, title, body, link)
   select id, 'event', 'New event: ' || new.title,
-         to_char(new.starts_at, 'Mon DD at HH24:MI'), '/app/events'
+         to_char(new.starts_at at time zone 'Asia/Manila', 'Mon DD at HH24:MI'), '/app/events'
   from public.profiles
   where id is distinct from new.created_by;
   return new;
@@ -338,7 +338,7 @@ begin
   v_parts := array[]::text[];
   if new.starts_at is not null then
     v_parts := array_append(v_parts,
-      'When: ' || to_char(new.starts_at, 'Mon DD, YYYY · HH12:MI AM'));
+      'When: ' || to_char(new.starts_at at time zone 'Asia/Manila', 'Mon DD, YYYY · HH12:MI AM'));
   end if;
   if coalesce(new.location, '') <> '' then
     v_parts := array_append(v_parts, 'Where: ' || new.location);
