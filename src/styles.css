@@ -1877,7 +1877,7 @@ html[data-theme='dark'] .id-card {
   border-radius: 999px;
 }
 .notif-mark:hover { background: var(--accent-glow-soft); }
-.notif-list { max-height: min(420px, 60vh); overflow: auto; }
+.notif-list { max-height: min(300px, 60vh); overflow: auto; }
 .notif-item {
   display: flex;
   gap: 10px;
@@ -1915,7 +1915,20 @@ html[data-theme='dark'] .id-card {
   margin-top: 7px;
 }
 @media (max-width: 640px) {
-  .notif-panel { right: -70px; }
+  .notif-panel {
+    position: fixed;
+    top: calc(var(--topbar-h) + env(safe-area-inset-top) + 10px);
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-height: calc(100dvh - var(--topbar-h) - env(safe-area-inset-top) - 60px);
+    animation: notif-in 0.2s ease-out;
+  }
+  .notif-list { max-height: min(300px, calc(100dvh - var(--topbar-h) - 120px)); }
+}
+@keyframes notif-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
 }
 
 /* ============================================================
