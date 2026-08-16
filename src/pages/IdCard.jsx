@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
 import { monthDay, timeAgo } from '../lib/format'
-import { drawIdCanvas, ID_W, ID_H } from '../lib/idCanvas'
+import { drawIdCanvas } from '../lib/idCanvas'
 
 export default function IdCard() {
   const { user, toast } = useApp()
@@ -29,11 +29,9 @@ export default function IdCard() {
 
   const draw = async () => {
     const c = document.createElement('canvas')
-    c.width = ID_W
-    c.height = ID_H
     try {
       const qr = await QRCode.toDataURL(qrValue, {
-        width: 480,
+        width: 600,
         margin: 1,
         color: { dark: '#2b2410', light: '#ffffff' },
         errorCorrectionLevel: 'M',

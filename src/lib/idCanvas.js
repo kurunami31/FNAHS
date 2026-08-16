@@ -2,6 +2,7 @@ import { initials } from './format'
 
 export const ID_W = 680
 export const ID_H = 430
+export const ID_SCALE = 3
 
 const INK = '#2b2410'
 const MUT = '#8a7d5c'
@@ -60,7 +61,10 @@ async function loadAvatar(src) {
 }
 
 export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
+  c.width = ID_W * ID_SCALE
+  c.height = ID_H * ID_SCALE
   const ctx = c.getContext('2d')
+  ctx.scale(ID_SCALE, ID_SCALE)
   const W = ID_W
   const H = ID_H
 
@@ -192,10 +196,13 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   if (qr) {
     try {
       const qImg = await loadImage(qr)
+      ctx.fillStyle = '#ffffff'
+      rr(ctx, qx - 8, qy - 8, qs + 16, qs + 16, 12)
+      ctx.fill()
       ctx.drawImage(qImg, qx, qy, qs, qs)
       ctx.strokeStyle = INK
       ctx.lineWidth = 3
-      rr(ctx, qx, qy, qs, qs, 8)
+      rr(ctx, qx - 8, qy - 8, qs + 16, qs + 16, 12)
       ctx.stroke()
     } catch {
       /* qr skipped */

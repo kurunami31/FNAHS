@@ -6,7 +6,7 @@ import { can, POSITIONS, positionLabel } from '../rbac'
 import { api } from '../lib/api'
 import { initials, timeAgo, monthDay } from '../lib/format'
 import { PROGRAMS } from '../lib/mock'
-import { drawIdCanvas, ID_W, ID_H } from '../lib/idCanvas'
+import { drawIdCanvas } from '../lib/idCanvas'
 
 const ROLES = ['student', 'moderator', 'superadmin']
 
@@ -394,12 +394,10 @@ function MemberIdCard({ member }) {
 
   const draw = async () => {
     const c = document.createElement('canvas')
-    c.width = ID_W
-    c.height = ID_H
     try {
       const qr = await QRCode.toDataURL(
         JSON.stringify({ t: 'fnahs-id', id: member.id, n: member.full_name || '', v: 1 }),
-        { width: 480, margin: 1, color: { dark: '#2b2410', light: '#ffffff' }, errorCorrectionLevel: 'M' }
+        { width: 600, margin: 1, color: { dark: '#2b2410', light: '#ffffff' }, errorCorrectionLevel: 'M' }
       )
       await drawIdCanvas(c, { profile: member, avatarUrl: member.avatar_url, qr })
       canvasRef.current = c
