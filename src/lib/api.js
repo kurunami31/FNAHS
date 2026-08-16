@@ -351,6 +351,11 @@ async function demoMarkAttendance(eventId, userId) {
   saveDb(db)
 }
 
+async function demoRemoveAttendance(eventId, userId) {
+  delete (db.attendance[eventId] || {})[userId]
+  saveDb(db)
+}
+
 /* ---------------- feeds ---------------- */
 
 let feedCache = null
@@ -1043,6 +1048,13 @@ export const api = {
         if (error) throw error
       }
     : demoMarkAttendance,
+
+  removeAttendance: SUPABASE_ENABLED
+    ? async (eventId, userId) => {
+        const { error } = await supabase.from('attendance').delete().eq('event_id', eventId).eq('user_id', userId)
+        if (error) throw error
+      }
+    : demoRemoveAttendance,
 
   /* my attendance history */
   getMyAttendance: SUPABASE_ENABLED

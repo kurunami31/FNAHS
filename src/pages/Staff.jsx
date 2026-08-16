@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ShieldCheck, Camera, CameraOff, Users, QrCode } from 'lucide-react'
+import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2 } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
@@ -139,6 +139,18 @@ export default function Staff() {
     }
   }
 
+  const removeAttendance = async (userId) => {
+    const name = attendance.find((a) => a.user_id === userId)?.profiles?.full_name || 'this member'
+    if (!window.confirm(`Remove ${name} from the attendance log? This cannot be undone.`)) return
+    try {
+      await api.removeAttendance(eventIdRef.current, userId)
+      toast('Attendance removed')
+      await loadAttendance()
+    } catch {
+      toast('Could not remove attendance', 'err')
+    }
+  }
+
   if (!isStaff) {
     return (
       <div className="empty-state">
@@ -245,6 +257,13 @@ export default function Staff() {
                   </div>
                 </div>
                 <span className="badge badge--ok">present</span>
+                <button
+                  className="icon-btn icon-btn--danger"
+                  title="Remove from attendance"
+                  onClick={() => removeAttendance(a.user_id)}
+                >
+                  <Trash2 size={15} />
+                </button>
               </div>
             ))}
           </div>

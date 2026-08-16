@@ -52,7 +52,7 @@ export const SCOPE_LABELS = {
 
 export const ROLE_SCOPES = {
   superadmin: ['*'],
-  moderator: ['feed.moderate', 'directory.view'],
+  moderator: ['feed.moderate', 'directory.view', 'attendance.scan'],
   student: [],
 }
 

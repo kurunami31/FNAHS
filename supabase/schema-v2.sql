@@ -84,7 +84,7 @@ returns boolean language sql security definer set search_path = public as $$
   select exists (
     select 1 from public.profiles
     where id = auth.uid()
-      and (role = 'superadmin' or positions && array[
+      and (role in ('superadmin', 'moderator') or positions && array[
         'governor', 'v-governor',
         'v-gov-internal', 'v-gov-external',
         'secretary', 'assoc-secretary',

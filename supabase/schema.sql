@@ -287,17 +287,17 @@ create policy "attendance is readable by members"
 drop policy if exists "staff can record attendance" on public.attendance;
 create policy "staff can record attendance"
   on public.attendance for insert
-  with check ((select role from public.profiles where id = auth.uid()) in ('staff', 'superadmin'));
+  with check ((select role from public.profiles where id = auth.uid()) in ('staff', 'moderator', 'superadmin'));
 
 drop policy if exists "staff can update attendance" on public.attendance;
 create policy "staff can update attendance"
   on public.attendance for update
-  using ((select role from public.profiles where id = auth.uid()) in ('staff', 'superadmin'));
+  using ((select role from public.profiles where id = auth.uid()) in ('staff', 'moderator', 'superadmin'));
 
 drop policy if exists "staff can delete attendance" on public.attendance;
 create policy "staff can delete attendance"
   on public.attendance for delete
-  using ((select role from public.profiles where id = auth.uid()) in ('staff', 'superadmin'));
+  using ((select role from public.profiles where id = auth.uid()) in ('staff', 'moderator', 'superadmin'));
 
 -- ---------- rate limits (Florence chat) ----------
 create table if not exists public.rate_limits (
