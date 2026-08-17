@@ -1,24 +1,38 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, Newspaper, CalendarDays } from 'lucide-react'
+import { X, Newspaper, CalendarDays, HandCoins } from 'lucide-react'
 import { api } from '../lib/api'
 import { initials, timeAgo } from '../lib/format'
-import { roleLabel, positionLabel } from '../rbac'
+import { roleLabel, positionLabel, can } from '../rbac'
+import { feeStatus } from '../lib/fees'
+import { useApp } from '../context/AppContext'
 
 export default function MemberModal({ member, onClose }) {
   const navigate = useNavigate()
+  const { user } = useApp()
   const [posts, setPosts] = useState([])
   const [going, setGoing] = useState([])
+  const [fee, setFee] = useState(null)
 
   useEffect(() => {
     if (!member) return
     let alive = true
     api.getPosts().then((all) => alive && setPosts(all.filter((p) => p.author?.id === member.id).slice(0, 4))).catch(() => {})
     api.getEvents().then((evs) => alive && setGoing(evs.filter((e) => e.rsvps?.[member.id] === 'going').slice(0, 3))).catch(() => {})
+    if (can(user, 'fees.view')) {
+      api
+        .getMembershipFees()
+        .then((rows) => {
+          if (!alive) return
+          const own = rows.filter((r) => r.member_id === member.id)
+          setFee(own.sort((a, b) => b.school_year.localeCompare(a.school_year))[0] || null)
+        })
+        .catch(() => {})
+    }
     return () => {
       alive = false
     }
-  }, [member])
+  }, [member, user])
 
   if (!member) return null
 
@@ -62,6 +76,27 @@ export default function MemberModal({ member, onClose }) {
             <span>role</span>
           </div>
         </div>
+
+        {can(user, 'fees.view') && (
+          <div className="mm-sec">
+            <h5><HandCoins size={14} /> Membership fees</h5>
+            <div className="mm-chips">
+              {fee ? (
+                <>
+                  <span className="chip">{fee.school_year}</span>
+                  <span className={`chip${feeStatus(fee).sem1 === 'paid' ? ' chip--ok' : ''}`}>
+                    Sem 1 {feeStatus(fee).sem1 ? (feeStatus(fee).sem1 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
+                  </span>
+                  <span className={`chip${feeStatus(fee).sem2 === 'paid' ? ' chip--ok' : ''}`}>
+                    Sem 2 {feeStatus(fee).sem2 ? (feeStatus(fee).sem2 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
+                  </span>
+                </>
+              ) : (
+                <span className="chip">No fee record yet</span>
+              )}
+            </div>
+          </div>
+        )}
 
         {going.length > 0 && (
           <div className="mm-sec">

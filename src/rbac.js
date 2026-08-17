@@ -45,6 +45,8 @@ export const SCOPE_LABELS = {
   'attendance.scan': 'Scan attendance at the door',
   'attendance.export': 'Export attendance & tallies',
   'members.edit': 'Edit member profiles & positions',
+  'fees.view': 'See membership fee status',
+  'fees.manage': 'Record membership fee payments',
   'console.access': 'Open the admin console',
   'directory.view': 'Browse the member directory',
   'settings.superadmin': 'Registrar: roles, positions, structure',
@@ -52,7 +54,7 @@ export const SCOPE_LABELS = {
 
 export const ROLE_SCOPES = {
   superadmin: ['*'],
-  moderator: ['feed.moderate', 'directory.view', 'attendance.scan'],
+  moderator: ['feed.moderate', 'directory.view', 'attendance.scan', 'fees.view'],
   student: [],
 }
 
@@ -65,6 +67,7 @@ export const POSITION_SCOPES = {
     'attendance.scan',
     'attendance.export',
     'members.edit',
+    'fees.view',
     'console.access',
     'directory.view',
   ],
@@ -76,6 +79,7 @@ export const POSITION_SCOPES = {
     'attendance.scan',
     'attendance.export',
     'members.edit',
+    'fees.view',
     'console.access',
     'directory.view',
   ],
@@ -83,13 +87,13 @@ export const POSITION_SCOPES = {
   'assoc-pio': ['announcements.post', 'feed.moderate'],
   'v-gov-internal': ['announcements.post', 'events.manage', 'attendance.scan'],
   'v-gov-external': ['announcements.post', 'events.manage', 'attendance.scan'],
-  secretary: ['announcements.post', 'events.manage', 'attendance.scan', 'members.edit', 'console.access', 'directory.view'],
+  secretary: ['announcements.post', 'events.manage', 'attendance.scan', 'members.edit', 'fees.view', 'console.access', 'directory.view'],
   'assoc-secretary': ['events.manage', 'attendance.scan'],
-  treasurer: ['events.manage', 'attendance.scan', 'attendance.export', 'console.access', 'directory.view'],
-  'assoc-treasurer': ['attendance.scan', 'attendance.export'],
-  auditor: ['feed.moderate', 'attendance.export', 'console.access', 'directory.view'],
+  treasurer: ['events.manage', 'attendance.scan', 'attendance.export', 'fees.view', 'fees.manage', 'console.access', 'directory.view'],
+  'assoc-treasurer': ['attendance.scan', 'attendance.export', 'fees.view', 'fees.manage'],
+  auditor: ['feed.moderate', 'attendance.export', 'fees.view', 'fees.manage', 'console.access', 'directory.view'],
   'assoc-auditor': ['attendance.export'],
-  'business-manager': ['events.manage', 'attendance.scan', 'attendance.export', 'console.access', 'directory.view'],
+  'business-manager': ['events.manage', 'attendance.scan', 'attendance.export', 'fees.view', 'fees.manage', 'console.access', 'directory.view'],
   'assoc-business-manager': ['attendance.scan'],
   committees: [],
 }

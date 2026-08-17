@@ -6,6 +6,7 @@ import { can } from '../rbac'
 import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
 import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
+import { currentSchoolYear, feeStatus } from '../lib/fees'
 
 export default function Staff() {
   const { user, toast, online, pendingCount } = useApp()
@@ -135,6 +136,16 @@ export default function Staff() {
       await api.markAttendance(eventIdRef.current, userId)
       toast(online ? 'Attendance recorded' : 'Attendance recorded — will sync when you’re back online')
       await loadAttendance()
+      // show the member's fee status next to the scan (fee viewers only)
+      if (can(user, 'fees.view')) {
+        api
+          .getMembershipFees(currentSchoolYear())
+          .then((rows) => {
+            const f = rows.find((r) => r.member_id === userId) || null
+            setLast((prev) => (prev?.id === userId ? { ...prev, fee: f } : prev))
+          })
+          .catch(() => {})
+      }
     } catch {
       toast('Could not record attendance', 'err')
     }
@@ -236,6 +247,22 @@ export default function Staff() {
         {last && (
           <div className="form-ok" style={{ marginTop: 14, marginBottom: 0 }}>
             Last scan: <b>{last.id.slice(0, 8)}</b> · {timeAgo(last.at)}
+            {can(user, 'fees.view') && (
+              <div style={{ marginTop: 8 }}>
+                {last.fee ? (
+                  <>
+                    <span className={`chip${feeStatus(last.fee).sem1 === 'paid' ? ' chip--ok' : ''}`}>
+                      Sem 1 {feeStatus(last.fee).sem1 ? (feeStatus(last.fee).sem1 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
+                    </span>
+                    <span className={`chip${feeStatus(last.fee).sem2 === 'paid' ? ' chip--ok' : ''}`}>
+                      Sem 2 {feeStatus(last.fee).sem2 ? (feeStatus(last.fee).sem2 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
+                    </span>
+                  </>
+                ) : (
+                  <span className="chip">No fee record for {currentSchoolYear()}</span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </section>

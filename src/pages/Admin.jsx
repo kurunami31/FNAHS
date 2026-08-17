@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download } from 'lucide-react'
+import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download, HandCoins } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can, POSITIONS, positionLabel } from '../rbac'
 import { api } from '../lib/api'
@@ -8,6 +8,7 @@ import { initials, timeAgo, monthDay } from '../lib/format'
 import { PROGRAMS } from '../lib/mock'
 import { drawIdCanvas } from '../lib/idCanvas'
 import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
+import { currentSchoolYear, feeStatus } from '../lib/fees'
 
 const ROLES = ['student', 'moderator', 'superadmin']
 
@@ -26,6 +27,18 @@ export default function Admin() {
   const [attEventId, setAttEventId] = useState('')
   const [attRows, setAttRows] = useState([])
   const attEventIdRef = useRef('')
+  const [feeYear, setFeeYear] = useState(currentSchoolYear())
+  const [feeMap, setFeeMap] = useState({})
+  const [feeModal, setFeeModal] = useState(null)
+
+  const canFees = can(user, 'fees.view')
+  const canManageFees = can(user, 'fees.manage')
+
+  // school years offered by the selector: the current AY plus three back
+  const feeYears = useMemo(() => {
+    const cur = currentSchoolYear().split('-')[0]
+    return Array.from({ length: 4 }, (_, i) => `${Number(cur) - i}-${Number(cur) - i + 1}`)
+  }, [])
 
   const isSuperadmin = user?.role === 'superadmin'
 
@@ -66,6 +79,26 @@ export default function Admin() {
       alive = false
     }
   }, [attEventId])
+
+  const loadFees = useCallback(async () => {
+    try {
+      const rows = await api.getMembershipFees(feeYear)
+      setFeeMap(Object.fromEntries(rows.map((r) => [r.member_id, r])))
+    } catch (e) {
+      console.error(e)
+      toast('Could not load membership fees', 'err')
+    }
+  }, [feeYear, toast])
+
+  useEffect(() => {
+    if (canFees) loadFees()
+  }, [canFees, loadFees])
+
+  const saveFee = async (memberId, patch) => {
+    await api.saveMembershipFee(memberId, feeYear, patch)
+    await loadFees()
+    toast('Fee record saved')
+  }
 
   const exportAttCsv = () => {
     const ev = events.find((e) => e.id === attEventId)
@@ -173,6 +206,11 @@ export default function Admin() {
         <button className={`tab-btn${tab === 'attendance' ? ' tab-btn--on' : ''}`} onClick={() => setTab('attendance')}>
           <Users size={15} /> Attendance
         </button>
+        {canFees && (
+          <button className={`tab-btn${tab === 'fees' ? ' tab-btn--on' : ''}`} onClick={() => setTab('fees')}>
+            <HandCoins size={15} /> Fees
+          </button>
+        )}
         <button className={`tab-btn${tab === 'maintenance' ? ' tab-btn--on' : ''}`} onClick={() => setTab('maintenance')}>
           <Wrench size={15} /> Maintenance
         </button>
@@ -365,6 +403,58 @@ export default function Admin() {
         </section>
       )}
 
+      {tab === 'fees' && (
+        <section className="panel">
+          <div className="admin-toolbar">
+            <div className="field" style={{ marginBottom: 0, minWidth: 200 }}>
+              <label>School year</label>
+              <select value={feeYear} onChange={(e) => setFeeYear(e.target.value)}>
+                {feeYears.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+            <p className="page-sub" style={{ margin: 0, flex: 1 }}>
+              {canManageFees
+                ? 'Record each member\u2019s semester payments for the selected school year.'
+                : 'Membership fee status for the selected school year — recording is done by the finance officers.'}
+            </p>
+          </div>
+          <div className="ledger">
+            {members
+              .filter((m) => m.role !== 'superadmin')
+              .map((m) => {
+                const f = feeMap[m.id]
+                const { sem1, sem2 } = feeStatus(f)
+                return (
+                  <div className="ledger-row" key={m.id}>
+                    <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>
+                      {m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{m.full_name}</div>
+                      <div className="ledger-meta">{m.email} · {m.program || '—'} · YR {m.year_level || '—'}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      <span className={`chip${sem1 === 'paid' ? ' chip--ok' : ''}`}>
+                        Sem 1 {sem1 ? (sem1 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
+                      </span>
+                      <span className={`chip${sem2 === 'paid' ? ' chip--ok' : ''}`}>
+                        Sem 2 {sem2 ? (sem2 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
+                      </span>
+                    </div>
+                    {canManageFees && (
+                      <button className="icon-btn" title={`Record fees for ${m.full_name}`} onClick={() => setFeeModal(m)}>
+                        <Pencil size={15} />
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+          </div>
+        </section>
+      )}
+
       {tab === 'maintenance' && (
         <section className="panel">
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18, flexWrap: 'wrap' }}>
@@ -444,6 +534,15 @@ export default function Admin() {
             setEventModal(null)
             toast('Event updated')
           }}
+        />
+      )}
+      {feeModal && (
+        <FeeModal
+          member={feeModal}
+          fee={feeMap[feeModal.id]}
+          schoolYear={feeYear}
+          onClose={() => setFeeModal(null)}
+          onSaved={saveFee}
         />
       )}
     </div>
@@ -693,13 +792,103 @@ function PostEditModal({ post, onClose, onSaved }) {
           <label>Content</label>
           <textarea rows={5} value={content} onChange={(e) => setContent(e.target.value)} />
         </div>
-        <div className="modal-actions">
+<div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn--primary" disabled={saving || !content.trim()} onClick={submit}>
+          <button className="btn btn--primary" disabled={saving} onClick={submit}>
             {saving ? 'Saving…' : 'Save changes'}
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function FeeModal({ member, fee, schoolYear, onClose, onSaved }) {
+  const [form, setForm] = useState(() => ({
+    sem1_amount: fee?.sem1_amount ?? '',
+    sem1_paid: !!fee?.sem1_paid_at,
+    sem1_receipt: fee?.sem1_receipt || '',
+    sem2_amount: fee?.sem2_amount ?? '',
+    sem2_paid: !!fee?.sem2_paid_at,
+    sem2_receipt: fee?.sem2_receipt || '',
+  }))
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async () => {
+    const patch = {}
+    patch.sem1_amount = Number(form.sem1_amount) || 0
+    patch.sem1_paid_at = form.sem1_paid ? new Date().toISOString() : null
+    patch.sem1_receipt = form.sem1_receipt.trim()
+    patch.sem2_amount = Number(form.sem2_amount) || 0
+    patch.sem2_paid_at = form.sem2_paid ? new Date().toISOString() : null
+    patch.sem2_receipt = form.sem2_receipt.trim()
+    setSaving(true)
+    try {
+      await onSaved(member.id, patch)
+      onClose()
+    } catch (e) {
+      console.error(e)
+      setError(e.message || 'Could not save the fee record.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const SemBlock = ({ num, label }) => (
+    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginTop: 6 }}>
+      <div className="field" style={{ marginBottom: 10 }}>
+        <label>{label} amount <span className="field-hint">(₱)</span></label>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={form[`${num}_amount`]}
+          onChange={(e) => setForm({ ...form, [`${num}_amount`]: e.target.value })}
+          placeholder="0.00"
+        />
+      </div>
+      <div className="field" style={{ marginBottom: 10 }}>
+        <label>
+          <input
+            type="checkbox"
+            checked={form[`${num}_paid`]}
+            onChange={(e) => setForm({ ...form, [`${num}_paid`]: e.target.checked })}
+            style={{ marginRight: 8, width: 'auto' }}
+          />
+          Paid — {label}
+        </label>
+      </div>
+      <div className="field" style={{ marginBottom: 0 }}>
+        <label>{label} receipt <span className="field-hint">(OR # / reference, optional)</span></label>
+        <input
+          value={form[`${num}_receipt`]}
+          onChange={(e) => setForm({ ...form, [`${num}_receipt`]: e.target.value })}
+          placeholder="OR-2026-001"
+        />
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h2>
+          FEES <span className="page-kicker">{member.full_name}</span>
+        </h2>
+        <p className="modal-sub" style={{ margin: '-10px 0 16px', color: 'var(--muted)', fontSize: '0.82rem' }}>
+          {schoolYear} · {member.program || '—'} · YR {member.year_level || '—'}
+        </p>
+        {error && <div className="form-error">{error}</div>}
+        <SemBlock num="sem1" label="Semester 1" />
+        <SemBlock num="sem2" label="Semester 2" />
+        <div className="modal-actions">
+          <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn--primary" disabled={saving} onClick={submit}>
+            {saving ? 'Saving…' : 'Save fees'}
+          </button>
+        </div>
+</div>
     </div>
   )
 }

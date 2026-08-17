@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { Download, ShieldCheck, Loader2 } from 'lucide-react'
+import { Download, ShieldCheck, Loader2, HandCoins } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
 import { monthDay, timeAgo } from '../lib/format'
 import { drawIdCanvas } from '../lib/idCanvas'
+import { currentSchoolYear, feeStatus } from '../lib/fees'
 
 export default function IdCard() {
   const { user, toast } = useApp()
@@ -16,13 +17,18 @@ export default function IdCard() {
   const [format, setFormat] = useState('png')
   const [saveImage, setSaveImage] = useState(null)
   const [history, setHistory] = useState([])
+  const [fee, setFee] = useState(null)
 
   useEffect(() => {
     api
       .getMyAttendance()
       .then(setHistory)
       .catch(() => {})
-  }, [])
+    api
+      .getMembershipFees(currentSchoolYear())
+      .then((rows) => setFee(rows.find((r) => r.member_id === user?.id) || null))
+      .catch(() => {})
+  }, [user?.id])
 
   const name = user?.full_name || 'Student Member'
   const qrValue = JSON.stringify({ t: 'fnahs-id', id: user?.id || 'demo', n: name, v: 1 })
@@ -183,6 +189,27 @@ export default function IdCard() {
           </div>
         </div>
       )}
+
+      <section className="sec" aria-labelledby="h-fees" style={{ maxWidth: 640, margin: '26px auto 0', width: '100%' }}>
+        <div className="sec-head">
+          <h2 id="h-fees"><HandCoins size={18} /> Membership Fees</h2>
+          <span className="sec-kicker">{currentSchoolYear()}</span>
+        </div>
+        {!fee ? (
+          <p className="panel-muted">No membership fee record for this school year yet — check in with the treasurer.</p>
+        ) : (
+          <div className="mm-chips">
+            <span className={`chip${feeStatus(fee).sem1 === 'paid' ? ' chip--ok' : ''}`}>
+              Sem 1 {feeStatus(fee).sem1 ? (feeStatus(fee).sem1 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
+            </span>
+            <span className={`chip${feeStatus(fee).sem2 === 'paid' ? ' chip--ok' : ''}`}>
+              Sem 2 {feeStatus(fee).sem2 ? (feeStatus(fee).sem2 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
+            </span>
+            {fee.sem1_receipt && <span className="chip">1st sem OR: {fee.sem1_receipt}</span>}
+            {fee.sem2_receipt && <span className="chip">2nd sem OR: {fee.sem2_receipt}</span>}
+          </div>
+        )}
+      </section>
 
       <section className="sec" aria-labelledby="h-history" style={{ maxWidth: 640, margin: '34px auto 0', width: '100%' }}>
         <div className="sec-head">
