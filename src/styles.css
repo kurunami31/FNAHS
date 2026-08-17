@@ -614,6 +614,7 @@ img { max-width: 100%; }
 .btn--danger { background: var(--danger); color: #fff; }
 .btn--danger:hover { filter: brightness(1.05); }
 .btn--sm { padding: 8px 14px; min-height: 36px; font-size: 0.82rem; border-radius: var(--r-sm); }
+.btn--tiny { padding: 5px 10px; min-height: 28px; font-size: 0.78rem; border-radius: 8px; }
 .btn--lg { padding: 14px 26px; min-height: 50px; font-size: 1rem; }
 .btn--block { width: 100%; }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }

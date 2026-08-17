@@ -7,6 +7,7 @@ import { api } from '../lib/api'
 import { initials, timeAgo, monthDay } from '../lib/format'
 import { PROGRAMS } from '../lib/mock'
 import { drawIdCanvas } from '../lib/idCanvas'
+import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
 
 const ROLES = ['student', 'moderator', 'superadmin']
 
@@ -22,6 +23,9 @@ export default function Admin() {
   const [idModal, setIdModal] = useState(null)
   const [postModal, setPostModal] = useState(null)
   const [eventModal, setEventModal] = useState(null)
+  const [attEventId, setAttEventId] = useState('')
+  const [attRows, setAttRows] = useState([])
+  const attEventIdRef = useRef('')
 
   const isSuperadmin = user?.role === 'superadmin'
 
@@ -40,6 +44,35 @@ export default function Admin() {
   useEffect(() => {
     load()
   }, [load])
+
+  // default the attendance picker to the first event once events arrive
+  useEffect(() => {
+    if (!attEventId && events.length) setAttEventId(events[0].id)
+  }, [events, attEventId])
+
+  useEffect(() => {
+    attEventIdRef.current = attEventId
+  }, [attEventId])
+
+  useEffect(() => {
+    const id = attEventIdRef.current
+    if (!id) return
+    let alive = true
+    api
+      .getAttendance(id)
+      .then((rows) => alive && setAttRows(rows))
+      .catch((e) => console.error(e))
+    return () => {
+      alive = false
+    }
+  }, [attEventId])
+
+  const exportAttCsv = () => {
+    const ev = events.find((e) => e.id === attEventId)
+    const { filename, headers, rows } = attendanceCsv(ev, attRows)
+    downloadCsv(filename, headers, rows)
+    toast(`Exported ${rows.length} record${rows.length === 1 ? '' : 's'}`)
+  }
 
   if (!can(user, 'console.access')) {
     return (
@@ -136,6 +169,9 @@ export default function Admin() {
         </button>
         <button className={`tab-btn${tab === 'events' ? ' tab-btn--on' : ''}`} onClick={() => setTab('events')}>
           <CalendarDays size={15} /> Events
+        </button>
+        <button className={`tab-btn${tab === 'attendance' ? ' tab-btn--on' : ''}`} onClick={() => setTab('attendance')}>
+          <Users size={15} /> Attendance
         </button>
         <button className={`tab-btn${tab === 'maintenance' ? ' tab-btn--on' : ''}`} onClick={() => setTab('maintenance')}>
           <Wrench size={15} /> Maintenance
@@ -278,6 +314,54 @@ export default function Admin() {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {tab === 'attendance' && (
+        <section className="panel">
+          <div className="admin-toolbar">
+            <div className="field" style={{ marginBottom: 0, minWidth: 240, flex: 1 }}>
+              <label>Event</label>
+              <select value={attEventId} onChange={(e) => setAttEventId(e.target.value)}>
+                {events.length === 0 && <option value="">No events yet…</option>}
+                {events.map((e) => (
+                  <option key={e.id} value={e.id}>{e.title}</option>
+                ))}
+              </select>
+            </div>
+            <button className="btn btn--primary" onClick={exportAttCsv} disabled={attRows.length === 0}>
+              <Download size={15} /> Export CSV
+            </button>
+          </div>
+          {attRows.length === 0 ? (
+            <p className="panel-muted">No scans recorded for this event yet.</p>
+          ) : (
+            <div className="ledger">
+              {attRows.map((a) => (
+                <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
+                  <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                    {(a.profiles?.full_name || '?')
+                      .split(' ')
+                      .map((w) => w[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
+                      {a.profiles?.full_name || a.user_id.slice(0, 10)}
+                    </div>
+                    <div className="ledger-meta">
+                      {a.profiles?.program ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}` : ''}
+                      {' · '}
+                      {a.profiles?.email || 'no email'} · scanned {timeAgo(a.scanned_at)}
+                    </div>
+                  </div>
+                  <span className="badge badge--ok">present</span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 

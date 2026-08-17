@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2 } from 'lucide-react'
+import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2, Download } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
+import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
 
 export default function Staff() {
   const { user, toast, online, pendingCount } = useApp()
@@ -151,6 +152,13 @@ export default function Staff() {
     }
   }
 
+  const exportCsv = () => {
+    const ev = events.find((e) => e.id === eventId)
+    const { filename, headers, rows } = attendanceCsv(ev, attendance)
+    downloadCsv(filename, headers, rows)
+    toast(`Exported ${rows.length} record${rows.length === 1 ? '' : 's'}`)
+  }
+
   if (!isStaff) {
     return (
       <div className="empty-state">
@@ -236,6 +244,9 @@ export default function Staff() {
         <div className="panel-head">
           <h2 className="panel-title"><Users size={16} /> Attendance log</h2>
           {attendance.length > 0 && <span className="chip chip--ok">{attendance.length} present</span>}
+          <button className="btn btn--tiny" onClick={exportCsv} disabled={attendance.length === 0}>
+            <Download size={13} /> Export CSV
+          </button>
         </div>
         {attendance.length === 0 ? (
           <p className="panel-muted">No scans recorded for this event yet.</p>
