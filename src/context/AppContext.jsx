@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
+import { onStatus, flushQueue } from '../lib/offline'
 import { ORG_FULL } from '../lib/mock'
 
 const AppContext = createContext(null)
@@ -12,6 +13,46 @@ export function AppProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(true)
   const [toasts, setToasts] = useState([])
   const [maintenance, setMaintenance] = useState(false)
+  const [online, setOnline] = useState(true)
+  const [pendingCount, setPendingCount] = useState(0)
+  const [syncing, setSyncing] = useState(false)
+
+  // Connectivity + pending changes. The offline engine flushes the queue
+  // automatically when the connection returns; the banner offers a manual
+  // "Sync now" too.
+  useEffect(() => {
+    return onStatus(({ online: o, pending }) => {
+      setOnline(o)
+      setPendingCount(pending)
+    })
+  }, [])
+
+  const toast = useCallback((message, kind = 'ok') => {
+    const id = Math.random().toString(36).slice(2)
+    setToasts((t) => [...t, { id, message, kind }])
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200)
+  }, [])
+
+  // Toast fired when the offline engine finishes a queue flush.
+  useEffect(() => {
+    const onSynced = (e) => {
+      const n = e?.detail?.count || 0
+      if (!n) return
+      toast(`Back online — ${n} change${n === 1 ? '' : 's'} synced`)
+    }
+    window.addEventListener('fnahs:synced', onSynced)
+    return () => window.removeEventListener('fnahs:synced', onSynced)
+  }, [toast])
+
+  const syncNow = useCallback(async () => {
+    if (syncing) return
+    setSyncing(true)
+    try {
+      await flushQueue()
+    } finally {
+      setSyncing(false)
+    }
+  }, [syncing])
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -53,12 +94,6 @@ export function AppProvider({ children }) {
     return () => {
       alive = false
     }
-  }, [])
-
-  const toast = useCallback((message, kind = 'ok') => {
-    const id = Math.random().toString(36).slice(2)
-    setToasts((t) => [...t, { id, message, kind }])
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200)
   }, [])
 
   const login = useCallback(
@@ -104,8 +139,12 @@ export function AppProvider({ children }) {
       refreshUser,
       isDemo: !api.isSupabase,
       orgFull: ORG_FULL,
+      online,
+      pendingCount,
+      syncing,
+      syncNow,
     }),
-    [theme, user, authLoading, maintenance, setMaintenanceFlag, toasts, toast, login, signup, logout, refreshUser]
+    [theme, user, authLoading, maintenance, setMaintenanceFlag, toasts, toast, login, signup, logout, refreshUser, online, pendingCount, syncing, syncNow]
   )
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

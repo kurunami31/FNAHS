@@ -24,6 +24,7 @@ import { initials } from '../lib/format'
 import AccountSheet from './AccountSheet'
 import SearchOverlay from './SearchOverlay'
 import NotificationsBell from './NotificationsBell'
+import OfflineBanner from './OfflineBanner'
 
 const NAV = [
   { to: '/app', label: 'Home', icon: HomeIcon, end: true },
@@ -57,7 +58,7 @@ const MOBILE_TABS = [
 ]
 
 export default function Layout() {
-  const { user, theme, setTheme, logout, toast } = useApp()
+  const { user, theme, setTheme, logout, toast, online } = useApp()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const navigate = useNavigate()
@@ -113,6 +114,7 @@ export default function Layout() {
           </button>
         </div>
       )}
+      <OfflineBanner />
       <aside className="seal-rail">
         <NavLink to="/app" className="seal" aria-label="FNAHS home" title="FNAHS">
           <img src="/FNAHS.png" alt="FNAHS seal" />
@@ -172,6 +174,11 @@ export default function Layout() {
           FNAHS PULSO <b>/</b> {section}
         </div>
         <div className="spacer" />
+        <span
+          className={`conn-dot${online ? '' : ' conn-dot--off'}`}
+          title={online ? 'Connected' : 'Offline — showing saved data'}
+          aria-hidden="true"
+        />
         <NotificationsBell />
         <button className="icon-btn" onClick={() => setSearchOpen(true)} aria-label="Search" title="Search (Ctrl+K)">
           <Search size={19} />

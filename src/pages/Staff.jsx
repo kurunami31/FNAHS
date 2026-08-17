@@ -7,7 +7,7 @@ import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
 
 export default function Staff() {
-  const { user, toast } = useApp()
+  const { user, toast, online, pendingCount } = useApp()
   const [events, setEvents] = useState([])
   const [eventId, setEventId] = useState('')
   const [attendance, setAttendance] = useState([])
@@ -132,7 +132,7 @@ export default function Staff() {
     setLast({ id: userId, at: new Date().toISOString() })
     try {
       await api.markAttendance(eventIdRef.current, userId)
-      toast('Attendance recorded')
+      toast(online ? 'Attendance recorded' : 'Attendance recorded — will sync when you’re back online')
       await loadAttendance()
     } catch {
       toast('Could not record attendance', 'err')
@@ -188,6 +188,12 @@ export default function Staff() {
                 <b style={{ marginRight: 5 }}>{t.count}</b> {t.title}
               </span>
             ))}
+          </div>
+        )}
+        {!online && (
+          <div className="form-ok" style={{ marginTop: 12, marginBottom: 0 }}>
+            Offline mode — scans are saved to this device and sync when the connection returns
+            {pendingCount > 0 ? ` (${pendingCount} pending)` : ''}.
           </div>
         )}
       </section>

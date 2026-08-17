@@ -1,5 +1,6 @@
 import { supabase, isSupabase, SUPABASE_ENABLED } from '../supabase'
 import { demoDb, DEMO_USER_ID, DEMO_STAFF_ID, PROGRAMS, streamMockReply, seedFeeds, seedAnnouncements } from './mock'
+import { offlineRead, offlineWrite, isOfflineError, cacheSession, restoreSession, clearSessionCache } from './offline'
 import { uid, fmtDateTime } from './format'
 
 /* ---------------- input guards ---------------- */
@@ -385,6 +386,92 @@ async function demoRemoveAttendance(eventId, userId) {
   saveDb(db)
 }
 
+/* ---------------- offline mirrors: supabase data → demo store ----------------
+   Every successful Supabase read runs its mirror so the demo twins below can
+   serve the user's REAL data while offline. */
+function mirrorProfileInto(p) {
+  if (!p?.id) return
+  db.profiles[p.id] = { ...db.profiles[p.id], ...p }
+  saveDb(db)
+}
+function mirrorProfiles(list) {
+  ;(list || []).forEach(mirrorProfileInto)
+}
+function mirrorPosts(posts) {
+  const mapped = (posts || []).map((p) => ({
+    id: p.id,
+    user_id: p.user_id,
+    content: p.content,
+    image_url: p.image_url || null,
+    archived_at: p.archived_at || null,
+    created_at: p.created_at,
+    likes: (p.likes || p.post_likes || [])
+      .map((l) => (typeof l === 'string' ? l : l?.user_id))
+      .filter(Boolean),
+    comments: (p.comments || []).map((c) => ({
+      id: c.id,
+      user_id: c.user_id,
+      parent_id: c.parent_id || null,
+      content: c.content,
+      image_url: c.image_url || null,
+      created_at: c.created_at,
+    })),
+  }))
+  db.posts = [...mapped, ...db.posts.filter((d) => !mapped.some((m) => m.id === d.id))]
+  saveDb(db)
+}
+function mirrorEvents(events) {
+  const mapped = (events || []).map((e) => ({
+    id: e.id,
+    title: e.title,
+    description: e.description || '',
+    location: e.location || '',
+    starts_at: e.starts_at,
+    ends_at: e.ends_at,
+    created_by: e.created_by,
+    created_at: e.created_at,
+    rsvps: e.rsvps || {},
+  }))
+  db.events = [...mapped, ...db.events.filter((d) => !mapped.some((m) => m.id === d.id))]
+  saveDb(db)
+}
+function mirrorAnnouncements(list) {
+  const mapped = (list || []).map((a) => ({
+    id: a.id,
+    title: a.title,
+    body: a.body,
+    pinned: !!a.pinned,
+    author_id: a.author_id,
+    created_at: a.created_at,
+    profiles: a.profiles || null,
+  }))
+  localStorage.setItem('fnahs-demo-announcements', JSON.stringify(mapped))
+}
+function mirrorNotifications(data) {
+  const rows = data?.list || []
+  const local = JSON.parse(localStorage.getItem('fnahs-demo-notifs') || '[]')
+  localStorage.setItem('fnahs-demo-notifs', JSON.stringify([...rows, ...local.filter((n) => !rows.some((r) => r.id === n.id))]))
+}
+function mirrorPolls(polls) {
+  const all = JSON.parse(localStorage.getItem('fnahs-demo-polls') || '[]')
+  const mapped = (polls || []).map((p) => ({
+    id: p.id,
+    event_id: p.event_id,
+    question: p.question,
+    created_by: p.created_by,
+    created_at: p.created_at,
+    options: (p.options || []).map((o) => ({ id: o.id, label: o.label, votes: o.votes || [] })),
+  }))
+  localStorage.setItem('fnahs-demo-polls', JSON.stringify([...mapped, ...all.filter((p) => !mapped.some((m) => m.id === p.id))]))
+}
+function mirrorChat(rows) {
+  const me = demoCurrentUserId()
+  if (!me) return
+  const all = JSON.parse(localStorage.getItem('fnahs-demo-chat') || '{}')
+  all[me] = (rows || []).map((r) => ({ role: r.role, content: r.content, created_at: r.created_at }))
+  localStorage.setItem('fnahs-demo-chat', JSON.stringify(all))
+}
+
 /* ---------------- feeds ---------------- */
 
 let feedCache = null
@@ -522,12 +609,24 @@ export const api = {
       const id = demoCurrentUserId()
       return Promise.resolve({ user: id ? db.profiles[id] || null : null })
     }
-    return supabase.auth.getSession().then(({ data }) => {
+    return supabase.auth.getSession().then(async ({ data }) => {
       const session = data?.session
       if (!session?.user) return { user: null }
-      return api.getProfile(session.user.id).then((profile) => ({
-        user: { ...(profile || {}), id: session.user.id, email: profile?.email || session.user.email },
-      }))
+      try {
+        const profile = await api.getProfile(session.user.id)
+        if (!profile) throw new Error('profile not found')
+        const user = { ...profile, id: session.user.id, email: profile.email || session.user.email }
+        cacheSession(user)
+        return { user }
+      } catch (e) {
+        // Offline: fall back to the cached session so the app opens straight
+        // into the dashboard with the last-known profile.
+        if (isOfflineError(e) || typeof navigator !== 'undefined' && !navigator.onLine) {
+          const cached = restoreSession()
+          if (cached) return { user: cached }
+        }
+        return { user: null }
+      }
     })
   },
 
@@ -549,9 +648,18 @@ export const api = {
       demoLogin(found.id)
       return { user: found }
     }
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
-    return { user: await api.getProfile(data.user.id) }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      const profile = await api.getProfile(data.user.id)
+      if (!profile) throw new Error('Your profile could not be loaded.')
+      const user = { ...profile, id: data.user.id, email: profile.email || data.user.email }
+      cacheSession(user)
+      return { user }
+    } catch (e) {
+      if (isOfflineError(e)) throw new Error('No connection — sign-in isn\u2019t available offline.', { cause: e })
+      throw e
+    }
   },
 
   async signUp(full_name, email, password) {
@@ -576,27 +684,26 @@ export const api = {
       demoLogout()
       return
     }
+    clearSessionCache()
     await supabase.auth.signOut()
   },
 
   /* profiles */
-  getProfile: SUPABASE_ENABLED
-    ? async (id) => {
+  getProfile: offlineRead('getProfile', async (id) => {
         const { data, error } = await supabase
           .from('profiles')
           .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .eq('id', id)
           .maybeSingle()
         if (error) {
+          if (isOfflineError(error)) throw error
           markDbError(error)
           return null
         }
         return data
-      }
-    : demoGetProfile,
+      }, demoGetProfile, mirrorProfileInto),
 
-  upsertProfile: SUPABASE_ENABLED
-    ? async (p) => {
+  upsertProfile: offlineWrite('upsertProfile', async (p) => {
         const patch = {
           full_name: composeFullName(p),
           surname: sanitizeText(p.surname, 60) || null,
@@ -619,17 +726,15 @@ export const api = {
           .maybeSingle()
         if (error) throw error
         return data
-      }
-    : async (p) => {
+      }, async (p) => {
         const clean = { ...p, full_name: composeFullName(p) || sanitizeText(p.full_name, 120), avatar_url: sanitizeUrl(p.avatar_url) }
         db.profiles[p.id] = { ...db.profiles[p.id], ...clean }
         saveDb(db)
         return db.profiles[p.id]
-      },
+      }),
 
   /* privacy consent — the gate writes only the caller's own row */
-  acceptPrivacyPolicy: SUPABASE_ENABLED
-    ? async () => {
+  acceptPrivacyPolicy: offlineWrite('acceptPrivacyPolicy', async () => {
         const {
           data: { user },
         } = await supabase.auth.getUser()
@@ -643,17 +748,15 @@ export const api = {
           .maybeSingle()
         if (error) throw error
         return data
-      }
-    : async () => {
+      }, async () => {
         const me = demoCurrentUserId()
         if (!me) throw new Error('You must be signed in.')
         await demoUpsertProfile({ id: me, privacy_policy_accepted_at: new Date().toISOString() })
         return { privacy_policy_accepted_at: demoGetProfile(me).privacy_policy_accepted_at }
-      },
+      }),
 
   /* posts */
-  getPosts: SUPABASE_ENABLED
-    ? async ({ from = 0, to = FEED_PAGE - 1 } = {}) => {
+  getPosts: offlineRead('getPosts', async ({ from = 0, to = FEED_PAGE - 1 } = {}) => {
         const { data, error } = await supabase
           .from('posts')
           .select('*, comments(*), post_likes(user_id), profiles!posts_user_id_fkey(full_name, avatar_url, program)')
@@ -670,14 +773,12 @@ export const api = {
           likes: (p.post_likes || []).map((l) => l.user_id),
           author: p.profiles,
         }))
-      }
-    : async ({ from = 0, to = FEED_PAGE - 1 } = {}) => {
+      }, async ({ from = 0, to = FEED_PAGE - 1 } = {}) => {
         const posts = await demoGetPosts()
         return posts.slice(from, to + 1).map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
-      },
+      }, mirrorPosts),
 
-  getArchivedPosts: SUPABASE_ENABLED
-    ? async ({ from = 0, to = 99 } = {}) => {
+  getArchivedPosts: offlineRead('getArchivedPosts', async ({ from = 0, to = 99 } = {}) => {
         const { data, error } = await supabase
           .from('posts')
           .select('*, comments(*), post_likes(user_id), profiles!posts_user_id_fkey(full_name, avatar_url, program)')
@@ -694,18 +795,16 @@ export const api = {
           likes: (p.post_likes || []).map((l) => l.user_id),
           author: p.profiles,
         }))
-      }
-    : async ({ from = 0, to = 99 } = {}) => {
+      }, async ({ from = 0, to = 99 } = {}) => {
         const posts = [...db.posts]
           .filter((p) => p.archived_at)
           .sort((a, b) => new Date(b.archived_at) - new Date(a.archived_at))
         return posts.slice(from, to + 1).map((p) => ({ ...p, author: db.profiles[p.user_id] || null }))
-      },
+      }, mirrorPosts),
 
   /* directory — served by the security-definer get_directory() RPC (no email,
      no RLS gaps); viewers only: superadmin/moderator + console officers */
-  getMembers: SUPABASE_ENABLED
-    ? async () => {
+  getMembers: offlineRead('getMembers', async () => {
         const { data, error } = await supabase.rpc('get_directory').order('full_name')
         if (error) {
           markDbError(error)
@@ -713,15 +812,13 @@ export const api = {
         }
         setDbStatus('ok')
         return (data || []).filter((m) => m.role !== 'superadmin')
-      }
-    : async () => {
+      }, async () => {
         if (!demoCanViewDirectory()) throw new Error('insufficient privileges')
         return Object.values(db.profiles).filter((m) => m.role !== 'superadmin')
-      },
+      }, mirrorProfiles),
 
   /* member count — lightweight count only, visible to everyone */
-  getMemberCount: SUPABASE_ENABLED
-    ? async () => {
+  getMemberCount: offlineRead('getMemberCount', async () => {
         const { data, error } = await supabase.rpc('get_member_count')
         if (error) {
           markDbError(error)
@@ -729,11 +826,9 @@ export const api = {
         }
         setDbStatus('ok')
         return Number(data || 0)
-      }
-    : async () => Object.values(db.profiles).filter((m) => m.role !== 'superadmin').length,
+      }, async () => Object.values(db.profiles).filter((m) => m.role !== 'superadmin').length),
 
-  createPost: SUPABASE_ENABLED
-    ? async ({ content, image_url }) => {
+  createPost: offlineWrite('createPost', async ({ content, image_url }) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in to post.')
         const { data, error } = await supabase
@@ -743,22 +838,18 @@ export const api = {
           .single()
         if (error) throw error
         return data
-      }
-    : demoCreatePost,
+      }, demoCreatePost, { localId: (p) => p?.id }),
 
-  toggleLike: SUPABASE_ENABLED
-    ? async (postId) => {
+  toggleLike: offlineWrite('toggleLike', async (postId) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
         const { data: existing } = await supabase.from('post_likes').select('*').eq('post_id', postId).eq('user_id', user.id).maybeSingle()
         if (existing) await supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', user.id)
         else await supabase.from('post_likes').insert({ post_id: postId, user_id: user.id })
         return (await supabase.from('post_likes').select('user_id').eq('post_id', postId)).data.map((l) => l.user_id)
-      }
-    : demoToggleLike,
+      }, demoToggleLike),
 
-  addComment: SUPABASE_ENABLED
-    ? async (postId, content, imageUrl, parentId) => {
+  addComment: offlineWrite('addComment', async (postId, content, imageUrl, parentId) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in to comment.')
         const { data, error } = await supabase
@@ -768,11 +859,9 @@ export const api = {
           .single()
         if (error) throw error
         return data
-      }
-    : demoAddComment,
+      }, demoAddComment),
 
-  updateComment: SUPABASE_ENABLED
-    ? async (commentId, content, imageUrl) => {
+  updateComment: offlineWrite('updateComment', async (commentId, content, imageUrl) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in.')
         const { data, error } = await supabase
@@ -783,51 +872,39 @@ export const api = {
           .single()
         if (error) throw error
         return data
-      }
-    : demoUpdateComment,
+      }, demoUpdateComment),
 
-  deleteComment: SUPABASE_ENABLED
-    ? async (commentId) => {
+  deleteComment: offlineWrite('deleteComment', async (commentId) => {
         const { error } = await supabase.from('comments').delete().eq('id', commentId)
         if (error) throw error
-      }
-    : demoDeleteComment,
+      }, demoDeleteComment),
 
-  archivePost: SUPABASE_ENABLED
-    ? async (postId) => {
+  archivePost: offlineWrite('archivePost', async (postId) => {
         const { error } = await supabase.from('posts').update({ archived_at: new Date().toISOString() }).eq('id', postId)
         if (error) throw error
-      }
-    : demoArchivePost,
+      }, demoArchivePost),
 
-  unarchivePost: SUPABASE_ENABLED
-    ? async (postId) => {
+  unarchivePost: offlineWrite('unarchivePost', async (postId) => {
         const { error } = await supabase.from('posts').update({ archived_at: null }).eq('id', postId)
         if (error) throw error
-      }
-    : demoUnarchivePost,
+      }, demoUnarchivePost),
 
-  deletePost: SUPABASE_ENABLED
-    ? async (postId) => {
+  deletePost: offlineWrite('deletePost', async (postId) => {
         const { error } = await supabase.from('posts').delete().eq('id', postId)
         if (error) throw error
-      }
-    : demoDeletePost,
+      }, demoDeletePost),
 
   /* moderation + admin CRUD */
-  updatePost: SUPABASE_ENABLED
-    ? async (postId, patch) => {
+  updatePost: offlineWrite('updatePost', async (postId, patch) => {
         const { error } = await supabase.from('posts').update(patch).eq('id', postId)
         if (error) throw error
-      }
-    : async (postId, patch) => {
+      }, async (postId, patch) => {
         const post = db.posts.find((p) => p.id === postId)
         if (post) Object.assign(post, patch)
         saveDb(db)
-      },
+      }),
 
-  getUsers: SUPABASE_ENABLED
-    ? async () => {
+  getUsers: offlineRead('getUsers', async () => {
         // security-definer RPC — only staff/superadmin may read profiles (incl. email)
         const { data, error } = await supabase.rpc('admin_get_users')
         if (error) {
@@ -836,11 +913,9 @@ export const api = {
         }
         setDbStatus('ok')
         return data || []
-      }
-    : async () => Object.values(db.profiles),
+      }, async () => Object.values(db.profiles), mirrorProfiles),
 
-  createUser: SUPABASE_ENABLED
-    ? async (p) => {
+  createUser: offlineWrite('createUser', async (p) => {
         // Member creation goes through the security-definer create_member()
         // RPC: it creates the auth user (so the new member can actually log
         // in), lets the signup trigger make the profile row, and only then
@@ -857,8 +932,7 @@ export const api = {
         })
         if (error) throw error
         return created
-      }
-    : async (p) => {
+      }, async (p) => {
         const row = {
           id: uid(),
           full_name: p.full_name,
@@ -872,10 +946,9 @@ export const api = {
         db.profiles[row.id] = row
         saveDb(db)
         return row
-      },
+      }, { localId: (r) => r?.id }),
 
-  updateUser: SUPABASE_ENABLED
-    ? async (id, patch) => {
+  updateUser: offlineWrite('updateUser', async (id, patch) => {
         const clean = {}
         if (patch.surname !== undefined) clean.surname = sanitizeText(patch.surname, 60) || null
         if (patch.first_name !== undefined) clean.first_name = sanitizeText(patch.first_name, 60) || null
@@ -898,73 +971,61 @@ export const api = {
           .maybeSingle()
         if (error) throw error
         return data
-      }
-    : async (id, patch) => {
+      }, async (id, patch) => {
         db.profiles[id] = { ...db.profiles[id], ...patch }
         saveDb(db)
         return db.profiles[id]
-      },
+      }),
 
   /* roles + positions go through the superadmin-gated RPCs only
      (client-side role/positions updates are blocked by the guard trigger) */
-  changeRole: SUPABASE_ENABLED
-    ? async (id, role) => {
+  changeRole: offlineWrite('changeRole', async (id, role) => {
         const { error } = await supabase.rpc('change_role', { p_target: id, p_new_role: role })
         if (error) throw error
-      }
-    : async (id, role) => {
+      }, async (id, role) => {
         db.profiles[id] = { ...db.profiles[id], role }
         saveDb(db)
-      },
+      }),
 
-  setPositions: SUPABASE_ENABLED
-    ? async (id, positions) => {
+  setPositions: offlineWrite('setPositions', async (id, positions) => {
         const { error } = await supabase.rpc('set_positions', { p_target: id, p_positions: positions })
         if (error) throw error
-      }
-    : async (id, positions) => {
+      }, async (id, positions) => {
         db.profiles[id] = { ...db.profiles[id], positions }
         saveDb(db)
-      },
+      }),
 
-  deleteUser: SUPABASE_ENABLED
-    ? async (id) => {
+  deleteUser: offlineWrite('deleteUser', async (id) => {
         const { error } = await supabase.from('profiles').delete().eq('id', id)
         if (error) throw error
-      }
-    : async (id) => {
+      }, async (id) => {
         delete db.profiles[id]
         db.posts = db.posts.filter((p) => p.user_id !== id)
         saveDb(db)
-      },
+      }),
 
-  updateEvent: SUPABASE_ENABLED
-    ? async (eventId, patch) => {
+  updateEvent: offlineWrite('updateEvent', async (eventId, patch) => {
         const { data, error } = await supabase.from('events').update(patch).eq('id', eventId).select().single()
         if (error) throw error
         return data
-      }
-    : async (eventId, patch) => {
+      }, async (eventId, patch) => {
         const ev = db.events.find((e) => e.id === eventId)
         if (ev) Object.assign(ev, patch)
         saveDb(db)
         return ev
-      },
+      }),
 
-  deleteEvent: SUPABASE_ENABLED
-    ? async (eventId) => {
+  deleteEvent: offlineWrite('deleteEvent', async (eventId) => {
         const { error } = await supabase.from('events').delete().eq('id', eventId)
         if (error) throw error
-      }
-    : async (eventId) => {
+      }, async (eventId) => {
         db.events = db.events.filter((e) => e.id !== eventId)
         delete db.attendance[eventId]
         saveDb(db)
-      },
+      }),
 
   /* events */
-  getEvents: SUPABASE_ENABLED
-    ? async () => {
+  getEvents: offlineRead('getEvents', async () => {
         const { data, error } = await supabase
           .from('events')
           .select('*, rsvps(*, profiles(full_name, avatar_url, program))')
@@ -984,8 +1045,7 @@ export const api = {
             attendees,
           }
         })
-      }
-    : async () => {
+      }, async () => {
         const events = await demoGetEvents()
         return events.map((e) => ({
           ...e,
@@ -993,11 +1053,16 @@ export const api = {
             Object.keys(e.rsvps || {}).map((id) => [id, db.profiles[id] || null])
           ),
         }))
-      },
+      }, (events) => {
+        mirrorEvents(events)
+        // rsvp rows carry profiles for the attendees map — mirror those too
+        for (const e of events || []) {
+          for (const u of Object.values(e.attendees || {})) if (u) mirrorProfileInto(u)
+        }
+      }),
 
   /* all events — past included (admin console needs to manage old events) */
-  getAllEvents: SUPABASE_ENABLED
-    ? async () => {
+  getAllEvents: offlineRead('getAllEvents', async () => {
         const { data, error } = await supabase
           .from('events')
           .select('*, rsvps(*)')
@@ -1011,14 +1076,12 @@ export const api = {
           ...e,
           rsvps: Object.fromEntries((e.rsvps || []).map((r) => [r.user_id, r.status])),
         }))
-      }
-    : async () => {
+      }, async () => {
         const evs = await demoGetEvents()
         return evs.map((e) => ({ ...e, rsvps: e.rsvps || {} }))
-      },
+      }, mirrorEvents),
 
-  createEvent: SUPABASE_ENABLED
-    ? async (ev) => {
+  createEvent: offlineWrite('createEvent', async (ev) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in.')
         // RLS requires auth.uid() = created_by, so the creator must be recorded.
@@ -1045,11 +1108,9 @@ export const api = {
           console.warn('Could not announce event on the feed:', e)
         }
         return data
-      }
-    : demoCreateEvent,
+      }, demoCreateEvent, { localId: (e) => e?.id }),
 
-  setRsvp: SUPABASE_ENABLED
-    ? async (eventId, status) => {
+  setRsvp: offlineWrite('setRsvp', async (eventId, status) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
         if (status === 'none') {
@@ -1057,37 +1118,36 @@ export const api = {
         } else {
           await supabase.from('rsvps').upsert({ event_id: eventId, user_id: user.id, status })
         }
-      }
-    : demoSetRsvp,
+      }, demoSetRsvp),
 
-  getAttendance: SUPABASE_ENABLED
-    ? async (eventId) => {
+  getAttendance: offlineRead('getAttendance', async (eventId) => {
         const { data, error } = await supabase
           .from('attendance')
           .select('*, profiles(full_name, program, year_level)')
           .eq('event_id', eventId)
         if (error) throw error
         return data || []
-      }
-    : demoGetAttendance,
+      }, demoGetAttendance, (rows) => {
+        for (const r of rows || []) {
+          const ev = db.attendance[r.event_id] || (db.attendance[r.event_id] = {})
+          ev[r.user_id] = r.scanned_at
+          if (r.profiles) mirrorProfileInto(r.profiles)
+        }
+        saveDb(db)
+      }),
 
-  markAttendance: SUPABASE_ENABLED
-    ? async (eventId, userId) => {
+  markAttendance: offlineWrite('markAttendance', async (eventId, userId) => {
         const { error } = await supabase.from('attendance').upsert({ event_id: eventId, user_id: userId, scanned_at: new Date().toISOString() })
         if (error) throw error
-      }
-    : demoMarkAttendance,
+      }, demoMarkAttendance),
 
-  removeAttendance: SUPABASE_ENABLED
-    ? async (eventId, userId) => {
+  removeAttendance: offlineWrite('removeAttendance', async (eventId, userId) => {
         const { error } = await supabase.from('attendance').delete().eq('event_id', eventId).eq('user_id', userId)
         if (error) throw error
-      }
-    : demoRemoveAttendance,
+      }, demoRemoveAttendance),
 
   /* my attendance history */
-  getMyAttendance: SUPABASE_ENABLED
-    ? async () => {
+  getMyAttendance: offlineRead('getMyAttendance', async () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return []
         const { data, error } = await supabase
@@ -1097,8 +1157,7 @@ export const api = {
           .order('scanned_at', { ascending: false })
         if (error) throw error
         return (data || []).map((r) => ({ event_id: r.event_id, scanned_at: r.scanned_at, ...(r.events || {}) }))
-      }
-    : async () => {
+      }, async () => {
         const me = demoCurrentUserId() || DEMO_USER_ID
         const rows = []
         for (const [event_id, m] of Object.entries(db.attendance || {})) {
@@ -1110,11 +1169,10 @@ export const api = {
           }
         }
         return rows.sort((a, b) => new Date(b.scanned_at) - new Date(a.scanned_at))
-      },
+      }),
 
   /* attendance tallies per event */
-  getAttendanceSummary: SUPABASE_ENABLED
-    ? async () => {
+  getAttendanceSummary: offlineRead('getAttendanceSummary', async () => {
         const { data, error } = await supabase.from('attendance').select('event_id, events(title)')
         if (error) throw error
         const counts = {}
@@ -1124,19 +1182,17 @@ export const api = {
           titles[r.event_id] = r.events?.title
         }
         return Object.entries(counts).map(([event_id, count]) => ({ event_id, count, title: titles[event_id] || 'Event' }))
-      }
-    : async () =>
+      }, async () =>
         db.events
           .map((e) => ({ event_id: e.id, count: Object.keys(db.attendance[e.id] || {}).length, title: e.title }))
-          .filter((t) => t.count > 0),
+          .filter((t) => t.count > 0)),
 
   getFeeds,
   getWhoNews,
   aiChat,
 
   /* ---------------- announcements (announcer-gated by RLS) ---------------- */
-  getAnnouncements: SUPABASE_ENABLED
-    ? async () => {
+  getAnnouncements: offlineRead('getAnnouncements', async () => {
         const { data, error } = await supabase
           .from('announcements')
           .select('*, profiles!announcements_author_id_fkey(full_name, avatar_url)')
@@ -1149,8 +1205,7 @@ export const api = {
         }
         setDbStatus('ok')
         return data || []
-      }
-    : async () => {
+      }, async () => {
         const list = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
         if (!list.length) {
           const staff = db.profiles[DEMO_STAFF_ID] || {}
@@ -1167,10 +1222,9 @@ export const api = {
           return seeded
         }
         return list.sort((a, b) => (b.pinned - a.pinned) || (new Date(b.created_at) - new Date(a.created_at)))
-      },
+      }, mirrorAnnouncements),
 
-  createAnnouncement: SUPABASE_ENABLED
-    ? async ({ title, body, pinned }) => {
+  createAnnouncement: offlineWrite('createAnnouncement', async ({ title, body, pinned }) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in.')
         const { data, error } = await supabase
@@ -1180,18 +1234,16 @@ export const api = {
           .single()
         if (error) throw error
         return data
-      }
-    : async ({ title, body, pinned }) => {
+      }, async ({ title, body, pinned }) => {
         const me = db.profiles[demoCurrentUserId()] || db.profiles[DEMO_USER_ID]
         const list = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
         const row = { id: uid(), title, body, pinned: !!pinned, author_id: me?.id, created_at: new Date().toISOString(), profiles: { full_name: me?.full_name || 'FNAHS', avatar_url: me?.avatar_url || null } }
         list.unshift(row)
         localStorage.setItem('fnahs-demo-announcements', JSON.stringify(list))
         return row
-      },
+      }, { localId: (a) => a?.id }),
 
-  updateAnnouncement: SUPABASE_ENABLED
-    ? async (id, patch) => {
+  updateAnnouncement: offlineWrite('updateAnnouncement', async (id, patch) => {
         const clean = {}
         if (patch.title !== undefined) clean.title = sanitizeText(patch.title, 200)
         if (patch.body !== undefined) clean.body = sanitizeText(patch.body, 2000)
@@ -1199,27 +1251,23 @@ export const api = {
         if (patch.archived_at !== undefined) clean.archived_at = patch.archived_at
         const { error } = await supabase.from('announcements').update(clean).eq('id', id)
         if (error) throw error
-      }
-    : async (id, patch) => {
+      }, async (id, patch) => {
         const list = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
         const row = list.find((a) => a.id === id)
         if (row) Object.assign(row, patch)
         localStorage.setItem('fnahs-demo-announcements', JSON.stringify(list))
-      },
+      }),
 
-  deleteAnnouncement: SUPABASE_ENABLED
-    ? async (id) => {
+  deleteAnnouncement: offlineWrite('deleteAnnouncement', async (id) => {
         const { error } = await supabase.from('announcements').delete().eq('id', id)
         if (error) throw error
-      }
-    : async (id) => {
+      }, async (id) => {
         const list = JSON.parse(localStorage.getItem('fnahs-demo-announcements') || '[]')
         localStorage.setItem('fnahs-demo-announcements', JSON.stringify(list.filter((a) => a.id !== id)))
-      },
+      }),
 
   /* ---------------- notifications (own rows only) ---------------- */
-  getNotifications: SUPABASE_ENABLED
-    ? async () => {
+  getNotifications: offlineRead('getNotifications', async () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return { list: [], unread: 0 }
         const { data, error } = await supabase
@@ -1233,34 +1281,29 @@ export const api = {
           return { list: [], unread: 0 }
         }
         return { list: data || [], unread: (data || []).filter((n) => !n.read_at).length }
-      }
-    : async () => {
+      }, async () => {
         const me = demoCurrentUserId()
         const all = JSON.parse(localStorage.getItem('fnahs-demo-notifs') || '[]')
         const list = all.filter((n) => n.user_id === me).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 30)
         return { list, unread: list.filter((n) => !n.read_at).length }
-      },
+      }, mirrorNotifications),
 
-  markNotificationRead: SUPABASE_ENABLED
-    ? async (id) => {
+  markNotificationRead: offlineWrite('markNotificationRead', async (id) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
         await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', user.id)
-      }
-    : async (id) => {
+      }, async (id) => {
         const all = JSON.parse(localStorage.getItem('fnahs-demo-notifs') || '[]')
         const n = all.find((x) => x.id === id)
         if (n) n.read_at = new Date().toISOString()
         localStorage.setItem('fnahs-demo-notifs', JSON.stringify(all))
-      },
+      }),
 
-  markAllNotificationsRead: SUPABASE_ENABLED
-    ? async () => {
+  markAllNotificationsRead: offlineWrite('markAllNotificationsRead', async () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
         await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('user_id', user.id).is('read_at', null)
-      }
-    : async () => {
+      }, async () => {
         const me = demoCurrentUserId()
         if (!me) return
         const all = JSON.parse(localStorage.getItem('fnahs-demo-notifs') || '[]')
@@ -1269,11 +1312,10 @@ export const api = {
           if (n.user_id === me && !n.read_at) n.read_at = now
         })
         localStorage.setItem('fnahs-demo-notifs', JSON.stringify(all))
-      },
+      }),
 
   /* ---------------- event polls ---------------- */
-  getPolls: SUPABASE_ENABLED
-    ? async (eventId) => {
+  getPolls: offlineRead('getPolls', async (eventId) => {
         const { data, error } = await supabase
           .from('event_polls')
           .select('*, poll_options(*, poll_votes(user_id))')
@@ -1290,14 +1332,12 @@ export const api = {
             votes: (o.poll_votes || []).map((v) => v.user_id),
           })),
         }))
-      }
-    : async (eventId) => {
+      }, async (eventId) => {
         const all = JSON.parse(localStorage.getItem('fnahs-demo-polls') || '[]')
         return all.filter((p) => p.event_id === eventId)
-      },
+      }, mirrorPolls),
 
-  createPoll: SUPABASE_ENABLED
-    ? async (eventId, question, optionLabels) => {
+  createPoll: offlineWrite('createPoll', async (eventId, question, optionLabels) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in.')
         const { data: poll, error: pe } = await supabase
@@ -1314,26 +1354,23 @@ export const api = {
           if (oe) throw oe
         }
         return poll
-      }
-    : async (eventId, question, optionLabels) => {
+      }, async (eventId, question, optionLabels) => {
         const me = demoCurrentUserId() || DEMO_USER_ID
         const all = JSON.parse(localStorage.getItem('fnahs-demo-polls') || '[]')
         const poll = { id: uid(), event_id: eventId, question, created_by: me, created_at: new Date().toISOString(), options: optionLabels.map((label) => ({ id: uid(), label, votes: [] })) }
         all.push(poll)
         localStorage.setItem('fnahs-demo-polls', JSON.stringify(all))
         return poll
-      },
+      }, { localId: (p) => p?.id }),
 
-  castVote: SUPABASE_ENABLED
-    ? async (pollId, optionId) => {
+  castVote: offlineWrite('castVote', async (pollId, optionId) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in.')
         const { error } = await supabase
           .from('poll_votes')
           .upsert({ poll_id: pollId, option_id: optionId, user_id: user.id }, { onConflict: 'poll_id,user_id' })
         if (error) throw error
-      }
-    : async (pollId, optionId) => {
+      }, async (pollId, optionId) => {
         const me = demoCurrentUserId() || DEMO_USER_ID
         const all = JSON.parse(localStorage.getItem('fnahs-demo-polls') || '[]')
         const poll = all.find((p) => p.id === pollId)
@@ -1342,11 +1379,10 @@ export const api = {
           poll.options.find((o) => o.id === optionId)?.votes.push(me)
         }
         localStorage.setItem('fnahs-demo-polls', JSON.stringify(all))
-      },
+      }),
 
   /* ---------------- Florence chat history (own messages) ---------------- */
-  getChatHistory: SUPABASE_ENABLED
-    ? async () => {
+  getChatHistory: offlineRead('getChatHistory', async () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return []
         const { data, error } = await supabase
@@ -1360,20 +1396,17 @@ export const api = {
           return []
         }
         return data || []
-      }
-    : async () => {
+      }, async () => {
         const me = demoCurrentUserId()
         const all = JSON.parse(localStorage.getItem('fnahs-demo-chat') || '{}')
         return (all[me] || []).slice(-40)
-      },
+      }, mirrorChat),
 
-  saveChatMessage: SUPABASE_ENABLED
-    ? async (role, content) => {
+  saveChatMessage: offlineWrite('saveChatMessage', async (role, content) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
         await supabase.from('chat_messages').insert({ user_id: user.id, role, content: String(content || '').slice(0, 12000) })
-      }
-    : async (role, content) => {
+      }, async (role, content) => {
         const me = demoCurrentUserId()
         if (!me) return
         const all = JSON.parse(localStorage.getItem('fnahs-demo-chat') || '{}')
@@ -1381,7 +1414,7 @@ export const api = {
         list.push({ role, content, created_at: new Date().toISOString() })
         all[me] = list.slice(-100)
         localStorage.setItem('fnahs-demo-chat', JSON.stringify(all))
-      },
+      }),
 
   PROGRAMS,
 }
