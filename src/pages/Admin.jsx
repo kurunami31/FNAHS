@@ -27,6 +27,7 @@ export default function Admin() {
   const [eventModal, setEventModal] = useState(null)
   const [attEventId, setAttEventId] = useState('')
   const [attRows, setAttRows] = useState([])
+  const [attQ, setAttQ] = useState('')
   const attEventIdRef = useRef('')
   const [feeYear, setFeeYear] = useState(currentSchoolYear())
   const [feePayments, setFeePayments] = useState([])
@@ -397,37 +398,60 @@ export default function Admin() {
                 placeholder="Select an event…"
               />
             </div>
+            <div className="field" style={{ marginBottom: 0, minWidth: 200 }}>
+              <label>Search</label>
+              <input
+                type="search"
+                placeholder="Name or ID no…"
+                value={attQ}
+                onChange={(e) => setAttQ(e.target.value)}
+              />
+            </div>
             <button className="btn btn--primary" onClick={exportAttCsv} disabled={attRows.length === 0}>
               <Download size={15} /> Export CSV
             </button>
+          </div>
+          <div className="tally-strip" style={{ marginBottom: 14 }}>
+            {events.map((e) => (
+              <span key={e.id} className={`chip${e.id === attEventId ? ' chip--ok' : ''}`}>
+                <b style={{ marginRight: 5 }}>{attEventId === e.id ? attRows.length : 0}</b> {e.title}
+              </span>
+            ))}
           </div>
           {attRows.length === 0 ? (
             <p className="panel-muted">No scans recorded for this event yet.</p>
           ) : (
             <div className="ledger">
-              {attRows.map((a) => (
-                <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
-                  <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
-                    {(a.profiles?.full_name || '?')
-                      .split(' ')
-                      .map((w) => w[0])
-                      .slice(0, 2)
-                      .join('')
-                      .toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
-                      {a.profiles?.full_name || a.user_id.slice(0, 10)}
+              {attRows
+                .filter((a) => {
+                  const n = attQ.trim().toLowerCase()
+                  if (!n) return true
+                  return (a.profiles?.full_name || '').toLowerCase().includes(n) || (a.profiles?.id_no || '').toLowerCase().includes(n)
+                })
+                .map((a) => (
+                  <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
+                    <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                      {(a.profiles?.full_name || '?')
+                        .split(' ')
+                        .map((w) => w[0])
+                        .slice(0, 2)
+                        .join('')
+                        .toUpperCase()}
                     </div>
-                    <div className="ledger-meta">
-                      {a.profiles?.program ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}` : ''}
-                      {' · '}
-                      {a.profiles?.email || 'no email'} · scanned {timeAgo(a.scanned_at)}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
+                        {a.profiles?.full_name || a.user_id.slice(0, 10)}
+                      </div>
+                      <div className="ledger-meta">
+                        {a.profiles?.id_no ? `ID ${a.profiles.id_no} · ` : ''}
+                        {a.profiles?.program ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}` : ''}
+                        {' · '}
+                        {a.profiles?.email || 'no email'} · scanned {timeAgo(a.scanned_at)}
+                      </div>
                     </div>
+                    <span className="badge badge--ok">present</span>
                   </div>
-                  <span className="badge badge--ok">present</span>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </section>

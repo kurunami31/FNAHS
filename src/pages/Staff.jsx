@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2, Download, HandCoins } from 'lucide-react'
+import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2, Download, HandCoins, Search } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
@@ -19,6 +19,7 @@ export default function Staff() {
   const [last, setLast] = useState(null)
   const [tallies, setTallies] = useState([])
   const [payments, setPayments] = useState([])
+  const [attQ, setAttQ] = useState('')
   const scanBoxRef = useRef(null)
   // Mirrors the current eventId so the scan handler never goes stale mid-scan.
   const eventIdRef = useRef('')
@@ -332,64 +333,96 @@ export default function Staff() {
         {attendance.length === 0 ? (
           <p className="panel-muted">No scans recorded for this event yet.</p>
         ) : (
-          <div className="ledger">
-            {attendance.map((a) => (
-              <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
-                <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
-                  {(a.profiles?.full_name || '?')
-                    .split(' ')
-                    .map((w) => w[0])
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase()}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
-                    {a.profiles?.full_name || a.user_id.slice(0, 10)}
-                  </div>
-                  <div className="ledger-meta">
-                    {a.profiles?.program
-                      ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}`
-                      : ''}{' '}
-                    · scanned {timeAgo(a.scanned_at)}
-                  </div>
-                </div>
-                <span className="badge badge--ok">present</span>
-                {eventFee > 0 &&
-                  (payments.some((p) => p.member_id === a.user_id) ? (
-                    <>
-                      <span className="chip chip--ok">paid</span>
-                      {canManagePayments && (
-                        <button
-                          className="icon-btn"
-                          title="Void this payment"
-                          onClick={() => unmarkPaid(a.user_id, a.profiles?.full_name || 'member')}
-                        >
-                          <HandCoins size={15} />
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    canManagePayments && (
+          <>
+            <div className="search-field" style={{ marginBottom: 12, maxWidth: 360 }}>
+              <Search size={14} />
+              <input
+                type="search"
+                placeholder="Search by name or ID no…"
+                value={attQ}
+                onChange={(e) => setAttQ(e.target.value)}
+              />
+            </div>
+            <div className="ledger">
+              {attendance
+                .filter((a) => {
+                  const n = attQ.trim().toLowerCase()
+                  if (!n) return true
+                  const name = a.profiles?.full_name || ''
+                  const id = a.profiles?.id_no || ''
+                  return name.toLowerCase().includes(n) || id.toLowerCase().includes(n)
+                })
+                .map((a) => {
+                  const paidRow = eventFee > 0 && payments.some((p) => p.member_id === a.user_id)
+                  return (
+                    <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
+                      <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                        {(a.profiles?.full_name || '?')
+                          .split(' ')
+                          .map((w) => w[0])
+                          .slice(0, 2)
+                          .join('')
+                          .toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
+                          {a.profiles?.full_name || a.user_id.slice(0, 10)}
+                        </div>
+                        <div className="ledger-meta">
+                          {a.profiles?.id_no ? `ID ${a.profiles.id_no} · ` : ''}
+                          {a.profiles?.program
+                            ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}`
+                            : ''}{' '}
+                          · scanned {timeAgo(a.scanned_at)}
+                        </div>
+                      </div>
+                      <span className="badge badge--ok">present</span>
+                      {eventFee > 0 &&
+                        (paidRow ? (
+                          <>
+                            <span className="chip chip--ok">paid</span>
+                            {canManagePayments && (
+                              <button
+                                className="icon-btn"
+                                title="Void this payment"
+                                onClick={() => unmarkPaid(a.user_id, a.profiles?.full_name || 'member')}
+                              >
+                                <HandCoins size={15} />
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          canManagePayments && (
+                            <button
+                              className="icon-btn"
+                              title={`Mark paid — ₱${fmtPeso(eventFee)}`}
+                              onClick={() => markPaid(a.user_id, a.profiles?.full_name || 'member')}
+                            >
+                              <HandCoins size={15} />
+                            </button>
+                          )
+                        ))}
                       <button
-                        className="icon-btn"
-                        title={`Mark paid — ₱${fmtPeso(eventFee)}`}
-                        onClick={() => markPaid(a.user_id, a.profiles?.full_name || 'member')}
+                        className="icon-btn icon-btn--danger"
+                        title="Remove from attendance"
+                        onClick={() => removeAttendance(a.user_id)}
                       >
-                        <HandCoins size={15} />
+                        <Trash2 size={15} />
                       </button>
-                    )
-                  ))}
-                <button
-                  className="icon-btn icon-btn--danger"
-                  title="Remove from attendance"
-                  onClick={() => removeAttendance(a.user_id)}
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            ))}
-          </div>
+                    </div>
+                  )
+                })}
+            </div>
+            {attQ.trim() && (
+              <p className="page-sub" style={{ marginTop: 10 }}>
+                Showing {attendance.filter((a) => {
+                  const n = attQ.trim().toLowerCase()
+                  return (a.profiles?.full_name || '').toLowerCase().includes(n) || (a.profiles?.id_no || '').toLowerCase().includes(n)
+                }).length}{' '}
+                of {attendance.length} — total {attendance.length} attended
+              </p>
+            )}
+          </>
         )}
       </section>
     </div>

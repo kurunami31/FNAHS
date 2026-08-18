@@ -1234,7 +1234,7 @@ export const api = {
   getAttendance: offlineRead('getAttendance', async (eventId) => {
         const { data, error } = await supabase
           .from('attendance')
-          .select('*, profiles(full_name, program, year_level, email)')
+          .select('*, profiles(full_name, program, year_level, email, id_no)')
           .eq('event_id', eventId)
         if (error) throw error
         return data || []
@@ -1297,6 +1297,19 @@ export const api = {
         db.events
           .map((e) => ({ event_id: e.id, count: Object.keys(db.attendance[e.id] || {}).length, title: e.title }))
           .filter((t) => t.count > 0)),
+
+  /* member-visible per-event attendance counts (security-definer RPC) */
+  getEventTallies: offlineRead('getEventTallies', async () => {
+        const { data, error } = await supabase.rpc('get_event_tallies')
+        if (error) throw error
+        return data || []
+      }, async () => {
+        const counts = {}
+        for (const [event_id, m] of Object.entries(db.attendance || {})) {
+          counts[event_id] = Object.keys(m || {}).length
+        }
+        return Object.entries(counts).map(([event_id, count]) => ({ event_id, count }))
+      }),
 
   /* ---------------- membership fees (RLS: own rows or fee viewer) ---------------- */
   getAnnualFee: offlineRead('getAnnualFee', async () => {

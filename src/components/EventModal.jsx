@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X, Clock, MapPin, Users, QrCode, Check, BarChart3, Plus, HandCoins } from 'lucide-react'
+import { X, Clock, MapPin, Users, QrCode, Check, BarChart3, Plus, HandCoins, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { canAny } from '../rbac'
 import { api } from '../lib/api'
@@ -9,6 +9,8 @@ import { fmtPeso } from '../lib/fees'
 export default function EventModal({ event, onClose, onChanged }) {
   const { user, toast } = useApp()
   const [scanned, setScanned] = useState(null)
+  const [attendees, setAttendees] = useState([])
+  const [attQ, setAttQ] = useState('')
   const [paid, setPaid] = useState(0)
   const [myPaid, setMyPaid] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -22,7 +24,10 @@ export default function EventModal({ event, onClose, onChanged }) {
   useEffect(() => {
     api
       .getAttendance(event.id)
-      .then((rows) => setScanned(rows.length))
+      .then((rows) => {
+        setScanned(rows.length)
+        setAttendees(rows)
+      })
       .catch(() => {})
     if (fee > 0) {
       api
@@ -237,6 +242,50 @@ export default function EventModal({ event, onClose, onChanged }) {
             </div>
           )}
         </div>
+
+        {isStaff && scanned != null && scanned > 0 && (
+          <div className="evm-sec">
+            <h5><QrCode size={14} /> Attendance log <span className="chip chip--ok">{scanned} scanned</span></h5>
+            <div className="field" style={{ marginBottom: 10 }}>
+              <div className="search-field">
+                <Search size={14} />
+                <input
+                  type="search"
+                  placeholder="Search by name or ID no…"
+                  value={attQ}
+                  onChange={(e) => setAttQ(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="ledger" style={{ maxHeight: 260, overflow: 'auto' }}>
+              {attendees
+                .filter((a) => {
+                  const n = attQ.trim().toLowerCase()
+                  if (!n) return true
+                  const name = a.profiles?.full_name || ''
+                  const id = a.profiles?.id_no || ''
+                  return name.toLowerCase().includes(n) || id.toLowerCase().includes(n)
+                })
+                .map((a) => (
+                  <div className="ledger-row" key={a.user_id}>
+                    <div className="avatar" style={{ width: 30, height: 30, fontSize: 11 }}>
+                      {a.profiles?.full_name ? initials(a.profiles.full_name) : '?'}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                        {a.profiles?.full_name || a.user_id.slice(0, 10)}
+                      </div>
+                      <div className="ledger-meta">
+                        {a.profiles?.id_no ? `ID ${a.profiles.id_no} · ` : ''}
+                        {a.profiles?.program || '—'} · scanned {fmtDateTime(a.scanned_at)}
+                      </div>
+                    </div>
+                    <span className="badge badge--ok">present</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
 
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Close</button>

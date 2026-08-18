@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CalendarDays, MapPin, Clock, Plus, Check, X, Users, HandCoins } from 'lucide-react'
+import { CalendarDays, MapPin, Clock, Plus, Check, X, Users, HandCoins, QrCode } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
@@ -10,6 +10,7 @@ import EventModal from '../components/EventModal'
 export default function Events() {
   const { user, toast } = useApp()
   const [events, setEvents] = useState([])
+  const [tallies, setTallies] = useState({})
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(false)
   const [selected, setSelected] = useState(null)
@@ -18,8 +19,9 @@ export default function Events() {
 
   const load = useCallback(async () => {
     try {
-      const evs = await api.getEvents()
+      const [evs, t] = await Promise.all([api.getEvents(), api.getEventTallies()])
       setEvents(evs)
+      setTallies(Object.fromEntries((t || []).map((x) => [x.event_id, x.count])))
       setSelected((s) => (s ? evs.find((e) => e.id === s.id) || null : s))
     } catch (e) {
       console.error(e)
@@ -91,6 +93,7 @@ await load()
                 <span><Clock size={14} /> {fmtDateTime(e.starts_at)}</span>
                 <span><MapPin size={14} /> {e.location}</span>
                 <span><Users size={14} /> {going} going</span>
+                <span><QrCode size={14} /> {tallies[e.id] || 0} attended</span>
                 {Number(e.fee_amount) > 0 && (
                   <span className="chip chip--gold"><HandCoins size={12} /> ₱{fmtPeso(e.fee_amount)}</span>
                 )}
