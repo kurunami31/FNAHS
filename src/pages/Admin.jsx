@@ -9,6 +9,7 @@ import { PROGRAMS } from '../lib/mock'
 import { drawIdCanvas } from '../lib/idCanvas'
 import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
 import { currentSchoolYear, feeStatus } from '../lib/fees'
+import Select from '../components/Select'
 
 const ROLES = ['student', 'moderator', 'superadmin']
 
@@ -244,16 +245,14 @@ export default function Admin() {
                     </div>
                   )}
                 </div>
-                <select
+                <Select
+                  compact
                   className="role-select"
                   value={m.role}
-                  aria-label={`Role of ${m.full_name}`}
-                  onChange={(e) => changeRole(m, e.target.value)}
-                >
-                  {ROLES.filter((r) => r !== 'superadmin' || isSuperadmin).map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
+                  onChange={(v) => changeRole(m, v)}
+                  ariaLabel={`Role of ${m.full_name}`}
+                  options={ROLES.filter((r) => r !== 'superadmin' || isSuperadmin).map((r) => ({ value: r, label: r }))}
+                />
                 <div className="admin-actions">
                   <button className="icon-btn" title="View digital ID" onClick={() => setIdModal(m)}>
                     <IdCard size={15} />
@@ -360,12 +359,12 @@ export default function Admin() {
           <div className="admin-toolbar">
             <div className="field" style={{ marginBottom: 0, minWidth: 240, flex: 1 }}>
               <label>Event</label>
-              <select value={attEventId} onChange={(e) => setAttEventId(e.target.value)}>
-                {events.length === 0 && <option value="">No events yet…</option>}
-                {events.map((e) => (
-                  <option key={e.id} value={e.id}>{e.title}</option>
-                ))}
-              </select>
+              <Select
+                value={attEventId}
+                onChange={setAttEventId}
+                options={events.map((e) => ({ value: e.id, label: e.title }))}
+                placeholder="Select an event…"
+              />
             </div>
             <button className="btn btn--primary" onClick={exportAttCsv} disabled={attRows.length === 0}>
               <Download size={15} /> Export CSV
@@ -408,11 +407,11 @@ export default function Admin() {
           <div className="admin-toolbar">
             <div className="field" style={{ marginBottom: 0, minWidth: 200 }}>
               <label>School year</label>
-              <select value={feeYear} onChange={(e) => setFeeYear(e.target.value)}>
-                {feeYears.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
+              <Select
+                value={feeYear}
+                onChange={setFeeYear}
+                options={feeYears.map((y) => ({ value: y, label: y }))}
+              />
             </div>
             <p className="page-sub" style={{ margin: 0, flex: 1 }}>
               {canManageFees
@@ -710,29 +709,29 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
         )}
         <div className="field">
           <label>Program</label>
-          <select value={form.program} onChange={(e) => setForm({ ...form, program: e.target.value })}>
-            {PROGRAMS.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
+          <Select
+            value={form.program}
+            onChange={(v) => setForm({ ...form, program: v })}
+            options={PROGRAMS.map((p) => ({ value: p, label: p }))}
+          />
         </div>
         <div className="field">
           <label>Year level</label>
-          <select value={form.year_level} onChange={(e) => setForm({ ...form, year_level: e.target.value })}>
-            {['1', '2', '3', '4', '—'].map((y) => (
-              <option key={y} value={y}>{y === '—' ? 'Faculty' : `Year ${y}`}</option>
-            ))}
-          </select>
+          <Select
+            value={form.year_level}
+            onChange={(v) => setForm({ ...form, year_level: v })}
+            options={['1', '2', '3', '4', '—'].map((y) => ({ value: y, label: y === '—' ? 'Faculty' : `Year ${y}` }))}
+          />
         </div>
         {isSuperadmin && (
           <>
             <div className="field">
               <label>Role</label>
-              <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
+              <Select
+                value={form.role}
+                onChange={(v) => setForm({ ...form, role: v })}
+                options={ROLES.map((r) => ({ value: r, label: r }))}
+              />
             </div>
             <div className="field">
               <label>Positions <span className="field-hint">(what tools the member gets — pick none for a plain member)</span></label>

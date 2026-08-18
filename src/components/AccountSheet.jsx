@@ -7,6 +7,7 @@ import { api } from '../lib/api'
 import { initials } from '../lib/format'
 import { PROGRAMS, ORG_FULL } from '../lib/mock'
 import { BUILD_ID, DEVELOPER } from '../lib/build'
+import Select from './Select'
 
 export default function AccountSheet({ onClose, onLogout }) {
   const { user, setUser, toast } = useApp()
@@ -212,28 +213,30 @@ export default function AccountSheet({ onClose, onLogout }) {
             </div>
             <div className="field">
               <label>Program</label>
-              <select value={form.program || ''} onChange={(e) => setForm({ ...form, program: e.target.value })}>
-                {PROGRAMS.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
+              <Select
+                value={form.program || ''}
+                onChange={(v) => setForm({ ...form, program: v })}
+                options={PROGRAMS.map((p) => ({ value: p, label: p }))}
+                placeholder="Select program…"
+              />
             </div>
             <div className="field">
               <label>Year level</label>
-              <select value={form.year_level || ''} onChange={(e) => setForm({ ...form, year_level: e.target.value })}>
-                {['1', '2', '3', '4'].map((y) => (
-                  <option key={y} value={y}>Year {y}</option>
-                ))}
-              </select>
+              <Select
+                value={form.year_level || ''}
+                onChange={(v) => setForm({ ...form, year_level: v })}
+                options={['1', '2', '3', '4'].map((y) => ({ value: y, label: `Year ${y}` }))}
+                placeholder="Select year…"
+              />
             </div>
             <div className="field">
               <label>Section</label>
-              <select value={form.section || ''} onChange={(e) => setForm({ ...form, section: e.target.value })}>
-                <option value="">Select section…</option>
-                {['A', 'B', 'C', 'D'].map((s) => (
-                  <option key={s} value={s}>Section {s}</option>
-                ))}
-              </select>
+              <Select
+                value={form.section || ''}
+                onChange={(v) => setForm({ ...form, section: v })}
+                options={['A', 'B', 'C', 'D'].map((s) => ({ value: s, label: `Section ${s}` }))}
+                placeholder="Select section…"
+              />
             </div>
           </>
         )}

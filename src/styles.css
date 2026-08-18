@@ -1413,6 +1413,73 @@ html[data-theme='dark'] .id-card {
 .password-row { position: relative; }
 .password-row input { padding-right: 48px; }
 .password-row .icon-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; }
+
+/* Styled dropdown (Select.jsx) — matches the rounded field look */
+.sel { position: relative; width: 100%; }
+.sel-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.sel-trigger:hover { border-color: var(--line-strong); }
+.sel-trigger--open, .sel-trigger:focus-visible { border-color: var(--gold); box-shadow: var(--sh-glow); outline: none; }
+.sel-trigger:disabled { opacity: 0.55; cursor: not-allowed; }
+.sel-placeholder { color: var(--muted); }
+.sel-caret { flex: none; color: var(--muted); transition: transform 0.2s ease; }
+.sel-trigger--open .sel-caret { transform: rotate(180deg); }
+.sel-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 120;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-lg);
+  max-height: 260px;
+  overflow: auto;
+  padding: 6px;
+}
+.sel-group-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 10px 4px;
+}
+.sel-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 9px 10px;
+  font-size: 0.9rem;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+}
+.sel-opt:hover, .sel-opt--hi { background: var(--accent-glow-soft); }
+.sel-opt--on { color: var(--gold); font-weight: 600; }
+.sel--compact .sel-trigger { padding: 8px 10px; font-size: 0.85rem; border-radius: var(--r-sm); }
 .form-error {
   background: color-mix(in srgb, var(--danger) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);

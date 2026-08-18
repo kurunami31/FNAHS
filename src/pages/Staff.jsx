@@ -7,6 +7,7 @@ import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
 import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
 import { currentSchoolYear, feeStatus } from '../lib/fees'
+import Select from '../components/Select'
 
 export default function Staff() {
   const { user, toast, online, pendingCount } = useApp()
@@ -193,12 +194,12 @@ export default function Staff() {
         </div>
         <div className="field" style={{ marginBottom: 0 }}>
           <label>Pick the active event</label>
-          <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
-            {events.length === 0 && <option value="">No events yet…</option>}
-            {events.map((e) => (
-              <option key={e.id} value={e.id}>{e.title}</option>
-            ))}
-          </select>
+          <Select
+            value={eventId}
+            onChange={setEventId}
+            options={events.map((e) => ({ value: e.id, label: e.title }))}
+            placeholder="Select an event…"
+          />
         </div>
         {tallies.length > 0 && (
           <div className="tally-strip">
