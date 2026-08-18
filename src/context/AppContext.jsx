@@ -129,6 +129,36 @@ export function AppProvider({ children }) {
     return u
   }, [])
 
+  // Single-session guard: signing in on another device invalidates this
+  // session server-side. Poll is_latest_session and force a sign-out with
+  // a notice the moment this device is no longer the newest one.
+  useEffect(() => {
+    if (!user) return
+    let alive = true
+    const check = async () => {
+      try {
+        const latest = await api.isLatestSession()
+        if (!alive || latest) return
+        await api.signOut().catch(() => {})
+        if (!alive) return
+        setUser(null)
+        toast('You were signed out — your account was used on another device.', 'err')
+      } catch {
+        /* transient failure — retry on the next tick */
+      }
+    }
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') check()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    const t = setInterval(check, 30_000)
+    return () => {
+      alive = false
+      document.removeEventListener('visibilitychange', onVisible)
+      clearInterval(t)
+    }
+  }, [user, toast])
+
   const value = useMemo(
     () => ({
       theme,

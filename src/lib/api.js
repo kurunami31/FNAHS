@@ -714,6 +714,9 @@ export const api = {
       if (mfaFactorId) {
         return { mfa: { factorId: mfaFactorId } }
       }
+      // This device is now the single active session — kill any session
+      // on other devices (their refresh tokens die immediately).
+      await api.claimSession()
       const profile = await api.getProfile(data.user.id)
       if (!profile) throw new Error('Your profile could not be loaded.')
       const user = { ...profile, id: data.user.id, email: profile.email || data.user.email }
@@ -731,11 +734,33 @@ export const api = {
     const challengeId = await api.mfaChallenge(factorId)
     const { data, error } = await supabase.auth.mfa.verify({ factorId, challengeId, code: String(code || '').trim() })
     if (error) throw error
+    // This device is now the single active session — kill the aal1 session
+    // from the sign-in step plus any sessions on other devices.
+    await api.claimSession()
     const profile = await api.getProfile(data.user.id)
     if (!profile) throw new Error('Your profile could not be loaded.')
     const user = { ...profile, id: data.user.id, email: profile.email || data.user.email }
     await cacheSession(user)
     return { user }
+  },
+
+  /* single-session login: one device per account.
+     claim_session() invalidates every other session of the user at
+     sign-in; is_latest_session() powers the heartbeat that force-signs
+     out a device whose session was superseded by a login elsewhere. */
+  claimSession() {
+    if (!SUPABASE_ENABLED || !supabase) return Promise.resolve()
+    return supabase.rpc('claim_session').then(({ error }) => {
+      if (error) throw error
+    })
+  },
+
+  isLatestSession() {
+    if (!SUPABASE_ENABLED || !supabase) return Promise.resolve(true)
+    return supabase.rpc('is_latest_session').then(({ data, error }) => {
+      if (error) throw error
+      return !!data
+    })
   },
 
   async signUp(full_name, email, password) {
