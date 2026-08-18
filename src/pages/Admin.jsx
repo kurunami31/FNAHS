@@ -45,6 +45,7 @@ export default function Admin() {
     }
   }
   const [feeQ, setFeeQ] = useState('')
+const [searchQ, setSearchQ] = useState('')
   const [feeFilter, setFeeFilter] = useState('all')
   const [feeModal, setFeeModal] = useState(null)
 
