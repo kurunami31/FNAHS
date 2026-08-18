@@ -51,10 +51,41 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['FNAHS.png', 'favicon.ico'],
-      manifest: false,
+      manifest: {
+        id: '/',
+        name: 'FNAHS · PULSO',
+        short_name: 'FNAHS PULSO',
+        description:
+          'FNAHS · PULSO — Proactive and United Legion of Student nurses Organization, the Faculty of Nursing and Allied Health Sciences community platform.',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        display_override: ['standalone', 'minimal-ui', 'browser'],
+        background_color: '#faf7ee',
+        theme_color: '#a67400',
+        lang: 'en',
+        orientation: 'portrait-primary',
+        categories: ['education', 'social'],
+        icons: [
+          { src: '/FNAHS.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/icons/icon-180.png', sizes: '180x180', type: 'image/png', purpose: 'any' },
+        ],
+        shortcuts: [
+          { name: 'Feed', short_name: 'Feed', url: '/app/feed', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Events', short_name: 'Events', url: '/app/events', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Health Centre', short_name: 'Health', url: '/app/health', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
+        ],
+        screenshots: [
+          { src: '/screenshots/wide.png', sizes: '1280x720', type: 'image/png', form_factor: 'wide', label: 'FNAHS PULSO home' },
+          { src: '/screenshots/narrow.png', sizes: '750x1334', type: 'image/png', form_factor: 'narrow', label: 'FNAHS PULSO home' },
+        ],
+      },
     }),
   ],
   build: {
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -62,6 +93,7 @@ export default defineConfig({
           image: ['html-to-image'],
           scanner: ['html5-qrcode'],
           icons: ['lucide-react'],
+          vendor: ['react', 'react-dom', 'react-router-dom', '@supabase/supabase-js'],
         },
       },
     },

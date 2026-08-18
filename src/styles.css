@@ -2507,3 +2507,32 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 .hero-seal { padding: 3px; border-width: 1.5px; box-shadow: 0 10px 30px -8px var(--accent-glow); }
 .hero-seal img { transform: scale(1.02); }
 
+
+/* ============================================================
+   PWA — INSTALL BANNER
+   ============================================================ */
+.install-banner {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(560px, calc(100vw - 24px));
+  padding: 10px 12px 10px 16px;
+  background: var(--deep);
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px -10px rgba(16, 14, 96, 0.35);
+  animation: rise 0.35s ease;
+}
+.install-banner p { margin: 0; font-size: 0.82rem; color: var(--ink); flex: 1; }
+.install-banner b { color: var(--accent); }
+.install-banner .icon-btn { flex: none; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

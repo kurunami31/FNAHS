@@ -7,6 +7,7 @@ import Layout from './components/Layout'
 import ChatWidget from './components/ChatWidget'
 import PrivacyNotice from './components/PrivacyNotice'
 import MaintenanceScreen from './components/MaintenanceScreen'
+import InstallPrompt from './components/InstallPrompt'
 
 const Home = lazy(() => import('./pages/Home'))
 const Feed = lazy(() => import('./pages/Feed'))
@@ -65,6 +66,8 @@ export default function App() {
       </Routes>
 
       {user && !consentPending && <ChatWidget />}
+
+      <InstallPrompt />
 
       <div className="toast-wrap">
         {toasts.map((t) => (
