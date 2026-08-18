@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download, HandCoins, RefreshCw } from 'lucide-react'
+import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download, HandCoins, RefreshCw, FileText } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can, POSITIONS, positionLabel, roleLabel } from '../rbac'
 import { api } from '../lib/api'
@@ -333,6 +333,9 @@ export default function Admin() {
         <button className={`tab-btn${tab === 'attendance' ? ' tab-btn--on' : ''}`} onClick={() => setTab('attendance')}>
           <Users size={15} /> Attendance
         </button>
+        <button className={`tab-btn${tab === 'reports' ? ' tab-btn--on' : ''}`} onClick={() => setTab('reports')}>
+          <FileText size={15} /> Report
+        </button>
         {canFees && (
           <button className={`tab-btn${tab === 'fees' ? ' tab-btn--on' : ''}`} onClick={() => setTab('fees')}>
             <HandCoins size={15} /> Fees
@@ -489,6 +492,156 @@ export default function Admin() {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {tab === 'reports' && (
+        <section className="panel">
+          <div className="panel-head">
+            <h2 className="panel-title">
+              <FileText size={16} /> Live report
+            </h2>
+            <span className="chip chip--gold">auto-refreshes</span>
+            <button className="btn btn--tiny" onClick={exportAttXlsx} disabled={!attEventId || attRows.length === 0}>
+              <Download size={13} /> Event XLSX
+            </button>
+            <button className="btn btn--tiny" onClick={exportFeeReport} disabled={members.length === 0}>
+              <Download size={13} /> Fees XLSX
+            </button>
+          </div>
+          <p className="page-sub" style={{ marginTop: 8 }}>
+            Everything the exports contain, in one place — it updates itself (every 30 seconds and whenever you
+            return to this tab) as admins, moderators, faculty, and officers confirm payments. Use the XLSX buttons
+            only when you need a saved copy.
+          </p>
+
+          <h3 style={{ margin: '18px 0 4px', fontSize: '1.02rem' }}>Event contributions</h3>
+          <div className="admin-toolbar">
+            <div className="field" style={{ marginBottom: 0, minWidth: 240, flex: 1 }}>
+              <label>Event</label>
+              <Select
+                value={attEventId}
+                onChange={setAttEventId}
+                options={events.map((e) => ({ value: e.id, label: e.title }))}
+                placeholder="Select an event…"
+              />
+            </div>
+          </div>
+          {(() => {
+            const ev = events.find((e) => e.id === attEventId)
+            const fee = Number(ev?.fee_amount) || 0
+            if (!ev) return <p className="panel-muted">Pick an event to see its contribution report.</p>
+            if (fee <= 0)
+              return <p className="panel-muted">{ev.title} has no contribution fee — nothing to collect.</p>
+            const paidCount = attPayments.length
+            const collected = attPayments.reduce((t, p) => t + Number(p.amount || 0), 0)
+            const unpaid = attRows.length - paidCount
+            const paidBy = new Set(attPayments.map((p) => p.member_id))
+            return (
+              <>
+                <div className="tally-strip">
+                  <span className="chip chip--ok">
+                    <b>{attRows.length}</b> present
+                  </span>
+                  <span className="chip chip--gold">
+                    <b>{paidCount}</b> paid · <b>₱{fmtPeso(collected)}</b> collected
+                  </span>
+                  <span className="chip">
+                    <b>{unpaid}</b> unpaid · ₱{fmtPeso(unpaid * fee)} outstanding
+                  </span>
+                </div>
+                {attRows.length === 0 ? (
+                  <p className="panel-muted">No scans recorded for this event yet.</p>
+                ) : (
+                  <div className="ledger">
+                    {attRows.map((a) => (
+                      <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
+                        <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                          {(a.profiles?.full_name || '?')
+                            .split(' ')
+                            .map((w) => w[0])
+                            .slice(0, 2)
+                            .join('')
+                            .toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
+                            {a.profiles?.full_name || a.user_id.slice(0, 10)}
+                          </div>
+                          <div className="ledger-meta">
+                            {a.profiles?.id_no ? `ID ${a.profiles.id_no} · ` : ''}
+                            {a.profiles?.program || '—'}
+                            {a.profiles?.year_level ? ` (Yr ${a.profiles.year_level})` : ''}
+                          </div>
+                        </div>
+                        <span className={`chip${paidBy.has(a.user_id) ? ' chip--ok' : ''}`}>
+                          {paidBy.has(a.user_id) ? `PAID ₱${fmtPeso(fee)}` : 'UNPAID'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )
+          })()}
+
+          <h3 style={{ margin: '22px 0 4px', fontSize: '1.02rem' }}>Membership fees · {feeYear}</h3>
+          {(() => {
+            const roster = members.filter((m) => m.role !== 'superadmin')
+            const states = roster.map((m) => feeSummary(feePayments.filter((p) => p.member_id === m.id), annualFee))
+            const paid = states.filter((s) => s.status === 'paid').length
+            const partial = states.filter((s) => s.status === 'partial').length
+            const unpaid = states.filter((s) => s.status === 'unpaid').length
+            const collected = feePayments.reduce((t, p) => t + Number(p.amount || 0), 0)
+            return (
+              <>
+                <div className="tally-strip">
+                  <span className="chip">
+                    <b>{roster.length}</b> members
+                  </span>
+                  <span className="chip chip--ok">
+                    <b>{paid}</b> paid
+                  </span>
+                  <span className="chip chip--warn">
+                    <b>{partial}</b> partial
+                  </span>
+                  <span className="chip">
+                    <b>{unpaid}</b> unpaid
+                  </span>
+                  <span className="chip chip--gold">
+                    <b>₱{fmtPeso(collected)}</b> collected of ₱{fmtPeso(annualFee * roster.length)} potential
+                  </span>
+                </div>
+                <div className="ledger">
+                  {roster.map((m) => {
+                    const s = feeSummary(feePayments.filter((p) => p.member_id === m.id), annualFee)
+                    return (
+                      <div className="ledger-row" key={m.id}>
+                        <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                          {m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{m.full_name}</div>
+                          <div className="ledger-meta">
+                            {m.email} · {m.program || '—'} · YR {m.year_level || '—'}
+                          </div>
+                        </div>
+                        <span
+                          className={`chip${s.status === 'paid' ? ' chip--ok' : s.status === 'partial' ? ' chip--warn' : ''}`}
+                        >
+                          {s.status === 'paid'
+                            ? `Paid ₱${fmtPeso(s.paid)}`
+                            : s.status === 'partial'
+                              ? `Partial ₱${fmtPeso(s.paid)} of ₱${fmtPeso(s.annual)}`
+                              : 'Unpaid'}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )
+          })()}
         </section>
       )}
 
