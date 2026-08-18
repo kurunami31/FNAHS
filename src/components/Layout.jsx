@@ -80,7 +80,7 @@ export default function Layout() {
   }
   const closeSheet = () => {
     setSheetShown(false)
-    sheetCloseTimer.current = setTimeout(() => setSheetOpen(false), 280)
+    sheetCloseTimer.current = setTimeout(() => setSheetOpen(false), 240)
   }
 
   useEffect(() => () => clearTimeout(sheetCloseTimer.current), [])

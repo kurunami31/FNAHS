@@ -106,6 +106,12 @@ export function AppProvider({ children }) {
     []
   )
 
+  const finishMfa = useCallback(async (factorId, code) => {
+    const user = await api.mfaSignIn(factorId, code)
+    setUser(user)
+    return user
+  }, [])
+
   const signup = useCallback(async (name, email, password) => {
     const res = await api.signUp(name, email, password)
     if (!res.needsConfirmation) setUser(res.user)
@@ -135,6 +141,7 @@ export function AppProvider({ children }) {
       toasts,
       toast,
       login,
+      finishMfa,
       signup,
       logout,
       refreshUser,
@@ -145,7 +152,7 @@ export function AppProvider({ children }) {
       syncing,
       syncNow,
     }),
-    [theme, user, authLoading, maintenance, setMaintenanceFlag, toasts, toast, login, signup, logout, refreshUser, online, pendingCount, syncing, syncNow]
+    [theme, user, authLoading, maintenance, setMaintenanceFlag, toasts, toast, login, finishMfa, signup, logout, refreshUser, online, pendingCount, syncing, syncNow]
   )
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

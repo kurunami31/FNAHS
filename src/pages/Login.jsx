@@ -3,11 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, LogIn, Info, ArrowRight, ShieldCheck } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
-import { api } from '../lib/api'
 import { DEVELOPER } from '../lib/build'
 
 export default function Login() {
-  const { login, toast, isDemo } = useApp()
+  const { login, finishMfa, toast, isDemo } = useApp()
   const navigate = useNavigate()
   const [gate, setGate] = useState(true)
   const [email, setEmail] = useState('')
@@ -39,12 +38,12 @@ export default function Login() {
     }
   }
 
-  const finishMfa = async (e) => {
+  const finishMfaStep = async (e) => {
     e.preventDefault()
     setError('')
     setMfaBusy(true)
     try {
-      await api.mfaSignIn(mfa.factorId, mfaCode)
+      await finishMfa(mfa.factorId, mfaCode)
       toast('Welcome back!')
       navigate('/app')
     } catch (err) {
@@ -116,7 +115,7 @@ export default function Login() {
         {error && <div className="form-error">{error}</div>}
 
         {mfa ? (
-          <form onSubmit={finishMfa}>
+          <form onSubmit={finishMfaStep}>
             <div className="form-ok" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <ShieldCheck size={15} /> Two-factor authentication is on for this account.
             </div>
