@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home as HomeIcon,
@@ -60,8 +60,6 @@ const MOBILE_TABS = [
 export default function Layout() {
   const { user, theme, setTheme, logout, toast, online } = useApp()
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [sheetShown, setSheetShown] = useState(false)
-  const sheetCloseTimer = useRef(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const navigate = useNavigate()
   const loc = useLocation()
@@ -72,18 +70,8 @@ export default function Layout() {
   const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || ['', 'FNAHS PULSO'])[1]
   const [dbNotice, setDbNotice] = useState(false)
 
-  const openSheet = () => {
-    clearTimeout(sheetCloseTimer.current)
-    setSheetOpen(true)
-    // Wait one frame so the sheet paints at its resting spot first, then slide it in.
-    requestAnimationFrame(() => requestAnimationFrame(() => setSheetShown(true)))
-  }
-  const closeSheet = () => {
-    setSheetShown(false)
-    sheetCloseTimer.current = setTimeout(() => setSheetOpen(false), 240)
-  }
-
-  useEffect(() => () => clearTimeout(sheetCloseTimer.current), [])
+  const openSheet = () => setSheetOpen(true)
+  const closeSheet = () => setSheetOpen(false)
 
   useEffect(() => {
     const check = () => setDbNotice(api.dbStatus === 'missing' && api.isSupabase)
@@ -239,16 +227,10 @@ export default function Layout() {
 
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
 
-      {sheetOpen && (
-        <>
-          <div
-            className={`sheet-backdrop${sheetShown ? ' is-open' : ''}`}
-            onClick={closeSheet}
-            aria-hidden="true"
-          />
-          <AccountSheet shown={sheetShown} onClose={closeSheet} onLogout={handleLogout} />
-        </>
-      )}
+      <div className={`sheet-wrap${sheetOpen ? ' sheet-wrap--open' : ''}`}>
+        <div className="sheet-backdrop" onClick={closeSheet} aria-hidden="true" />
+        <AccountSheet onClose={closeSheet} onLogout={handleLogout} />
+      </div>
     </div>
   )
 }
