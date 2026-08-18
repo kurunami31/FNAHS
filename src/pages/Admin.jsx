@@ -7,7 +7,7 @@ import { api } from '../lib/api'
 import { initials, timeAgo, monthDay } from '../lib/format'
 import { PROGRAMS } from '../lib/mock'
 import { drawIdCanvas } from '../lib/idCanvas'
-import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
+import { attendanceWorkbook, feeReportWorkbook, downloadWorkbook } from '../lib/exportXlsx'
 import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import Select from '../components/Select'
 
@@ -130,11 +130,27 @@ export default function Admin() {
     }
   }
 
-  const exportAttCsv = () => {
-    const ev = events.find((e) => e.id === attEventId)
-    const { filename, headers, rows } = attendanceCsv(ev, attRows)
-    downloadCsv(filename, headers, rows)
-    toast(`Exported ${rows.length} record${rows.length === 1 ? '' : 's'}`)
+  const exportAttXlsx = async () => {
+    try {
+      const ev = events.find((e) => e.id === attEventId)
+      const { workbook, filename } = await attendanceWorkbook(ev, attRows)
+      await downloadWorkbook(workbook, filename)
+      toast(`Exported ${attRows.length} record${attRows.length === 1 ? '' : 's'}`)
+    } catch (e) {
+      console.error(e)
+      toast('Could not export attendance', 'err')
+    }
+  }
+
+  const exportFeeReport = async () => {
+    try {
+      const { workbook, filename } = await feeReportWorkbook({ members, feePayments, annualFee, schoolYear: feeYear })
+      await downloadWorkbook(workbook, filename)
+      toast('Fee report exported')
+    } catch (e) {
+      console.error(e)
+      toast('Could not export the fee report', 'err')
+    }
   }
 
   if (!can(user, 'console.access')) {
@@ -407,8 +423,8 @@ export default function Admin() {
                 onChange={(e) => setAttQ(e.target.value)}
               />
             </div>
-            <button className="btn btn--primary" onClick={exportAttCsv} disabled={attRows.length === 0}>
-              <Download size={15} /> Export CSV
+            <button className="btn btn--primary" onClick={exportAttXlsx} disabled={attRows.length === 0}>
+              <Download size={15} /> Export XLSX
             </button>
           </div>
           <div className="tally-strip" style={{ marginBottom: 14 }}>
@@ -489,6 +505,9 @@ export default function Admin() {
                   </button>
                 ))}
               </div>
+              <button className="btn btn--primary" onClick={exportFeeReport} disabled={members.length === 0}>
+                <Download size={15} /> Export Report
+              </button>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>

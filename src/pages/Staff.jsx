@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
-import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
+import { attendanceWorkbook, downloadWorkbook } from '../lib/exportXlsx'
 import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import Select from '../components/Select'
 
@@ -203,11 +203,16 @@ export default function Staff() {
     }
   }
 
-  const exportCsv = () => {
-    const ev = events.find((e) => e.id === eventId)
-    const { filename, headers, rows } = attendanceCsv(ev, attendance)
-    downloadCsv(filename, headers, rows)
-    toast(`Exported ${rows.length} record${rows.length === 1 ? '' : 's'}`)
+  const exportXlsx = async () => {
+    try {
+      const ev = events.find((e) => e.id === eventId)
+      const { workbook, filename } = await attendanceWorkbook(ev, attendance)
+      await downloadWorkbook(workbook, filename)
+      toast(`Exported ${attendance.length} record${attendance.length === 1 ? '' : 's'}`)
+    } catch (e) {
+      console.error(e)
+      toast('Could not export attendance', 'err')
+    }
   }
 
   if (!isStaff) {
@@ -326,8 +331,8 @@ export default function Staff() {
           <h2 className="panel-title"><Users size={16} /> Attendance log</h2>
           {attendance.length > 0 && <span className="chip chip--ok">{attendance.length} present</span>}
           {eventFee > 0 && <span className="chip chip--gold">{payments.length} paid · ₱{fmtPeso(eventFee)}</span>}
-          <button className="btn btn--tiny" onClick={exportCsv} disabled={attendance.length === 0}>
-            <Download size={13} /> Export CSV
+          <button className="btn btn--tiny" onClick={exportXlsx} disabled={attendance.length === 0}>
+            <Download size={13} /> Export XLSX
           </button>
         </div>
         {attendance.length === 0 ? (
