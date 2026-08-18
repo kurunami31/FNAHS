@@ -9,7 +9,7 @@ import { PROGRAMS, ORG_FULL } from '../lib/mock'
 import { BUILD_ID, DEVELOPER } from '../lib/build'
 import Select from './Select'
 
-export default function AccountSheet({ onClose, onLogout }) {
+export default function AccountSheet({ shown = false, onClose, onLogout }) {
   const { user, setUser, toast } = useApp()
   const navigate = useNavigate()
 
@@ -174,7 +174,7 @@ export default function AccountSheet({ onClose, onLogout }) {
   }
 
   return (
-    <div className="sheet" role="dialog" aria-label="Account settings">
+    <div className={`sheet${shown ? ' is-open' : ''}`} role="dialog" aria-label="Account settings">
       <div className="sheet-head">
         {user?.role === 'superadmin' ? (
           <div className="avatar avatar--ring">

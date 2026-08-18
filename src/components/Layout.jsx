@@ -246,7 +246,7 @@ export default function Layout() {
             onClick={closeSheet}
             aria-hidden="true"
           />
-          <AccountSheet onClose={closeSheet} onLogout={handleLogout} />
+          <AccountSheet shown={sheetShown} onClose={closeSheet} onLogout={handleLogout} />
         </>
       )}
     </div>
