@@ -203,6 +203,17 @@ export default function Admin() {
     }
   }
 
+  const changePositions = async (m, positions) => {
+    try {
+      await api.setPositions(m.id, positions)
+      setMembers((ms) => ms.map((x) => (x.id === m.id ? { ...x, positions } : x)))
+      toast(positions.length ? `${m.full_name}'s position: ${positions.map(positionLabel).join(', ')}` : `${m.full_name} is now a plain member`)
+    } catch (e) {
+      console.error(e)
+      toast(e.message?.includes('insufficient') ? 'Only a superadmin can change positions' : 'Position update failed', 'err')
+    }
+  }
+
   const removeMember = async (m) => {
     if (m.id === user.id) {
       toast('You cannot delete your own account', 'err')
@@ -312,10 +323,16 @@ export default function Admin() {
                 <Select
                   compact
                   className="role-select"
-                  value={m.role}
-                  onChange={(v) => changeRole(m, v)}
-                  ariaLabel={`Role of ${m.full_name}`}
-                  options={ROLES.map((r) => ({ value: r, label: roleLabel(r) }))}
+                  value={m.positions?.length === 1 ? `pos:${m.positions[0]}` : `role:${m.role || 'student'}`}
+                  onChange={(v) => {
+                    if (v.startsWith('role:')) changeRole(m, v.slice(5))
+                    else changePositions(m, [v.slice(4)])
+                  }}
+                  ariaLabel={`Role or position of ${m.full_name}`}
+                  options={[
+                    { label: 'Roles', options: ROLES.map((r) => ({ value: `role:${r}`, label: roleLabel(r) })) },
+                    { label: 'Officer positions', options: POSITIONS.map((p) => ({ value: `pos:${p}`, label: positionLabel(p) })) },
+                  ]}
                 />
                 <div className="admin-actions">
                   <button className="icon-btn" title="View digital ID" onClick={() => setIdModal(m)}>
