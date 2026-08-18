@@ -2540,3 +2540,27 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 .ledger-row .role-select .sel-trigger--open,
 .ledger-row .role-select .sel-trigger:focus-visible { border-color: var(--gold); box-shadow: var(--sh-glow); }
 .ledger-row .role-select .sel-pop { width: auto; min-width: 150px; }
+
+/* ============================================================
+   ADMIN CONSOLE — MOBILE ROW LAYOUT
+   ============================================================ */
+@media (max-width: 640px) {
+  .ledger-row { flex-wrap: wrap; gap: 10px 8px; padding: 12px; }
+  .ledger-row .ledger-meta { overflow-wrap: anywhere; }
+  .admin-actions { margin-left: auto; }
+  .admin-actions .icon-btn { flex: none; }
+
+  /* members: avatar + role dropdown + actions share one line;
+     the name/positions block drops to a full-width second line */
+  .mem-row > .avatar { order: 1; }
+  .mem-row > .role-select { order: 2; }
+  .mem-row > .admin-actions { order: 3; }
+  .mem-row > div[style*="flex: 1"] { order: 4; flex-basis: 100% !important; }
+
+  /* fees: avatar + record button on one line, chips and name each
+     take their own full-width line */
+  .fee-row > .avatar { order: 1; }
+  .fee-row > .icon-btn { order: 2; }
+  .fee-row > div[style*="flex: 1"] { order: 3; flex-basis: 100% !important; }
+  .fee-row > div[style*="flex-wrap"] { order: 4; flex-basis: 100% !important; justify-content: flex-start; }
+}

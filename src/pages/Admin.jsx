@@ -294,7 +294,7 @@ export default function Admin() {
           </div>
           <div className="ledger">
             {visibleMembers.map((m) => (
-              <div className="ledger-row" key={m.id}>
+              <div className="ledger-row mem-row" key={m.id}>
                 <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>
                   {m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}
                 </div>
@@ -554,7 +554,7 @@ export default function Admin() {
                 const s = feeSummary(payments, annualFee)
                 if (feeFilter !== 'all' && s.status !== feeFilter) return null
                 return (
-                  <div className="ledger-row" key={m.id}>
+                  <div className="ledger-row fee-row" key={m.id}>
                     <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>
                       {m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}
                     </div>
