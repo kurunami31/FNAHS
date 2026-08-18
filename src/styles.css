@@ -1275,18 +1275,6 @@ html[data-theme='dark'] .id-card {
 .admin-actions { display: flex; gap: 8px; align-items: center; }
 .icon-btn--danger { color: var(--danger, #e5484d); }
 .icon-btn--danger:hover { background: color-mix(in srgb, var(--danger, #e5484d) 12%, transparent); }
-.role-select {
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 0.82rem;
-  padding: 7px 10px;
-  outline: none;
-  cursor: pointer;
-}
-.role-select:focus { border-color: var(--gold); }
 .post-clamp { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: 0.88rem; }
 .hint { color: var(--muted); font-size: 0.8rem; margin: 0; }
 .hint a { color: var(--accent); }
@@ -2509,7 +2497,7 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 
 
 /* ============================================================
-   PWA — INSTALL BANNER
+   PWA ï¿½ INSTALL BANNER
    ============================================================ */
 .install-banner {
   position: fixed;
@@ -2526,13 +2514,29 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
   border: 1px solid var(--line-strong);
   border-radius: 16px;
   box-shadow: 0 12px 32px -10px rgba(16, 14, 96, 0.35);
-  animation: rise 0.35s ease;
+  animation: bannerRise 0.35s ease;
 }
 .install-banner p { margin: 0; font-size: 0.82rem; color: var(--ink); flex: 1; }
 .install-banner b { color: var(--accent); }
 .install-banner .icon-btn { flex: none; }
 
-@keyframes rise {
+@keyframes bannerRise {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+/* Role dropdown in admin member rows â€” the old native-select pill styles
+   now target the Select trigger; the wrapper stays auto-width in the row. */
+.ledger-row .role-select { width: auto; flex: none; }
+.ledger-row .role-select .sel-trigger {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.ledger-row .role-select .sel-trigger:hover { border-color: var(--line-strong); }
+.ledger-row .role-select .sel-trigger--open,
+.ledger-row .role-select .sel-trigger:focus-visible { border-color: var(--gold); box-shadow: var(--sh-glow); }
+.ledger-row .role-select .sel-pop { width: auto; min-width: 150px; }
