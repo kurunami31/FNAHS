@@ -101,6 +101,32 @@ export const POSITION_SCOPES = {
 const SUPERADMIN_ONLY = ['settings.superadmin']
 
 /* ------------------------------------------------------------
+   Tool cards — what each permission unlocks, for the Home
+   "Your Tools" grid. Route is where the tool lives in the app.
+   ------------------------------------------------------------ */
+export const TOOLS = {
+  'feed.moderate': { label: 'Moderation desk', desc: 'Pin, hide & remove feed posts', route: '/app/feed' },
+  'announcements.post': { label: 'Announcements', desc: 'Publish org bulletins', route: '/app' },
+  'events.manage': { label: 'Events', desc: 'Create & manage events', route: '/app/events' },
+  'polls.manage': { label: 'Event polls', desc: 'Run polls on events', route: '/app/events' },
+  'attendance.scan': { label: 'Door scanner', desc: 'Scan attendance at the door', route: '/app/staff' },
+  'attendance.export': { label: 'Attendance export', desc: 'Export rosters & tallies', route: '/app/staff' },
+  'members.edit': { label: 'Member records', desc: 'Edit profiles & positions', route: '/app/admin' },
+  'fees.view': { label: 'Fee status', desc: 'See membership fee standing', route: '/app/admin' },
+  'fees.manage': { label: 'Fee ledger', desc: 'Record membership payments', route: '/app/admin' },
+  'console.access': { label: 'Admin console', desc: 'Full org management', route: '/app/admin' },
+  'directory.view': { label: 'Directory', desc: 'Browse member profiles', route: '/app/directory' },
+  'settings.superadmin': { label: 'Registrar', desc: 'Roles, positions, structure', route: '/app/admin' },
+}
+
+export function toolsFor(user) {
+  if (!user) return []
+  const scopes = scopesFor(user)
+  const active = scopes.includes('*') ? Object.keys(TOOLS) : scopes
+  return active.filter((s) => TOOLS[s]).map((s) => ({ id: s, ...TOOLS[s] }))
+}
+
+/* ------------------------------------------------------------
    Resolution helpers
    ------------------------------------------------------------ */
 export function scopesFor(user) {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import QRCode from 'qrcode'
 import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download, HandCoins } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { can, POSITIONS, positionLabel } from '../rbac'
+import { can, POSITIONS, positionLabel, roleLabel } from '../rbac'
 import { api } from '../lib/api'
 import { initials, timeAgo, monthDay } from '../lib/format'
 import { PROGRAMS } from '../lib/mock'
@@ -792,7 +792,18 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [advanced, setAdvanced] = useState(false)
   const isSuperadmin = user?.role === 'superadmin'
+
+  // One grouped dropdown for role + positions. Picking an officer position
+  // replaces the position list with exactly that one; "Advanced" reveals the
+  // multi-select grid for members holding several posts.
+  const singlePos = form.positions?.length === 1 ? form.positions[0] : null
+  const rolePosValue = singlePos ? `pos:${singlePos}` : `role:${form.role || 'student'}`
+  const pickRolePos = (v) => {
+    if (v.startsWith('role:')) setForm((f) => ({ ...f, role: v.slice(5) }))
+    if (v.startsWith('pos:')) setForm((f) => ({ ...f, positions: [v.slice(4)] }))
+  }
 
   const submit = async () => {
     if (!form.full_name.trim() || !form.email.trim()) {
@@ -863,33 +874,45 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
         {isSuperadmin && (
           <>
             <div className="field">
-              <label>Role</label>
+              <label>Role / Officer position</label>
               <Select
-                value={form.role}
-                onChange={(v) => setForm({ ...form, role: v })}
-                options={ROLES.map((r) => ({ value: r, label: r }))}
+                value={rolePosValue}
+                onChange={pickRolePos}
+                options={[
+                  { label: 'Roles', options: ROLES.map((r) => ({ value: `role:${r}`, label: roleLabel(r) })) },
+                  { label: 'Officer positions', options: POSITIONS.map((p) => ({ value: `pos:${p}`, label: positionLabel(p) })) },
+                ]}
+                placeholder="Choose a role or position…"
               />
+              <p className="field-hint">
+                Pick a position to grant exactly its toolset. Members holding several posts can use Advanced.
+              </p>
             </div>
-            <div className="field">
-              <label>Positions <span className="field-hint">(what tools the member gets — pick none for a plain member)</span></label>
-              <div className="pos-grid">
-                {POSITIONS.map((p) => {
-                  const on = form.positions?.includes(p)
-                  return (
-                    <button
-                      key={p}
-                      type="button"
-                      className={`pos-chip${on ? ' pos-chip--on' : ''}`}
-                      onClick={() =>
-                        setForm((f) => ({ ...f, positions: on ? f.positions.filter((x) => x !== p) : [...(f.positions || []), p] }))
-                      }
-                    >
-                      {positionLabel(p)}
-                    </button>
-                  )
-                })}
+            {advanced && (
+              <div className="field">
+                <label>Positions <span className="field-hint">(multi-select)</span></label>
+                <div className="pos-grid">
+                  {POSITIONS.map((p) => {
+                    const on = form.positions?.includes(p)
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        className={`pos-chip${on ? ' pos-chip--on' : ''}`}
+                        onClick={() =>
+                          setForm((f) => ({ ...f, positions: on ? f.positions.filter((x) => x !== p) : [...(f.positions || []), p] }))
+                        }
+                      >
+                        {positionLabel(p)}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
+            )}
+            <button type="button" className="btn btn--tiny" onClick={() => setAdvanced((a) => !a)}>
+              {advanced ? 'Hide advanced positions' : 'Advanced positions…'}
+            </button>
           </>
         )}
         <div className="modal-actions">

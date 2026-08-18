@@ -1929,6 +1929,36 @@ html[data-theme='dark'] .id-card {
 .field-hint { font-weight: 400; font-size: 0.74rem; color: var(--muted); margin-left: 6px; }
 
 /* ============================================================
+   HOME — YOUR TOOLS
+   ============================================================ */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 10px;
+}
+.tool-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.14s ease, transform 0.14s ease, box-shadow 0.14s ease;
+}
+.tool-card svg { color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+.tool-card b { display: block; font-size: 0.87rem; line-height: 1.3; }
+.tool-card span { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--muted); line-height: 1.4; }
+.tool-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 14, 96, 0.08);
+}
+
+/* ============================================================
    ANNOUNCEMENTS
    ============================================================ */
 .ann-sec { margin-top: 22px; }

@@ -1,13 +1,29 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Stethoscope, CalendarDays } from 'lucide-react'
+import { ArrowRight, Stethoscope, CalendarDays, Shield, Megaphone, Vote, ScanLine, FileDown, Users, HandCoins, Wrench, BookOpen, KeyRound, Newspaper } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
+import { toolsFor } from '../rbac'
 import { api } from '../lib/api'
 import { seedFeeds, ORG_TAGLINE, PROGRAMS } from '../lib/mock'
 import { timeAgo } from '../lib/format'
 import EventModal from '../components/EventModal'
 import Announcements from '../components/Announcements'
+
+const TOOL_ICONS = {
+  'feed.moderate': Shield,
+  'announcements.post': Megaphone,
+  'events.manage': CalendarDays,
+  'polls.manage': Vote,
+  'attendance.scan': ScanLine,
+  'attendance.export': FileDown,
+  'members.edit': Users,
+  'fees.view': HandCoins,
+  'fees.manage': HandCoins,
+  'console.access': Wrench,
+  'directory.view': BookOpen,
+  'settings.superadmin': KeyRound,
+}
 
 export default function Home() {
   const { user } = useApp()
@@ -16,6 +32,7 @@ export default function Home() {
   const [events, setEvents] = useState([])
   const [selected, setSelected] = useState(null)
   const [memberCount, setMemberCount] = useState(0)
+  const tools = toolsFor(user)
 
   const reloadRounds = async () => {
     try {
@@ -88,6 +105,29 @@ export default function Home() {
       </section>
 
       {user && <Announcements />}
+
+      {user && tools.length > 0 && (
+        <section className="sec" aria-labelledby="h-tools">
+          <div className="sec-head">
+            <h2 id="h-tools">Your Tools</h2>
+            <span className="sec-kicker">per-role tools</span>
+          </div>
+          <div className="tools-grid">
+            {tools.map((t) => {
+              const Icon = TOOL_ICONS[t.id] || Newspaper
+              return (
+                <button key={t.id} className="tool-card" onClick={() => navigate(t.route)}>
+                  <Icon size={18} />
+                  <div>
+                    <b>{t.label}</b>
+                    <span>{t.desc}</span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       <div className="home-cols">
         <section className="sec" aria-labelledby="h-briefs">
