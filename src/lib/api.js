@@ -1197,7 +1197,7 @@ export const api = {
   getEventPayments: offlineRead('getEventPayments', async (eventId) => {
         let q = supabase
           .from('event_payments')
-          .select('*, profiles(full_name, program, year_level, email)')
+          .select('*, profiles!member_id(full_name, program, year_level, email)')
           .order('paid_at', { ascending: false })
         if (eventId) q = q.eq('event_id', eventId)
         const { data, error } = await q
@@ -1366,7 +1366,7 @@ export const api = {
   getFeePayments: offlineRead('getFeePayments', async (schoolYear) => {
         let q = supabase
           .from('fee_payments')
-          .select('*, profiles(full_name, program, year_level, email)')
+          .select('*, profiles!member_id(full_name, program, year_level, email)')
           .order('paid_at', { ascending: false })
         if (schoolYear) q = q.eq('school_year', schoolYear)
         const { data, error } = await q

@@ -315,7 +315,7 @@ export default function Admin() {
                   value={m.role}
                   onChange={(v) => changeRole(m, v)}
                   ariaLabel={`Role of ${m.full_name}`}
-                  options={ROLES.filter((r) => r !== 'superadmin' || isSuperadmin).map((r) => ({ value: r, label: r }))}
+                  options={ROLES.map((r) => ({ value: r, label: roleLabel(r) }))}
                 />
                 <div className="admin-actions">
                   <button className="icon-btn" title="View digital ID" onClick={() => setIdModal(m)}>
