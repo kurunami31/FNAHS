@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home as HomeIcon,
@@ -60,6 +60,8 @@ const MOBILE_TABS = [
 export default function Layout() {
   const { user, theme, setTheme, logout, toast, online } = useApp()
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [sheetShown, setSheetShown] = useState(false)
+  const sheetCloseTimer = useRef(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const navigate = useNavigate()
   const loc = useLocation()
@@ -69,6 +71,19 @@ export default function Layout() {
   const canDirectory = can(user, 'directory.view')
   const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || ['', 'FNAHS PULSO'])[1]
   const [dbNotice, setDbNotice] = useState(false)
+
+  const openSheet = () => {
+    clearTimeout(sheetCloseTimer.current)
+    setSheetOpen(true)
+    // Wait one frame so the sheet paints at its resting spot first, then slide it in.
+    requestAnimationFrame(() => requestAnimationFrame(() => setSheetShown(true)))
+  }
+  const closeSheet = () => {
+    setSheetShown(false)
+    sheetCloseTimer.current = setTimeout(() => setSheetOpen(false), 280)
+  }
+
+  useEffect(() => () => clearTimeout(sheetCloseTimer.current), [])
 
   useEffect(() => {
     const check = () => setDbNotice(api.dbStatus === 'missing' && api.isSupabase)
@@ -80,7 +95,7 @@ export default function Layout() {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') {
-        setSheetOpen(false)
+        closeSheet()
         setSearchOpen(false)
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -93,7 +108,7 @@ export default function Layout() {
   }, [])
 
   const handleLogout = async () => {
-    setSheetOpen(false)
+    closeSheet()
     await logout()
     toast('Logged out — rest well, and see you next duty.')
     navigate('/login')
@@ -156,7 +171,7 @@ export default function Layout() {
         <div className="rail-foot">
           <button
             className="rail-avatar"
-            onClick={() => setSheetOpen(true)}
+            onClick={openSheet}
             aria-label="Account settings"
             title="Account"
           >
@@ -214,7 +229,7 @@ export default function Layout() {
             <span>Staff</span>
           </NavLink>
         )}
-        <button className="tab" onClick={() => setSheetOpen(true)} aria-label="Account & more" title="Account & more">
+        <button className="tab" onClick={openSheet} aria-label="Account & more" title="Account & more">
           <span className="avatar tab-avatar">
             {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
           </span>
@@ -226,8 +241,12 @@ export default function Layout() {
 
       {sheetOpen && (
         <>
-          <div className="sheet-backdrop" onClick={() => setSheetOpen(false)} aria-hidden="true" />
-          <AccountSheet onClose={() => setSheetOpen(false)} onLogout={handleLogout} />
+          <div
+            className={`sheet-backdrop${sheetShown ? ' is-open' : ''}`}
+            onClick={closeSheet}
+            aria-hidden="true"
+          />
+          <AccountSheet onClose={closeSheet} onLogout={handleLogout} />
         </>
       )}
     </div>

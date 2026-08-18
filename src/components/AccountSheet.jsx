@@ -40,7 +40,7 @@ export default function AccountSheet({ onClose, onLogout }) {
     setMfaBusy(true)
     try {
       const f = await api.mfaEnroll()
-      setEnrolling(f)
+      setEnrolling({ factorId: f.id, totp: f.totp })
       setEnrollCode('')
     } catch (e) {
       setMfaMsg(e.message || 'Could not start MFA setup.')

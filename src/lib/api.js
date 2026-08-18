@@ -651,6 +651,13 @@ export const api = {
       const session = data?.session
       if (!session?.user) return { user: null }
       try {
+        // An aal1 session left behind by an abandoned MFA sign-in must not
+        // restore as a login — sign out so the challenge step runs again.
+        const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+        if (aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2') {
+          await supabase.auth.signOut()
+          return { user: null }
+        }
         const profile = await api.getProfile(session.user.id)
         if (!profile) throw new Error('profile not found')
         const user = { ...profile, id: session.user.id, email: profile.email || session.user.email }
@@ -700,10 +707,12 @@ export const api = {
         throw error
       }
       api.loginSuccess(email)
-      // MFA enrolled on this account? Supabase returns factor_id and no
-      // session — the caller must complete a TOTP challenge.
-      if (data.factor_id) {
-        return { mfa: { factorId: data.factor_id } }
+      // MFA enrolled on this account? Newer GoTrue keeps the session at aal1
+      // and lists the verified factor on the user object; older builds returned
+      // factor_id instead. The caller must complete a TOTP challenge either way.
+      const mfaFactorId = data.factor_id || data.user?.factors?.find((f) => f.status === 'verified')?.id
+      if (mfaFactorId) {
+        return { mfa: { factorId: mfaFactorId } }
       }
       const profile = await api.getProfile(data.user.id)
       if (!profile) throw new Error('Your profile could not be loaded.')
