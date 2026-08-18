@@ -27,6 +27,7 @@ export default function Admin() {
   const [eventModal, setEventModal] = useState(null)
   const [attEventId, setAttEventId] = useState('')
   const [attRows, setAttRows] = useState([])
+  const [attPayments, setAttPayments] = useState([])
   const [attQ, setAttQ] = useState('')
   const attEventIdRef = useRef('')
   const [feeYear, setFeeYear] = useState(currentSchoolYear())
@@ -91,10 +92,19 @@ export default function Admin() {
       .getAttendance(id)
       .then((rows) => alive && setAttRows(rows))
       .catch((e) => console.error(e))
+    const ev = events.find((e) => e.id === id)
+    if (Number(ev?.fee_amount) > 0) {
+      api
+        .getEventPayments(id)
+        .then((rows) => alive && setAttPayments(rows))
+        .catch((e) => console.error(e))
+    } else {
+      setAttPayments([])
+    }
     return () => {
       alive = false
     }
-  }, [attEventId])
+  }, [attEventId, events])
 
   const loadFees = useCallback(async () => {
     try {
@@ -149,9 +159,7 @@ export default function Admin() {
   const exportAttXlsx = async () => {
     try {
       const ev = events.find((e) => e.id === attEventId)
-      let payments = []
-      if (Number(ev?.fee_amount) > 0) payments = await api.getEventPayments(attEventId)
-      const { workbook, filename } = await attendanceWorkbook(ev, attRows, payments)
+      const { workbook, filename } = await attendanceWorkbook(ev, attRows, attPayments)
       await downloadWorkbook(workbook, filename)
       toast(`Exported ${attRows.length} record${attRows.length === 1 ? '' : 's'}`)
     } catch (e) {
@@ -471,6 +479,11 @@ export default function Admin() {
                 <b style={{ marginRight: 5 }}>{attEventId === e.id ? attRows.length : 0}</b> {e.title}
               </span>
             ))}
+            {Number(events.find((e) => e.id === attEventId)?.fee_amount) > 0 && (
+              <span className="chip chip--gold">
+                {attPayments.length} paid · ₱{fmtPeso(Number(events.find((e) => e.id === attEventId)?.fee_amount) || 0)}
+              </span>
+            )}
           </div>
           {attRows.length === 0 ? (
             <p className="panel-muted">No scans recorded for this event yet.</p>
@@ -504,6 +517,9 @@ export default function Admin() {
                       </div>
                     </div>
                     <span className="badge badge--ok">present</span>
+                    {attPayments.some((p) => p.member_id === a.user_id) && (
+                      <span className="chip chip--ok">paid</span>
+                    )}
                   </div>
                 ))}
             </div>

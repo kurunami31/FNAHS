@@ -206,7 +206,7 @@ export default function Staff() {
   const exportXlsx = async () => {
     try {
       const ev = events.find((e) => e.id === eventId)
-      const { workbook, filename } = await attendanceWorkbook(ev, attendance)
+      const { workbook, filename } = await attendanceWorkbook(ev, attendance, payments)
       await downloadWorkbook(workbook, filename)
       toast(`Exported ${attendance.length} record${attendance.length === 1 ? '' : 's'}`)
     } catch (e) {
