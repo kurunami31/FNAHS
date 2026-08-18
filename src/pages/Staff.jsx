@@ -6,7 +6,7 @@ import { can } from '../rbac'
 import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
 import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
-import { currentSchoolYear, feeStatus } from '../lib/fees'
+import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import Select from '../components/Select'
 
 export default function Staff() {
@@ -139,11 +139,10 @@ export default function Staff() {
       await loadAttendance()
       // show the member's fee status next to the scan (fee viewers only)
       if (can(user, 'fees.view')) {
-        api
-          .getMembershipFees(currentSchoolYear())
-          .then((rows) => {
-            const f = rows.find((r) => r.member_id === userId) || null
-            setLast((prev) => (prev?.id === userId ? { ...prev, fee: f } : prev))
+        Promise.all([api.getFeePayments(currentSchoolYear()), api.getAnnualFee()])
+          .then(([payments, annual]) => {
+            const own = payments.filter((p) => p.member_id === userId)
+            setLast((prev) => (prev?.id === userId ? { ...prev, fee: own, annual } : prev))
           })
           .catch(() => {})
       }
@@ -250,15 +249,29 @@ export default function Staff() {
             Last scan: <b>{last.id.slice(0, 8)}</b> · {timeAgo(last.at)}
             {can(user, 'fees.view') && (
               <div style={{ marginTop: 8 }}>
-                {last.fee ? (
-                  <>
-                    <span className={`chip${feeStatus(last.fee).sem1 === 'paid' ? ' chip--ok' : ''}`}>
-                      Sem 1 {feeStatus(last.fee).sem1 ? (feeStatus(last.fee).sem1 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
-                    </span>
-                    <span className={`chip${feeStatus(last.fee).sem2 === 'paid' ? ' chip--ok' : ''}`}>
-                      Sem 2 {feeStatus(last.fee).sem2 ? (feeStatus(last.fee).sem2 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
-                    </span>
-                  </>
+                {last.fee?.length ? (
+                  (() => {
+                    const s = feeSummary(last.fee, last.annual)
+                    return (
+                      <>
+                        <span
+                          className={`chip${s.status === 'paid' ? ' chip--ok' : s.status === 'partial' ? ' chip--warn' : ''}`}
+                        >
+                          {s.status === 'paid'
+                            ? `Paid ₱${fmtPeso(s.paid)}`
+                            : s.status === 'partial'
+                              ? `Partial ₱${fmtPeso(s.paid)} of ₱${fmtPeso(s.annual)}`
+                              : 'Unpaid'}
+                        </span>
+                        {last.fee.slice(0, 3).map((p) => (
+                          <span key={p.id} className={`chip${p.payment_type === 'full' ? ' chip--ok' : ''}`}>
+                            {p.payment_type === 'full' ? 'FULL' : '½'} ₱{fmtPeso(p.amount)}
+                            {p.receipt ? ` · ${p.receipt}` : ''}
+                          </span>
+                        ))}
+                      </>
+                    )
+                  })()
                 ) : (
                   <span className="chip">No fee record for {currentSchoolYear()}</span>
                 )}

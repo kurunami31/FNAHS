@@ -6,7 +6,7 @@ import { can } from '../rbac'
 import { api } from '../lib/api'
 import { monthDay, timeAgo } from '../lib/format'
 import { drawIdCanvas } from '../lib/idCanvas'
-import { currentSchoolYear, feeStatus } from '../lib/fees'
+import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 
 export default function IdCard() {
   const { user, toast } = useApp()
@@ -18,15 +18,18 @@ export default function IdCard() {
   const [saveImage, setSaveImage] = useState(null)
   const [history, setHistory] = useState([])
   const [fee, setFee] = useState(null)
+  const [annualFee, setAnnualFee] = useState(200)
 
   useEffect(() => {
     api
       .getMyAttendance()
       .then(setHistory)
       .catch(() => {})
-    api
-      .getMembershipFees(currentSchoolYear())
-      .then((rows) => setFee(rows.find((r) => r.member_id === user?.id) || null))
+    Promise.all([api.getFeePayments(currentSchoolYear()), api.getAnnualFee()])
+      .then(([payments, annual]) => {
+        setFee(payments.filter((p) => p.member_id === user?.id))
+        setAnnualFee(annual)
+      })
       .catch(() => {})
   }, [user?.id])
 
@@ -195,18 +198,29 @@ export default function IdCard() {
           <h2 id="h-fees"><HandCoins size={18} /> Membership Fees</h2>
           <span className="sec-kicker">{currentSchoolYear()}</span>
         </div>
-        {!fee ? (
+        {!fee || fee.length === 0 ? (
           <p className="panel-muted">No membership fee record for this school year yet — check in with the treasurer.</p>
         ) : (
           <div className="mm-chips">
-            <span className={`chip${feeStatus(fee).sem1 === 'paid' ? ' chip--ok' : ''}`}>
-              Sem 1 {feeStatus(fee).sem1 ? (feeStatus(fee).sem1 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
-            </span>
-            <span className={`chip${feeStatus(fee).sem2 === 'paid' ? ' chip--ok' : ''}`}>
-              Sem 2 {feeStatus(fee).sem2 ? (feeStatus(fee).sem2 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
-            </span>
-            {fee.sem1_receipt && <span className="chip">1st sem OR: {fee.sem1_receipt}</span>}
-            {fee.sem2_receipt && <span className="chip">2nd sem OR: {fee.sem2_receipt}</span>}
+            {(() => {
+              const s = feeSummary(fee, annualFee)
+              return (
+                <span className={`chip${s.status === 'paid' ? ' chip--ok' : s.status === 'partial' ? ' chip--warn' : ''}`}>
+                  {s.status === 'paid'
+                    ? `PAID — ₱${fmtPeso(s.paid)}`
+                    : s.status === 'partial'
+                      ? `PARTIAL — ₱${fmtPeso(s.paid)} of ₱${fmtPeso(s.annual)}`
+                      : 'UNPAID'}
+                </span>
+              )
+            })()}
+            <span className="chip">Annual fee ₱{fmtPeso(annualFee)}</span>
+            {fee.map((p) => (
+              <span key={p.id} className={`chip${p.payment_type === 'full' ? ' chip--ok' : ''}`}>
+                {p.payment_type === 'full' ? 'FULL' : '½'} ₱{fmtPeso(p.amount)}
+                {p.receipt ? ` · OR ${p.receipt}` : ''}
+              </span>
+            ))}
           </div>
         )}
       </section>

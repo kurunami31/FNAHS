@@ -97,6 +97,7 @@ function loadDb() {
         feeds: db.feeds || fresh.feeds,
         attendance: db.attendance || {},
         membershipFees: db.membershipFees || {},
+        feePayments: db.feePayments || [],
       }
     }
   } catch {
@@ -436,21 +437,20 @@ function mirrorEvents(events) {
   db.events = [...mapped, ...db.events.filter((d) => !mapped.some((m) => m.id === d.id))]
   saveDb(db)
 }
-function mirrorMembershipFees(rows) {
+function mirrorFeePayments(rows) {
+  const mapped = (rows || []).map((r) => ({
+    id: r.id,
+    member_id: r.member_id,
+    school_year: r.school_year,
+    payment_type: r.payment_type,
+    amount: r.amount,
+    receipt: r.receipt || null,
+    paid_at: r.paid_at,
+    recorded_by: r.recorded_by || null,
+    created_at: r.created_at,
+  }))
+  db.feePayments = [...mapped, ...db.feePayments.filter((d) => !mapped.some((m) => m.id === d.id))]
   for (const r of rows || []) {
-    const byYear = db.membershipFees[r.member_id] || (db.membershipFees[r.member_id] = {})
-    byYear[r.school_year] = {
-      member_id: r.member_id,
-      school_year: r.school_year,
-      sem1_amount: r.sem1_amount,
-      sem1_paid_at: r.sem1_paid_at || null,
-      sem1_receipt: r.sem1_receipt || null,
-      sem2_amount: r.sem2_amount,
-      sem2_paid_at: r.sem2_paid_at || null,
-      sem2_receipt: r.sem2_receipt || null,
-      recorded_by: r.recorded_by || null,
-      updated_at: r.updated_at,
-    }
     if (r.profiles) mirrorProfileInto(r.profiles)
   }
   saveDb(db)
@@ -1207,77 +1207,87 @@ export const api = {
           .map((e) => ({ event_id: e.id, count: Object.keys(db.attendance[e.id] || {}).length, title: e.title }))
           .filter((t) => t.count > 0)),
 
-  /* ---------------- membership fees (RLS: own row or fee viewer) ---------------- */
-  getMembershipFees: offlineRead('getMembershipFees', async (schoolYear) => {
+  /* ---------------- membership fees (RLS: own rows or fee viewer) ---------------- */
+  getAnnualFee: offlineRead('getAnnualFee', async () => {
+        const { data, error } = await supabase.rpc('get_membership_fee_amount')
+        if (error) throw error
+        return Number(data) || 0
+      }, async () => 200),
+
+  setAnnualFee: offlineWrite('setAnnualFee', async (amount) => {
+        const { error } = await supabase.rpc('set_membership_fee_amount', { p_amount: Number(amount) || 0 })
+        if (error) throw error
+      }, async (amount) => {
+        db.annualFee = Number(amount) || 0
+        saveDb(db)
+      }),
+
+  getFeePayments: offlineRead('getFeePayments', async (schoolYear) => {
         let q = supabase
-          .from('membership_fees')
+          .from('fee_payments')
           .select('*, profiles(full_name, program, year_level, email)')
-          .order('updated_at', { ascending: false })
+          .order('paid_at', { ascending: false })
         if (schoolYear) q = q.eq('school_year', schoolYear)
         const { data, error } = await q
         if (error) throw error
         return data || []
       }, async (schoolYear) => {
-        const rows = []
-        for (const [member_id, byYear] of Object.entries(db.membershipFees || {})) {
-          for (const [y, f] of Object.entries(byYear)) {
-            if (schoolYear && y !== schoolYear) continue
-            const p = db.profiles[member_id]
-            rows.push({
-              ...f,
-              member_id,
-              school_year: y,
-              profiles: p
-                ? { full_name: p.full_name, program: p.program, year_level: p.year_level, email: p.email }
+        const rows = (db.feePayments || [])
+          .filter((p) => !schoolYear || p.school_year === schoolYear)
+          .map((p) => {
+            const pr = db.profiles[p.member_id]
+            return {
+              ...p,
+              profiles: pr
+                ? { full_name: pr.full_name, program: pr.program, year_level: pr.year_level, email: pr.email }
                 : null,
-            })
-          }
-        }
-        return rows.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
-      }, mirrorMembershipFees),
+            }
+          })
+        return rows.sort((a, b) => new Date(b.paid_at) - new Date(a.paid_at))
+      }, mirrorFeePayments),
 
-  saveMembershipFee: offlineWrite('saveMembershipFee', async (memberId, schoolYear, patch) => {
+  recordFeePayment: offlineWrite('recordFeePayment', async (memberId, schoolYear, { type, receipt }) => {
         const { data: { user } } = await supabase.auth.getUser()
-        const clean = { member_id: memberId, school_year: schoolYear, recorded_by: user?.id, updated_at: new Date().toISOString() }
-        if (patch.sem1_amount !== undefined) clean.sem1_amount = Number(patch.sem1_amount) || 0
-        if (patch.sem1_paid_at !== undefined) clean.sem1_paid_at = patch.sem1_paid_at
-        if (patch.sem1_receipt !== undefined) clean.sem1_receipt = sanitizeText(patch.sem1_receipt, 200) || null
-        if (patch.sem2_amount !== undefined) clean.sem2_amount = Number(patch.sem2_amount) || 0
-        if (patch.sem2_paid_at !== undefined) clean.sem2_paid_at = patch.sem2_paid_at
-        if (patch.sem2_receipt !== undefined) clean.sem2_receipt = sanitizeText(patch.sem2_receipt, 200) || null
+        const annual = await api.getAnnualFee()
+        const amount = annual * (type === 'half' ? 0.5 : 1)
         const { data, error } = await supabase
-          .from('membership_fees')
-          .upsert(clean, { onConflict: 'member_id,school_year' })
+          .from('fee_payments')
+          .insert({
+            member_id: memberId,
+            school_year: schoolYear,
+            payment_type: type === 'half' ? 'half' : 'full',
+            amount,
+            receipt: sanitizeText(receipt, 200) || null,
+            paid_at: new Date().toISOString(),
+            recorded_by: user?.id,
+          })
           .select('*')
           .single()
         if (error) throw error
         return data
-      }, async (memberId, schoolYear, patch) => {
-        const byYear = db.membershipFees[memberId] || (db.membershipFees[memberId] = {})
-        const prev = byYear[schoolYear] || {
+      }, async (memberId, schoolYear, { type, receipt }) => {
+        const row = {
+          id: uid(),
           member_id: memberId,
           school_year: schoolYear,
-          sem1_amount: 0,
-          sem1_paid_at: null,
-          sem1_receipt: null,
-          sem2_amount: 0,
-          sem2_paid_at: null,
-          sem2_receipt: null,
-          recorded_by: null,
+          payment_type: type === 'half' ? 'half' : 'full',
+          amount: (db.annualFee || 200) * (type === 'half' ? 0.5 : 1),
+          receipt: receipt || null,
+          paid_at: new Date().toISOString(),
+          recorded_by: demoCurrentUserId() || null,
+          created_at: new Date().toISOString(),
         }
-        const row = {
-          ...prev,
-          ...(patch.sem1_amount !== undefined ? { sem1_amount: Number(patch.sem1_amount) || 0 } : {}),
-          ...(patch.sem1_paid_at !== undefined ? { sem1_paid_at: patch.sem1_paid_at } : {}),
-          ...(patch.sem1_receipt !== undefined ? { sem1_receipt: patch.sem1_receipt || null } : {}),
-          ...(patch.sem2_amount !== undefined ? { sem2_amount: Number(patch.sem2_amount) || 0 } : {}),
-          ...(patch.sem2_paid_at !== undefined ? { sem2_paid_at: patch.sem2_paid_at } : {}),
-          ...(patch.sem2_receipt !== undefined ? { sem2_receipt: patch.sem2_receipt || null } : {}),
-          updated_at: new Date().toISOString(),
-        }
-        byYear[schoolYear] = row
+        db.feePayments = [row, ...(db.feePayments || [])]
         saveDb(db)
         return row
+      }, { localId: (p) => p?.id }),
+
+  voidFeePayment: offlineWrite('voidFeePayment', async (id) => {
+        const { error } = await supabase.from('fee_payments').delete().eq('id', id)
+        if (error) throw error
+      }, async (id) => {
+        db.feePayments = (db.feePayments || []).filter((p) => p.id !== id)
+        saveDb(db)
       }),
 
   getFeeds,

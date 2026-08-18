@@ -8,7 +8,7 @@ import { initials, timeAgo, monthDay } from '../lib/format'
 import { PROGRAMS } from '../lib/mock'
 import { drawIdCanvas } from '../lib/idCanvas'
 import { downloadCsv, attendanceCsv } from '../lib/exportCsv'
-import { currentSchoolYear, feeStatus } from '../lib/fees'
+import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import Select from '../components/Select'
 
 const ROLES = ['student', 'moderator', 'superadmin']
@@ -29,7 +29,10 @@ export default function Admin() {
   const [attRows, setAttRows] = useState([])
   const attEventIdRef = useRef('')
   const [feeYear, setFeeYear] = useState(currentSchoolYear())
-  const [feeMap, setFeeMap] = useState({})
+  const [feePayments, setFeePayments] = useState([])
+  const [annualFee, setAnnualFee] = useState(200)
+  const [feeQ, setFeeQ] = useState('')
+  const [feeFilter, setFeeFilter] = useState('all')
   const [feeModal, setFeeModal] = useState(null)
 
   const canFees = can(user, 'fees.view')
@@ -83,8 +86,9 @@ export default function Admin() {
 
   const loadFees = useCallback(async () => {
     try {
-      const rows = await api.getMembershipFees(feeYear)
-      setFeeMap(Object.fromEntries(rows.map((r) => [r.member_id, r])))
+      const [payments, annual] = await Promise.all([api.getFeePayments(feeYear), api.getAnnualFee()])
+      setFeePayments(payments)
+      setAnnualFee(annual)
     } catch (e) {
       console.error(e)
       toast('Could not load membership fees', 'err')
@@ -95,10 +99,34 @@ export default function Admin() {
     if (canFees) loadFees()
   }, [canFees, loadFees])
 
-  const saveFee = async (memberId, patch) => {
-    await api.saveMembershipFee(memberId, feeYear, patch)
+  const recordFee = async (memberId, opts) => {
+    await api.recordFeePayment(memberId, feeYear, opts)
     await loadFees()
-    toast('Fee record saved')
+    toast('Payment recorded')
+  }
+
+  const voidFee = async (paymentId) => {
+    await api.voidFeePayment(paymentId)
+    await loadFees()
+    toast('Payment voided')
+  }
+
+  const changeAnnualFee = async () => {
+    const raw = window.prompt('Annual membership fee amount (₱)', String(annualFee))
+    if (raw === null) return
+    const n = Number(raw)
+    if (!Number.isFinite(n) || n < 0) {
+      toast('Enter a valid amount', 'err')
+      return
+    }
+    try {
+      await api.setAnnualFee(n)
+      setAnnualFee(n)
+      toast(`Annual fee set to ₱${fmtPeso(n)}`)
+    } catch (e) {
+      console.error(e)
+      toast('Could not update the annual fee', 'err')
+    }
   }
 
   const exportAttCsv = () => {
@@ -413,18 +441,53 @@ export default function Admin() {
                 options={feeYears.map((y) => ({ value: y, label: y }))}
               />
             </div>
-            <p className="page-sub" style={{ margin: 0, flex: 1 }}>
-              {canManageFees
-                ? 'Record each member\u2019s semester payments for the selected school year.'
-                : 'Membership fee status for the selected school year — recording is done by the finance officers.'}
+            <div className="field" style={{ marginBottom: 0, flex: 1, minWidth: 220 }}>
+              <label>Search</label>
+              <input
+                type="search"
+                placeholder="Search by name or email…"
+                value={feeQ}
+                onChange={(e) => setFeeQ(e.target.value)}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div className="btn-group" role="group" aria-label="Filter by status">
+                {['all', 'paid', 'partial', 'unpaid'].map((s) => (
+                  <button
+                    key={s}
+                    className={`btn btn--sm${feeFilter === s ? ' btn--active' : ''}`}
+                    onClick={() => setFeeFilter(s)}
+                  >
+                    {s === 'all' ? 'All' : s[0].toUpperCase() + s.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+            <span className="chip chip--gold">Annual fee ₱{fmtPeso(annualFee)}</span>
+            {canManageFees && (
+              <button className="btn btn--tiny" onClick={changeAnnualFee}>
+                <Pencil size={12} style={{ verticalAlign: -1 }} /> Set
+              </button>
+            )}
+            <p className="page-sub" style={{ margin: 0 }}>
+              Payments: <b>FULL</b> = {fmtPeso(annualFee)}, <b>HALF</b> = {fmtPeso(annualFee / 2)} · a member is
+              PAID once the sum of payments reaches the annual fee.
             </p>
           </div>
           <div className="ledger">
             {members
               .filter((m) => m.role !== 'superadmin')
+              .filter((m) => {
+                if (!feeQ.trim()) return true
+                const n = feeQ.trim().toLowerCase()
+                return m.full_name?.toLowerCase().includes(n) || m.email?.toLowerCase().includes(n)
+              })
               .map((m) => {
-                const f = feeMap[m.id]
-                const { sem1, sem2 } = feeStatus(f)
+                const payments = feePayments.filter((p) => p.member_id === m.id)
+                const s = feeSummary(payments, annualFee)
+                if (feeFilter !== 'all' && s.status !== feeFilter) return null
                 return (
                   <div className="ledger-row" key={m.id}>
                     <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>
@@ -435,11 +498,19 @@ export default function Admin() {
                       <div className="ledger-meta">{m.email} · {m.program || '—'} · YR {m.year_level || '—'}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                      <span className={`chip${sem1 === 'paid' ? ' chip--ok' : ''}`}>
-                        Sem 1 {sem1 ? (sem1 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
-                      </span>
-                      <span className={`chip${sem2 === 'paid' ? ' chip--ok' : ''}`}>
-                        Sem 2 {sem2 ? (sem2 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
+                      {payments.length > 0 &&
+                        payments.slice(0, 3).map((p) => (
+                          <span key={p.id} className={`chip${p.payment_type === 'full' ? ' chip--ok' : ''}`}>
+                            {p.payment_type === 'full' ? 'FULL' : '½'} ₱{fmtPeso(p.amount)}
+                            {p.receipt ? ` · ${p.receipt}` : ''}
+                          </span>
+                        ))}
+                      {payments.length > 3 && <span className="chip">+{payments.length - 3} more</span>}
+                      <span
+                        className={`chip${s.status === 'paid' ? ' chip--ok' : s.status === 'partial' ? ' chip--warn' : ''}`}
+                      >
+                        {s.status === 'paid' ? 'Paid' : s.status === 'partial' ? `Partial ₱${fmtPeso(s.paid)}` : 'Unpaid'}
+                        {s.status !== 'paid' && s.balance > 0 ? ` · balance ₱${fmtPeso(s.balance)}` : ''}
                       </span>
                     </div>
                     {canManageFees && (
@@ -538,10 +609,30 @@ export default function Admin() {
       {feeModal && (
         <FeeModal
           member={feeModal}
-          fee={feeMap[feeModal.id]}
+          payments={feePayments.filter((p) => p.member_id === feeModal.id)}
+          annualFee={annualFee}
           schoolYear={feeYear}
           onClose={() => setFeeModal(null)}
-          onSaved={saveFee}
+          onRecord={async (opts) => {
+            try {
+              await recordFee(feeModal.id, opts)
+            } catch (e) {
+              console.error(e)
+              toast('Could not record the payment', 'err')
+              return false
+            }
+            return true
+          }}
+          onVoid={async (id) => {
+            try {
+              await voidFee(id)
+            } catch (e) {
+              console.error(e)
+              toast('Could not void the payment', 'err')
+              return false
+            }
+            return true
+          }}
         />
       )}
     </div>
@@ -802,72 +893,41 @@ function PostEditModal({ post, onClose, onSaved }) {
   )
 }
 
-function FeeModal({ member, fee, schoolYear, onClose, onSaved }) {
-  const [form, setForm] = useState(() => ({
-    sem1_amount: fee?.sem1_amount ?? '',
-    sem1_paid: !!fee?.sem1_paid_at,
-    sem1_receipt: fee?.sem1_receipt || '',
-    sem2_amount: fee?.sem2_amount ?? '',
-    sem2_paid: !!fee?.sem2_paid_at,
-    sem2_receipt: fee?.sem2_receipt || '',
-  }))
+function FeeModal({ member, payments, annualFee, schoolYear, onClose, onRecord, onVoid }) {
+  const [type, setType] = useState('full')
+  const [receipt, setReceipt] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const s = feeSummary(payments, annualFee)
+  const amount = annualFee * (type === 'half' ? 0.5 : 1)
 
   const submit = async () => {
-    const patch = {}
-    patch.sem1_amount = Number(form.sem1_amount) || 0
-    patch.sem1_paid_at = form.sem1_paid ? new Date().toISOString() : null
-    patch.sem1_receipt = form.sem1_receipt.trim()
-    patch.sem2_amount = Number(form.sem2_amount) || 0
-    patch.sem2_paid_at = form.sem2_paid ? new Date().toISOString() : null
-    patch.sem2_receipt = form.sem2_receipt.trim()
     setSaving(true)
+    setError('')
     try {
-      await onSaved(member.id, patch)
-      onClose()
+      const ok = await onRecord({ type, receipt: receipt.trim() })
+      if (ok) {
+        setReceipt('')
+        setType('full')
+      }
     } catch (e) {
       console.error(e)
-      setError(e.message || 'Could not save the fee record.')
+      setError(e.message || 'Could not record the payment.')
     } finally {
       setSaving(false)
     }
   }
 
-  const SemBlock = ({ num, label }) => (
-    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginTop: 6 }}>
-      <div className="field" style={{ marginBottom: 10 }}>
-        <label>{label} amount <span className="field-hint">(₱)</span></label>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={form[`${num}_amount`]}
-          onChange={(e) => setForm({ ...form, [`${num}_amount`]: e.target.value })}
-          placeholder="0.00"
-        />
-      </div>
-      <div className="field" style={{ marginBottom: 10 }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={form[`${num}_paid`]}
-            onChange={(e) => setForm({ ...form, [`${num}_paid`]: e.target.checked })}
-            style={{ marginRight: 8, width: 'auto' }}
-          />
-          Paid — {label}
-        </label>
-      </div>
-      <div className="field" style={{ marginBottom: 0 }}>
-        <label>{label} receipt <span className="field-hint">(OR # / reference, optional)</span></label>
-        <input
-          value={form[`${num}_receipt`]}
-          onChange={(e) => setForm({ ...form, [`${num}_receipt`]: e.target.value })}
-          placeholder="OR-2026-001"
-        />
-      </div>
-    </div>
-  )
+  const voidOne = async (id, label) => {
+    if (!window.confirm(`Void ${label}? This cannot be undone.`)) return
+    setError('')
+    try {
+      await onVoid(id)
+    } catch (e) {
+      console.error(e)
+      setError(e.message || 'Could not void the payment.')
+    }
+  }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -878,16 +938,75 @@ function FeeModal({ member, fee, schoolYear, onClose, onSaved }) {
         <p className="modal-sub" style={{ margin: '-10px 0 16px', color: 'var(--muted)', fontSize: '0.82rem' }}>
           {schoolYear} · {member.program || '—'} · YR {member.year_level || '—'}
         </p>
-        {error && <div className="form-error">{error}</div>}
-        <SemBlock num="sem1" label="Semester 1" />
-        <SemBlock num="sem2" label="Semester 2" />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+          <span
+            className={`chip${s.status === 'paid' ? ' chip--ok' : s.status === 'partial' ? ' chip--warn' : ''}`}
+          >
+            {s.status === 'paid' ? 'PAID' : s.status === 'partial' ? 'PARTIAL' : 'UNPAID'}
+          </span>
+          <span className="chip">
+            Paid ₱{fmtPeso(s.paid)} · Annual fee ₱{fmtPeso(annualFee)}
+          </span>
+          {s.balance > 0 && <span className="chip">Balance ₱{fmtPeso(s.balance)}</span>}
+        </div>
+
+        {payments.length > 0 && (
+          <div className="ledger" style={{ marginBottom: 18 }}>
+            {payments.map((p) => (
+              <div className="ledger-row" key={p.id}>
+                <div
+                  className="avatar"
+                  style={{ width: 30, height: 30, fontSize: 11, background: p.payment_type === 'full' ? 'var(--ok)' : 'var(--gold)' }}
+                >
+                  {p.payment_type === 'full' ? 'F' : '½'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                    {p.payment_type === 'full' ? 'Full payment' : 'Half payment'} · ₱{fmtPeso(p.amount)}
+                  </div>
+                  <div className="ledger-meta">
+                    {new Date(p.paid_at).toLocaleString('en-PH', { dateStyle: 'short', timeStyle: 'short' })}
+                    {p.receipt ? ` · OR ${p.receipt}` : ' · no OR recorded'}
+                  </div>
+                </div>
+                <button className="btn btn--tiny btn--danger" onClick={() => voidOne(p.id, `${p.payment_type} payment`)}>
+                  Void
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="btn-group" style={{ marginBottom: 12 }}>
+          {['full', 'half'].map((t) => (
+            <button
+              key={t}
+              type="button"
+              className={`btn${type === t ? ' btn--active' : ''}`}
+              onClick={() => setType(t)}
+              style={{ borderRadius: 12 }}
+            >
+              {t === 'full' ? `Full — ₱${fmtPeso(annualFee)}` : `Half — ₱${fmtPeso(annualFee / 2)}`}
+            </button>
+          ))}
+        </div>
+        <div className="field" style={{ marginBottom: 12 }}>
+          <label>Receipt / OR number <span className="field-hint">(optional)</span></label>
+          <input
+            value={receipt}
+            onChange={(e) => setReceipt(e.target.value)}
+            placeholder="OR-2026-001"
+            disabled={saving}
+          />
+        </div>
+        {error && <div className="form-error" style={{ marginBottom: 12 }}>{error}</div>}
         <div className="modal-actions">
-          <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn--primary" disabled={saving} onClick={submit}>
-            {saving ? 'Saving…' : 'Save fees'}
+          <button className="btn btn--ghost" onClick={onClose}>Close</button>
+          <button className="btn btn--primary" disabled={saving || amount <= 0} onClick={submit}>
+            {saving ? 'Recording…' : `Record ₱${fmtPeso(amount)}`}
           </button>
         </div>
-</div>
+      </div>
     </div>
   )
 }

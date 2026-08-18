@@ -4,7 +4,7 @@ import { X, Newspaper, CalendarDays, HandCoins } from 'lucide-react'
 import { api } from '../lib/api'
 import { initials, timeAgo } from '../lib/format'
 import { roleLabel, positionLabel, can } from '../rbac'
-import { feeStatus } from '../lib/fees'
+import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import { useApp } from '../context/AppContext'
 
 export default function MemberModal({ member, onClose }) {
@@ -12,7 +12,7 @@ export default function MemberModal({ member, onClose }) {
   const { user } = useApp()
   const [posts, setPosts] = useState([])
   const [going, setGoing] = useState([])
-  const [fee, setFee] = useState(null)
+  const [feeInfo, setFeeInfo] = useState(null)
 
   useEffect(() => {
     if (!member) return
@@ -20,12 +20,14 @@ export default function MemberModal({ member, onClose }) {
     api.getPosts().then((all) => alive && setPosts(all.filter((p) => p.author?.id === member.id).slice(0, 4))).catch(() => {})
     api.getEvents().then((evs) => alive && setGoing(evs.filter((e) => e.rsvps?.[member.id] === 'going').slice(0, 3))).catch(() => {})
     if (can(user, 'fees.view')) {
-      api
-        .getMembershipFees()
-        .then((rows) => {
+      Promise.all([api.getFeePayments(), api.getAnnualFee()])
+        .then(([payments, annual]) => {
           if (!alive) return
-          const own = rows.filter((r) => r.member_id === member.id)
-          setFee(own.sort((a, b) => b.school_year.localeCompare(a.school_year))[0] || null)
+          setFeeInfo({
+            year: currentSchoolYear(),
+            payments: payments.filter((p) => p.member_id === member.id),
+            annual,
+          })
         })
         .catch(() => {})
     }
@@ -77,22 +79,29 @@ export default function MemberModal({ member, onClose }) {
           </div>
         </div>
 
-        {can(user, 'fees.view') && (
+        {can(user, 'fees.view') && feeInfo && (
           <div className="mm-sec">
             <h5><HandCoins size={14} /> Membership fees</h5>
             <div className="mm-chips">
-              {fee ? (
+              {feeInfo.payments.length > 0 ? (
                 <>
-                  <span className="chip">{fee.school_year}</span>
-                  <span className={`chip${feeStatus(fee).sem1 === 'paid' ? ' chip--ok' : ''}`}>
-                    Sem 1 {feeStatus(fee).sem1 ? (feeStatus(fee).sem1 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
-                  </span>
-                  <span className={`chip${feeStatus(fee).sem2 === 'paid' ? ' chip--ok' : ''}`}>
-                    Sem 2 {feeStatus(fee).sem2 ? (feeStatus(fee).sem2 === 'paid' ? 'paid' : 'unpaid') : 'not set'}
-                  </span>
+                  <span className="chip">{feeInfo.year}</span>
+                  {(() => {
+                    const s = feeSummary(feeInfo.payments, feeInfo.annual)
+                    return (
+                      <span
+                        className={`chip${s.status === 'paid' ? ' chip--ok' : s.status === 'partial' ? ' chip--warn' : ''}`}
+                      >
+                        {s.status === 'paid' ? `Paid ₱${fmtPeso(s.paid)}` : s.status === 'partial'
+                          ? `Partial ₱${fmtPeso(s.paid)} of ₱${fmtPeso(s.annual)}`
+                          : 'Unpaid'}
+                      </span>
+                    )
+                  })()}
+                  <span className="chip">{feeInfo.payments.length} payment{feeInfo.payments.length === 1 ? '' : 's'}</span>
                 </>
               ) : (
-                <span className="chip">No fee record yet</span>
+                <span className="chip">No fee record for {feeInfo.year}</span>
               )}
             </div>
           </div>

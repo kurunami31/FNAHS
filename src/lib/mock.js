@@ -282,5 +282,6 @@ export function demoDb() {
   const feeds = seedFeeds()
   const attendance = {}
   const membershipFees = {}
-  return { profiles, posts, events, feeds, attendance, membershipFees }
+  const feePayments = []
+  return { profiles, posts, events, feeds, attendance, membershipFees, feePayments }
 }

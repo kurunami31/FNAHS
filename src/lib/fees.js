@@ -1,4 +1,7 @@
-/* Membership fee helpers shared by Admin, Directory, My ID, and Staff. */
+/* Membership fee helpers shared by Admin, Directory, My ID, and Staff.
+   Model: one annual fee amount per school year; each payment is FULL (100%)
+   or HALF (50%) of it. A member is 'paid' once the sum of payments reaches
+   the annual fee, 'partial' below it, 'unpaid' with nothing recorded. */
 
 /** school year covering the given date — PH academic year starts in July */
 export function currentSchoolYear(d = new Date()) {
@@ -6,25 +9,31 @@ export function currentSchoolYear(d = new Date()) {
   return `${y}-${y + 1}`
 }
 
-/** 'paid' | 'unpaid' | null per semester (null = nothing set yet) */
-export function feeStatus(f) {
+/** roll up a member's payments for a year */
+export function feeSummary(payments, annualFee = 200) {
+  const paid = (payments || []).reduce((s, p) => s + (Number(p.amount) || 0), 0)
+  const annual = Math.max(Number(annualFee) || 0, 0)
   return {
-    sem1: f?.sem1_paid_at ? 'paid' : f?.sem1_amount > 0 ? 'unpaid' : null,
-    sem2: f?.sem2_paid_at ? 'paid' : f?.sem2_amount > 0 ? 'unpaid' : null,
+    paid,
+    annual,
+    balance: Math.max(annual - paid, 0),
+    status: annual > 0 && paid >= annual ? 'paid' : paid > 0 ? 'partial' : 'unpaid',
   }
 }
 
-export function isFeePaid(f) {
-  const { sem1, sem2 } = feeStatus(f)
-  if (sem1 === 'unpaid' || sem2 === 'unpaid') return false
-  return sem1 === 'paid' || sem2 === 'paid'
+/** 'paid' | 'partial' | 'unpaid' */
+export function feeStatus(payments, annualFee = 200) {
+  return feeSummary(payments, annualFee).status
 }
 
-/** short human label, e.g. "1st sem paid · 2nd sem unpaid" */
-export function feeLabel(f) {
-  const { sem1, sem2 } = feeStatus(f)
-  const parts = []
-  if (sem1) parts.push(`1st sem ${sem1}`)
-  if (sem2) parts.push(`2nd sem ${sem2}`)
-  return parts.join(' · ') || null
+/** short human label, e.g. "Partial — ₱100 of ₱200" */
+export function feeLabel(payments, annualFee = 200) {
+  const s = feeSummary(payments, annualFee)
+  if (s.status === 'paid') return `Paid — ₱${fmtPeso(s.paid)}`
+  if (s.status === 'partial') return `Partial — ₱${fmtPeso(s.paid)} of ₱${fmtPeso(s.annual)}`
+  return `Unpaid — ₱${fmtPeso(s.annual)} due`
+}
+
+export function fmtPeso(n) {
+  return Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
