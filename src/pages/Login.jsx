@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, LogIn, Info, ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Info, ArrowRight, ShieldCheck } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
+import { api } from '../lib/api'
 import { DEVELOPER } from '../lib/build'
 
 export default function Login() {
@@ -14,19 +15,42 @@ export default function Login() {
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [mfa, setMfa] = useState(null)
+  const [mfaCode, setMfaCode] = useState('')
+  const [mfaBusy, setMfaBusy] = useState(false)
 
   const submit = async (e) => {
     e.preventDefault()
     setError('')
     setBusy(true)
     try {
-      await login(email, password)
+      const res = await login(email, password)
+      if (res?.mfa) {
+        setMfa(res.mfa)
+        toast('Enter your authenticator code to finish signing in.')
+        return
+      }
       toast('Welcome back!')
       navigate('/app')
     } catch (err) {
       setError(err.message || 'Invalid credentials — try again.')
     } finally {
       setBusy(false)
+    }
+  }
+
+  const finishMfa = async (e) => {
+    e.preventDefault()
+    setError('')
+    setMfaBusy(true)
+    try {
+      await api.mfaSignIn(mfa.factorId, mfaCode)
+      toast('Welcome back!')
+      navigate('/app')
+    } catch (err) {
+      setError(err.message || 'That code did not work — try again.')
+    } finally {
+      setMfaBusy(false)
     }
   }
 
@@ -91,6 +115,33 @@ export default function Login() {
 
         {error && <div className="form-error">{error}</div>}
 
+        {mfa ? (
+          <form onSubmit={finishMfa}>
+            <div className="form-ok" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <ShieldCheck size={15} /> Two-factor authentication is on for this account.
+            </div>
+            <div className="field">
+              <label>Authenticator code</label>
+              <input
+                type="text"
+                required
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={8}
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="6-digit code"
+                autoFocus
+              />
+            </div>
+            <button className="btn btn--primary btn--block btn--lg" disabled={mfaBusy}>
+              <ShieldCheck size={17} /> {mfaBusy ? 'Checking…' : 'Verify & sign in'}
+            </button>
+            <button type="button" className="btn btn--ghost btn--block" style={{ marginTop: 8 }} onClick={() => setMfa(null)}>
+              Back
+            </button>
+          </form>
+        ) : (
         <form onSubmit={submit}>
           <div className="field">
             <label>Email</label>
@@ -109,6 +160,7 @@ export default function Login() {
             <LogIn size={17} /> {busy ? 'Logging in…' : 'Log in'}
           </button>
         </form>
+        )}
 
         <p className="auth-note">
           No account yet? <Link to="/signup" style={{ color: 'var(--accent)' }}>Join FNAHS PULSO</Link><br />

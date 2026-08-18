@@ -98,9 +98,10 @@ export function AppProvider({ children }) {
 
   const login = useCallback(
     async (email, password) => {
-      const { user: u } = await api.signIn(email, password)
-      setUser(u)
-      return u
+      const res = await api.signIn(email, password)
+      if (res?.mfa) return res
+      setUser(res.user)
+      return res.user
     },
     []
   )

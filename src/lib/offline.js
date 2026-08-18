@@ -7,6 +7,7 @@
 
 import { supabase, SUPABASE_ENABLED } from '../supabase'
 import { uid } from './format'
+import { vaultEncrypt, vaultDecrypt } from './vault'
 
 const LS_QUEUE = 'fnahs-pending-queue'
 const LS_IDMAP = 'fnahs-id-map'
@@ -39,6 +40,10 @@ export function isOnline() {
 
 export function initOffline() {
   if (typeof window === 'undefined') return
+  readQueue().then((q) => {
+    knownQueueLength = q.length
+    emit()
+  })
   window.addEventListener('online', () => {
     setOnline(true)
     flushQueue()
@@ -56,33 +61,38 @@ export function isOfflineError(e) {
 
 /* ---------------- write queue ---------------- */
 
+let knownQueueLength = 0
+
+// Queue payloads are encrypted at rest, so the count can't be read
+// synchronously — it's recomputed after every write and served from memory.
 export function queueCount() {
-  try {
-    return JSON.parse(localStorage.getItem(LS_QUEUE) || '[]').length
-  } catch {
-    return 0
-  }
+  return knownQueueLength
 }
 
-function readQueue() {
-  try {
-    return JSON.parse(localStorage.getItem(LS_QUEUE) || '[]')
-  } catch {
-    return []
-  }
+// The queue may hold member ids, emails and receipt numbers — encrypt it at
+// rest. A plaintext payload is always tolerated (encrypted roll-out), and a
+// null value means the write was skipped only when crypto is unavailable.
+async function readQueue() {
+  const raw = localStorage.getItem(LS_QUEUE) || '[]'
+  if (raw.startsWith('[')) return JSON.parse(raw)
+  const plain = await vaultDecrypt(raw)
+  return plain || []
 }
 
-function writeQueue(q) {
+async function writeQueue(q) {
+  knownQueueLength = q.length
+  const blob = await vaultEncrypt(q)
   try {
-    localStorage.setItem(LS_QUEUE, JSON.stringify(q))
+    if (blob) localStorage.setItem(LS_QUEUE, blob)
+    else if (q.length === 0) localStorage.removeItem(LS_QUEUE)
   } catch {
     /* storage full — ignore */
   }
   emit()
 }
 
-export function queueOp(method, args, localId) {
-  const q = readQueue()
+export async function queueOp(method, args, localId) {
+  const q = await readQueue()
   // An unsynced create followed by its own delete is a net zero — drop the
   // create so neither is replayed (delete/remove ops for OTHER local ids,
   // e.g. attendance against a locally-created event, stay queued).
@@ -95,7 +105,7 @@ export function queueOp(method, args, localId) {
     }
   }
   q.push({ id: uid(), method, args, localId: localId || null, at: new Date().toISOString() })
-  writeQueue(q)
+  await writeQueue(q)
 }
 
 /* ---------------- local → server id map ---------------- */
@@ -138,7 +148,7 @@ export function registerSync(method, supImpl) {
 /** replay queued writes in order; returns how many were applied/dropped */
 export async function flushQueue() {
   if (!SUPABASE_ENABLED || !supabase) return 0
-  const q = readQueue()
+  const q = await readQueue()
   if (!q.length) return 0
   let handled = 0
   const failures = []
@@ -163,7 +173,7 @@ export async function flushQueue() {
       break
     }
   }
-  writeQueue(failures)
+  await writeQueue(failures)
   if (handled) {
     try {
       window.dispatchEvent(new CustomEvent('fnahs:synced', { detail: { count: handled } }))
@@ -176,18 +186,21 @@ export async function flushQueue() {
 
 /* ---------------- session cache (offline auto-restore) ---------------- */
 
-export function cacheSession(profile) {
+export async function cacheSession(profile) {
   if (!profile?.id) return
   try {
-    localStorage.setItem(LS_SESSION, JSON.stringify({ profile, at: Date.now() }))
+    const blob = await vaultEncrypt({ profile, at: Date.now() })
+    if (blob) localStorage.setItem(LS_SESSION, blob)
   } catch {
     /* ignore */
   }
 }
 
-export function restoreSession() {
+export async function restoreSession() {
   try {
-    const s = JSON.parse(localStorage.getItem(LS_SESSION) || 'null')
+    const raw = localStorage.getItem(LS_SESSION)
+    if (!raw) return null
+    const s = raw.startsWith('{') ? JSON.parse(raw) : await vaultDecrypt(raw)
     return s?.profile || null
   } catch {
     return null
@@ -249,7 +262,7 @@ export function offlineWrite(method, supImpl, demoImpl, opts = {}) {
       if (isOfflineError(e)) {
         setOnline(false)
         const local = await demoImpl(...args)
-        queueOp(method, args, opts.localId ? opts.localId(local, ...args) : null)
+        await queueOp(method, args, opts.localId ? opts.localId(local, ...args) : null)
         return local
       }
       throw e

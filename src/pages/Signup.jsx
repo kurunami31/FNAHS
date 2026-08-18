@@ -4,6 +4,14 @@ import { Eye, EyeOff, UserPlus, Info, ShieldCheck, X } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import PrivacyNoticeContent from '../components/PrivacyNoticeContent'
 import { useApp } from '../context/AppContext'
+import { api } from '../lib/api'
+
+const STRENGTH = [
+  { label: 'too weak', min: 0 },
+  { label: 'weak', min: 1 },
+  { label: 'okay', min: 2 },
+  { label: 'strong', min: 3 },
+]
 
 export default function Signup() {
   const { signup, toast, isDemo } = useApp()
@@ -25,8 +33,8 @@ export default function Signup() {
       setError('Please read and agree to the Data Privacy Notice to create an account.')
       return
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
+    if (api.passwordStrength(password) < 2) {
+      setError('Password must be at least 8 characters with at least one letter and one number.')
       return
     }
     setBusy(true)
@@ -82,11 +90,17 @@ export default function Signup() {
           <div className="field">
             <label>Password</label>
             <div className="password-row">
-              <input type={show ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 6 characters" autoComplete="new-password" />
+              <input type={show ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 8 characters, letter + number" autoComplete="new-password" />
               <button type="button" className="icon-btn" onClick={() => setShow((s) => !s)} aria-label={show ? 'Hide password' : 'Show password'}>
                 {show ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+            {password && (
+              <div className="pw-meter" aria-label={`Password strength: ${STRENGTH[api.passwordStrength(password)].label}`}>
+                <span className={`pw-bar pw-bar--${api.passwordStrength(password)}`} />
+                <em>{STRENGTH[api.passwordStrength(password)].label}</em>
+              </div>
+            )}
           </div>
           <label className="privacy-agree" style={{ marginBottom: 14 }}>
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />

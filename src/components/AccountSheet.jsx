@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera, Archive, HeartPulse, Users, Settings2 } from 'lucide-react'
+import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera, Archive, HeartPulse, Users, Settings2, KeyRound, Smartphone } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { roleLabel, positionLabel, can } from '../rbac'
 import { api } from '../lib/api'
@@ -21,6 +21,64 @@ export default function AccountSheet({ onClose, onLogout }) {
   const [saving, setSaving] = useState(false)
   const fileRef = useRef(null)
   const saveTimer = useRef(null)
+
+  // ---- MFA (TOTP) state ----
+  const isOfficer = can(user, 'attendance.scan') || can(user, 'console.access') || can(user, 'fees.manage')
+  const [mfaFactors, setMfaFactors] = useState(null)
+  const [enrolling, setEnrolling] = useState(null) // { factorId, totp }
+  const [enrollCode, setEnrollCode] = useState('')
+  const [mfaBusy, setMfaBusy] = useState(false)
+  const [mfaMsg, setMfaMsg] = useState('')
+
+  useEffect(() => {
+    if (!isOfficer || !api.isSupabase) return
+    api.mfaListFactors().then(setMfaFactors).catch(() => {})
+  }, [isOfficer, user?.id])
+
+  const startEnroll = async () => {
+    setMfaMsg('')
+    setMfaBusy(true)
+    try {
+      const f = await api.mfaEnroll()
+      setEnrolling(f)
+      setEnrollCode('')
+    } catch (e) {
+      setMfaMsg(e.message || 'Could not start MFA setup.')
+    } finally {
+      setMfaBusy(false)
+    }
+  }
+
+  const confirmEnroll = async (e) => {
+    e.preventDefault()
+    setMfaMsg('')
+    setMfaBusy(true)
+    try {
+      await api.mfaVerify(enrolling.factorId, await api.mfaChallenge(enrolling.factorId), enrollCode)
+      setEnrolling(null)
+      setMfaMsg('Two-factor authentication is on. A fresh code is required at every sign-in.')
+      setMfaFactors(await api.mfaListFactors())
+    } catch (err) {
+      setMfaMsg(err.message || 'That code did not match — try again.')
+    } finally {
+      setMfaBusy(false)
+    }
+  }
+
+  const disableMfa = async (factorId) => {
+    if (!window.confirm('Turn off two-factor authentication? Anyone with your password could then sign in directly.')) return
+    setMfaMsg('')
+    setMfaBusy(true)
+    try {
+      await api.mfaUnenroll(factorId)
+      setMfaMsg('Two-factor authentication is off.')
+      setMfaFactors(await api.mfaListFactors())
+    } catch (e) {
+      setMfaMsg(e.message || 'Could not disable MFA.')
+    } finally {
+      setMfaBusy(false)
+    }
+  }
 
   useEffect(() => () => clearTimeout(saveTimer.current), [])
 
@@ -273,6 +331,77 @@ export default function AccountSheet({ onClose, onLogout }) {
           )}
         </div>
       </div>
+
+      {isOfficer && (
+        <div className="sheet-sec">
+          <h4>Security</h4>
+          {!mfaFactors ? (
+            <p className="mm-pic-hint">Loading two-factor status…</p>
+          ) : mfaFactors.length > 0 ? (
+            <>
+              <div className="sheet-row">
+                <div className="sr-txt">
+                  <h5>Two-factor authentication</h5>
+                  <p>On — you'll enter a TOTP code at every sign-in.</p>
+                </div>
+                <KeyRound size={16} style={{ color: 'var(--accent)' }} />
+              </div>
+              <button className="btn btn--ghost btn--block" onClick={() => disableMfa(mfaFactors[0].id)} disabled={mfaBusy} style={{ marginTop: 10 }}>
+                <Loader2 size={14} className={mfaBusy ? 'spin' : ''} /> Turn off 2FA
+              </button>
+            </>
+          ) : enrolling ? (
+            <>
+              <p className="mm-pic-hint" style={{ marginBottom: 8 }}>
+                Scan the code with your authenticator app (Google Authenticator, Authy, 1Password, …), then enter the 6-digit code it shows.
+              </p>
+              {enrolling.totp?.qr_code ? (
+                <img
+                  src={enrolling.totp.qr_code}
+                  alt="TOTP QR code"
+                  style={{ width: 150, height: 150, borderRadius: 10, margin: '0 auto 10px', display: 'block', background: '#fff', padding: 6 }}
+                />
+              ) : (
+                <p className="mm-pic-hint" style={{ textAlign: 'center', fontFamily: 'monospace', fontSize: '0.9rem', marginBottom: 8 }}>
+                  {enrolling.totp?.secret}
+                </p>
+              )}
+              <form onSubmit={confirmEnroll} style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={8}
+                  value={enrollCode}
+                  onChange={(e) => setEnrollCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="6-digit code"
+                  style={{ flex: 1 }}
+                  autoFocus
+                />
+                <button className="btn btn--primary" disabled={mfaBusy}>
+                  {mfaBusy ? '…' : 'Verify'}
+                </button>
+              </form>
+              <button className="btn btn--link btn--sm" onClick={() => setEnrolling(null)} disabled={mfaBusy}>
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="sheet-row">
+                <div className="sr-txt">
+                  <h5>Two-factor authentication</h5>
+                  <p>Extra protection for officer accounts — a TOTP code is required at sign-in.</p>
+                </div>
+                <Smartphone size={16} style={{ color: 'var(--muted)' }} />
+              </div>
+              <button className="btn btn--primary btn--block" onClick={startEnroll} disabled={mfaBusy} style={{ marginTop: 10 }}>
+                <KeyRound size={14} /> Set up authenticator app
+              </button>
+            </>
+          )}
+          {mfaMsg && <p className="form-ok" style={{ marginTop: 8 }}>{mfaMsg}</p>}
+        </div>
+      )}
 
       <div className="sheet-sec">
         <h4>Account</h4>

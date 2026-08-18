@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download, HandCoins } from 'lucide-react'
+import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download, HandCoins, RefreshCw } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can, POSITIONS, positionLabel, roleLabel } from '../rbac'
 import { api } from '../lib/api'
@@ -32,6 +32,17 @@ export default function Admin() {
   const [feeYear, setFeeYear] = useState(currentSchoolYear())
   const [feePayments, setFeePayments] = useState([])
   const [annualFee, setAnnualFee] = useState(200)
+  const [auditLogs, setAuditLogs] = useState([])
+
+  const loadAudit = async () => {
+    try {
+      const rows = await api.getAuditLogs(100)
+      setAuditLogs(rows)
+    } catch (e) {
+      console.error(e)
+      toast('Could not load the audit log', 'err')
+    }
+  }
   const [feeQ, setFeeQ] = useState('')
   const [feeFilter, setFeeFilter] = useState('all')
   const [feeModal, setFeeModal] = useState(null)
@@ -99,6 +110,11 @@ export default function Admin() {
   useEffect(() => {
     if (canFees) loadFees()
   }, [canFees, loadFees])
+
+  useEffect(() => {
+    if (tab === 'audit') loadAudit()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab])
 
   const recordFee = async (memberId, opts) => {
     await api.recordFeePayment(memberId, feeYear, opts)
@@ -259,6 +275,9 @@ export default function Admin() {
         )}
         <button className={`tab-btn${tab === 'maintenance' ? ' tab-btn--on' : ''}`} onClick={() => setTab('maintenance')}>
           <Wrench size={15} /> Maintenance
+        </button>
+        <button className={`tab-btn${tab === 'audit' ? ' tab-btn--on' : ''}`} onClick={() => setTab('audit')}>
+          <ShieldAlert size={15} /> Audit
         </button>
       </div>
 
@@ -617,6 +636,43 @@ export default function Admin() {
         </section>
       )}
 
+      {tab === 'audit' && (
+        <section className="panel">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Audit log</h3>
+            <p className="page-sub" style={{ margin: 0 }}>
+              Sensitive actions (role changes, fees, events, member edits) with the actor id — no PII stored.
+            </p>
+            <button className="btn btn--tiny" onClick={loadAudit} disabled={saving}>
+              <RefreshCw size={13} /> Refresh
+            </button>
+          </div>
+          {auditLogs.length === 0 ? (
+            <p className="panel-muted">No audit entries yet.</p>
+          ) : (
+            <div className="ledger">
+              {auditLogs.map((l) => (
+                <div className="ledger-row" key={l.id}>
+                  <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                    {initials(l.actor_id ? 'Officer' : 'System')}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>
+                      {l.action} <span className="badge">{l.entity}</span>
+                    </div>
+                    <div className="ledger-meta">
+                      actor {l.actor_id || 'system'} · {timeAgo(l.created_at)}
+                      {l.entity_id ? ` · ${String(l.entity_id).slice(0, 8)}…` : ''}
+                      {Object.keys(l.meta || {}).length > 0 ? ` · ${JSON.stringify(l.meta)}` : ''}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {memberModal && (
         <MemberFormModal
           mode={memberModal.mode}
@@ -810,8 +866,8 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
       setError('Name and email are required.')
       return
     }
-    if (mode === 'create' && (form.password || '').length < 6) {
-      setError('Password must be at least 6 characters — the member signs in with it.')
+    if (mode === 'create' && api.passwordStrength(form.password || '') < 2) {
+      setError('Password must be at least 8 characters with at least one letter and one number.')
       return
     }
     setSaving(true)
@@ -851,7 +907,7 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
         </div>
         {mode === 'create' && (
           <div className="field">
-            <label>Password <span className="field-hint">(min 6 chars — the member signs in with this)</span></label>
+            <label>Password <span className="field-hint">(min 8 chars, letter + number — the member signs in with this)</span></label>
             <input type="text" value={form.password || ''} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" autoComplete="new-password" />
           </div>
         )}

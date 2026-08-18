@@ -654,13 +654,13 @@ export const api = {
         const profile = await api.getProfile(session.user.id)
         if (!profile) throw new Error('profile not found')
         const user = { ...profile, id: session.user.id, email: profile.email || session.user.email }
-        cacheSession(user)
+        await cacheSession(user)
         return { user }
       } catch (e) {
         // Offline: fall back to the cached session so the app opens straight
         // into the dashboard with the last-known profile.
         if (isOfflineError(e) || typeof navigator !== 'undefined' && !navigator.onLine) {
-          const cached = restoreSession()
+          const cached = await restoreSession()
           if (cached) return { user: cached }
         }
         return { user: null }
@@ -669,10 +669,15 @@ export const api = {
   },
 
   async signIn(email, password) {
+    const lock = api.loginLockRemaining(email)
+    if (lock > 0) {
+      throw new Error(`Too many attempts — try again in ${lock}s.`)
+    }
     if (!SUPABASE_ENABLED) {
       // match by email so staff@fnahs.edu.ph maps to the staff account
       const found = Object.values(db.profiles).find((p) => p.email.toLowerCase() === email.toLowerCase())
       if (found && found.role === 'superadmin' && password !== ADMIN_PASSWORD) {
+        api.loginFail(email)
         throw new Error('Incorrect admin password — see the README.')
       }
       if (!found) {
@@ -681,23 +686,47 @@ export const api = {
         const p = { id, full_name: email.split('@')[0], email, program: PROGRAMS[0], year_level: '1', role: 'student', avatar_url: null, created_at: new Date().toISOString() }
         await demoUpsertProfile(p)
         demoLogin(id)
+        api.loginSuccess(email)
         return { user: p }
       }
       demoLogin(found.id)
+      api.loginSuccess(email)
       return { user: found }
     }
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) throw error
+      if (error) {
+        api.loginFail(email)
+        throw error
+      }
+      api.loginSuccess(email)
+      // MFA enrolled on this account? Supabase returns factor_id and no
+      // session — the caller must complete a TOTP challenge.
+      if (data.factor_id) {
+        return { mfa: { factorId: data.factor_id } }
+      }
       const profile = await api.getProfile(data.user.id)
       if (!profile) throw new Error('Your profile could not be loaded.')
       const user = { ...profile, id: data.user.id, email: profile.email || data.user.email }
-      cacheSession(user)
+      await cacheSession(user)
       return { user }
     } catch (e) {
       if (isOfflineError(e)) throw new Error('No connection — sign-in isn\u2019t available offline.', { cause: e })
       throw e
     }
+  },
+
+  /** complete MFA sign-in with a TOTP code */
+  async mfaSignIn(factorId, code) {
+    if (!SUPABASE_ENABLED || !supabase) throw new Error('MFA is only available in the live deployment.')
+    const challengeId = await api.mfaChallenge(factorId)
+    const { data, error } = await supabase.auth.mfa.verify({ factorId, challengeId, code: String(code || '').trim() })
+    if (error) throw error
+    const profile = await api.getProfile(data.user.id)
+    if (!profile) throw new Error('Your profile could not be loaded.')
+    const user = { ...profile, id: data.user.id, email: profile.email || data.user.email }
+    await cacheSession(user)
+    return { user }
   },
 
   async signUp(full_name, email, password) {
@@ -1020,6 +1049,7 @@ export const api = {
   changeRole: offlineWrite('changeRole', async (id, role) => {
         const { error } = await supabase.rpc('change_role', { p_target: id, p_new_role: role })
         if (error) throw error
+        api.logAudit('role.change', 'profile', id, { to: role })
       }, async (id, role) => {
         db.profiles[id] = { ...db.profiles[id], role }
         saveDb(db)
@@ -1028,6 +1058,7 @@ export const api = {
   setPositions: offlineWrite('setPositions', async (id, positions) => {
         const { error } = await supabase.rpc('set_positions', { p_target: id, p_positions: positions })
         if (error) throw error
+        api.logAudit('positions.set', 'profile', id, { positions })
       }, async (id, positions) => {
         db.profiles[id] = { ...db.profiles[id], positions }
         saveDb(db)
@@ -1036,6 +1067,7 @@ export const api = {
   deleteUser: offlineWrite('deleteUser', async (id) => {
         const { error } = await supabase.from('profiles').delete().eq('id', id)
         if (error) throw error
+        api.logAudit('member.delete', 'profile', id)
       }, async (id) => {
         delete db.profiles[id]
         db.posts = db.posts.filter((p) => p.user_id !== id)
@@ -1045,6 +1077,7 @@ export const api = {
   updateEvent: offlineWrite('updateEvent', async (eventId, patch) => {
         const { data, error } = await supabase.from('events').update(patch).eq('id', eventId).select().single()
         if (error) throw error
+        api.logAudit('event.update', 'event', eventId, { title: patch?.title })
         return data
       }, async (eventId, patch) => {
         const ev = db.events.find((e) => e.id === eventId)
@@ -1056,6 +1089,7 @@ export const api = {
   deleteEvent: offlineWrite('deleteEvent', async (eventId) => {
         const { error } = await supabase.from('events').delete().eq('id', eventId)
         if (error) throw error
+        api.logAudit('event.delete', 'event', eventId)
       }, async (eventId) => {
         db.events = db.events.filter((e) => e.id !== eventId)
         delete db.attendance[eventId]
@@ -1200,6 +1234,7 @@ export const api = {
           .select('*')
           .single()
         if (error) throw error
+        api.logAudit('event.fee.mark', 'event', eventId, { member_id: memberId, amount })
         return data
       }, async (eventId, memberId) => {
         const ev = db.events.find((e) => e.id === eventId)
@@ -1226,6 +1261,7 @@ export const api = {
           .eq('event_id', eventId)
           .eq('member_id', memberId)
         if (error) throw error
+        api.logAudit('event.fee.unmark', 'event', eventId, { member_id: memberId })
       }, async (eventId, memberId) => {
         db.eventPayments = (db.eventPayments || []).filter((p) => !(p.event_id === eventId && p.member_id === memberId))
         saveDb(db)
@@ -1321,6 +1357,7 @@ export const api = {
   setAnnualFee: offlineWrite('setAnnualFee', async (amount) => {
         const { error } = await supabase.rpc('set_membership_fee_amount', { p_amount: Number(amount) || 0 })
         if (error) throw error
+        api.logAudit('fee.annual.set', 'app_settings', '1', { amount: Number(amount) || 0 })
       }, async (amount) => {
         db.annualFee = Number(amount) || 0
         saveDb(db)
@@ -1368,6 +1405,7 @@ export const api = {
           .select('*')
           .single()
         if (error) throw error
+        api.logAudit('fee.record', 'fee_payment', data.id, { member_id: memberId, amount, type: type === 'half' ? 'half' : 'full' })
         return data
       }, async (memberId, schoolYear, { type, receipt }) => {
         const row = {
@@ -1389,6 +1427,7 @@ export const api = {
   voidFeePayment: offlineWrite('voidFeePayment', async (id) => {
         const { error } = await supabase.from('fee_payments').delete().eq('id', id)
         if (error) throw error
+        api.logAudit('fee.void', 'fee_payment', id)
       }, async (id) => {
         db.feePayments = (db.feePayments || []).filter((p) => p.id !== id)
         saveDb(db)
@@ -1624,4 +1663,110 @@ export const api = {
       }),
 
   PROGRAMS,
+
+  /* ---------------- security level 1 ---------------- */
+
+  /** client-side login throttle: 5 fails → 60s lockout per email */
+  loginLockRemaining(email) {
+    try {
+      const raw = JSON.parse(localStorage.getItem('fnahs-login-lock') || '{}')
+      const e = (email || '').trim().toLowerCase()
+      const slot = raw[e]
+      if (!slot) return 0
+      const until = slot.until - Date.now()
+      return until > 0 ? Math.ceil(until / 1000) : 0
+    } catch {
+      return 0
+    }
+  },
+
+  loginFail(email) {
+    try {
+      const raw = JSON.parse(localStorage.getItem('fnahs-login-lock') || '{}')
+      const e = (email || '').trim().toLowerCase()
+      const slot = raw[e] || { fails: 0 }
+      slot.fails = (slot.fails || 0) + 1
+      if (slot.fails >= 5) slot.until = Date.now() + 60_000
+      raw[e] = slot
+      localStorage.setItem('fnahs-login-lock', JSON.stringify(raw))
+    } catch {
+      /* ignore */
+    }
+  },
+
+  loginSuccess(email) {
+    try {
+      const raw = JSON.parse(localStorage.getItem('fnahs-login-lock') || '{}')
+      delete raw[(email || '').trim().toLowerCase()]
+      localStorage.setItem('fnahs-login-lock', JSON.stringify(raw))
+    } catch {
+      /* ignore */
+    }
+  },
+
+  /** password strength 0–3; level 1 needs ≥ 8 chars with letter + number */
+  passwordStrength(pw) {
+    let s = 0
+    if (!pw) return 0
+    if (pw.length >= 8) s++
+    if (/[a-zA-Z]/.test(pw) && /\d/.test(pw)) s++
+    if (/[^a-zA-Z0-9]/.test(pw)) s++
+    return s
+  },
+
+  /** append to the server-side audit log (fire-and-forget, never throws) */
+  logAudit(action, entity, entityId = null, meta = {}) {
+    if (!SUPABASE_ENABLED || !supabase) return Promise.resolve()
+    return supabase
+      .rpc('log_audit', { p_action: action, p_entity: entity, p_entity_id: entityId || null, p_meta: meta })
+      .then(({ error }) => {
+        if (error) console.warn('audit log skipped:', error.message)
+      })
+      .catch(() => {})
+  },
+
+  /** recent audit rows — console officers only (RPC enforces) */
+  getAuditLogs: offlineRead(
+    'getAuditLogs',
+    async (limit = 100) => {
+      const { data, error } = await supabase.rpc('get_audit_logs', { p_limit: limit })
+      if (error) throw error
+      return data || []
+    },
+    async () => []
+  ),
+
+  /* ---- MFA (TOTP) for officer accounts ---- */
+
+  mfaListFactors() {
+    if (!SUPABASE_ENABLED || !supabase) return Promise.resolve([])
+    return supabase.auth.mfa.listFactors().then(({ data, error }) => (error ? [] : data.all || []))
+  },
+
+  async mfaEnroll() {
+    if (!SUPABASE_ENABLED || !supabase) throw new Error('MFA is only available in the live deployment.')
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    if (error) throw error
+    return data
+  },
+
+  async mfaChallenge(factorId) {
+    if (!SUPABASE_ENABLED || !supabase) throw new Error('MFA is only available in the live deployment.')
+    const { data, error } = await supabase.auth.mfa.challenge({ factorId })
+    if (error) throw error
+    return data.id
+  },
+
+  async mfaVerify(factorId, challengeId, code) {
+    if (!SUPABASE_ENABLED || !supabase) throw new Error('MFA is only available in the live deployment.')
+    const { data, error } = await supabase.auth.mfa.verify({ factorId, challengeId, code: String(code || '').trim() })
+    if (error) throw error
+    return data
+  },
+
+  async mfaUnenroll(factorId) {
+    if (!SUPABASE_ENABLED || !supabase) return
+    const { error } = await supabase.auth.mfa.unenroll({ factorId })
+    if (error) throw error
+  },
 }

@@ -1929,6 +1929,46 @@ html[data-theme='dark'] .id-card {
 .field-hint { font-weight: 400; font-size: 0.74rem; color: var(--muted); margin-left: 6px; }
 
 /* ============================================================
+   SECURITY — PASSWORD METER
+   ============================================================ */
+.pw-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+}
+.pw-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  position: relative;
+  overflow: hidden;
+}
+.pw-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(var(--fill, 0));
+  transition: transform 0.2s ease;
+}
+.pw-bar--0::after { --fill: 0.2; background: #d9534f; }
+.pw-bar--1::after { --fill: 0.4; background: #e6a23c; }
+.pw-bar--2::after { --fill: 0.7; background: #7fb069; }
+.pw-bar--3::after { --fill: 1; background: #2e9e6b; }
+.pw-meter em {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 58px;
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
    HOME — YOUR TOOLS
    ============================================================ */
 .tools-grid {
