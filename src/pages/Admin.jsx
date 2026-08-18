@@ -126,6 +126,32 @@ export default function Admin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab])
 
+  // Auto-refresh payment confirmations: whenever the window regains focus
+  // and on a light 30s poll, so marks made by admins/mods/officers on other
+  // devices show up without a manual refresh.
+  const refreshLive = useCallback(() => {
+    const id = attEventIdRef.current
+    if (id) {
+      api
+        .getEventPayments(id)
+        .then((rows) => setAttPayments(rows))
+        .catch(() => {})
+    }
+    if (canFees) loadFees()
+  }, [canFees, loadFees])
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshLive()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    const t = setInterval(refreshLive, 30000)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      clearInterval(t)
+    }
+  }, [refreshLive])
+
   const recordFee = async (memberId, opts) => {
     await api.recordFeePayment(memberId, feeYear, opts)
     await loadFees()
@@ -159,7 +185,17 @@ export default function Admin() {
   const exportAttXlsx = async () => {
     try {
       const ev = events.find((e) => e.id === attEventId)
-      const { workbook, filename } = await attendanceWorkbook(ev, attRows, attPayments)
+      // Always pull fresh payment confirmations at export time so the file
+      // reflects the latest marks (screen state may be older).
+      let payments = attPayments
+      if (Number(ev?.fee_amount) > 0) {
+        try {
+          payments = await api.getEventPayments(attEventId)
+        } catch (e) {
+          console.error(e)
+        }
+      }
+      const { workbook, filename } = await attendanceWorkbook(ev, attRows, payments)
       await downloadWorkbook(workbook, filename)
       toast(`Exported ${attRows.length} record${attRows.length === 1 ? '' : 's'}`)
     } catch (e) {
@@ -170,7 +206,15 @@ export default function Admin() {
 
   const exportFeeReport = async () => {
     try {
-      const { workbook, filename } = await feeReportWorkbook({ members, feePayments, annualFee, schoolYear: feeYear })
+      // Fresh membership fee data at export time — never export stale state.
+      let payments = feePayments
+      let annual = annualFee
+      try {
+        ;[payments, annual] = await Promise.all([api.getFeePayments(feeYear), api.getAnnualFee()])
+      } catch (e) {
+        console.error(e)
+      }
+      const { workbook, filename } = await feeReportWorkbook({ members, feePayments: payments, annualFee: annual, schoolYear: feeYear })
       await downloadWorkbook(workbook, filename)
       toast('Fee report exported')
     } catch (e) {

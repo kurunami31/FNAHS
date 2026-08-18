@@ -206,7 +206,15 @@ export default function Staff() {
   const exportXlsx = async () => {
     try {
       const ev = events.find((e) => e.id === eventId)
-      const { workbook, filename } = await attendanceWorkbook(ev, attendance, payments)
+      // Fresh payment confirmations at export time (screen state may lag
+      // behind marks made on other devices).
+      let freshPayments = payments
+      try {
+        freshPayments = await api.getEventPayments(eventId)
+      } catch (e) {
+        console.error(e)
+      }
+      const { workbook, filename } = await attendanceWorkbook(ev, attendance, freshPayments)
       await downloadWorkbook(workbook, filename)
       toast(`Exported ${attendance.length} record${attendance.length === 1 ? '' : 's'}`)
     } catch (e) {
