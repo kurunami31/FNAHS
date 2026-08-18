@@ -518,7 +518,9 @@ const [feeFilter, setFeeFilter] = useState('all')
 
           <h3 style={{ margin: '18px 0 4px', fontSize: '1.02rem' }}>Event contributions</h3>
 <div style={{ marginTop: 16, fontSize: '0.85rem' }}>
-            Search: <input type="text" value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="Search names, IDs, or emails…" style={{ marginLeft: 8 }}/>
+            <div className="dir-search">
+              <Search size={17} /> <input placeholder="Search names, IDs, or emails" value={searchQ} onChange={(e) => setSearchQ(e.target.value)} style={{ marginLeft: 8 }}/>
+</div>
           </div>
           <div className="admin-toolbar">
             <div className="field" style={{ marginBottom: 0, minWidth: 240, flex: 1 }}>
