@@ -4,6 +4,13 @@ import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
 import { SUGGESTIONS } from '../lib/mock'
 
+const STRIP_MD = /(\*\*|__|\*|_|`|~~|^[-•]\s+)/gm
+
+/** Legacy replies used markdown; render everything as plain text. */
+function plainText(s) {
+  return String(s || '').replace(STRIP_MD, '')
+}
+
 export default function ChatWidget() {
   const { user, isDemo } = useApp()
   const [open, setOpen] = useState(false)
@@ -11,7 +18,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState([
     {
       role: 'bot',
-      content: `Hello! I'm Florence, the ${isDemo ? 'demo ' : ''}AI assistant of the Faculty of Nursing and Allied Health Sciences — named after the lady with the lamp. Ask me about study plans, clinical skills, medications, or org info. 🩺`,
+      content: `Hello! I'm Florence, the ${isDemo ? 'demo ' : ''}AI assistant of the Faculty of Nursing and Allied Health Sciences — named after the lady with the lamp. Ask me about study plans, clinical skills, medications, or org info.`,
     },
   ])
   const [input, setInput] = useState('')
@@ -133,7 +140,7 @@ export default function ChatWidget() {
                   )}
                 </div>
                 <div className="msg-bubble">
-                  {m.content}
+                  {plainText(m.content)}
                   {busy && i === messages.length - 1 && m.content !== '' && <span className="stream-caret" />}
                 </div>
               </div>

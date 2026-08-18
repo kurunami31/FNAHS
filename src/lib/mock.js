@@ -198,27 +198,27 @@ const AI_REPLIES = [
   {
     match: /nclex|board exam|study plan|review/i,
     reply: () =>
-      `Here's a simple NCLEX-style study plan:\n\n1. **Content blocks** — group by system (cardio, neuro, pharm) and do one block per week.\n2. **Daily 30–50 practice questions** with rationales, not just answers.\n3. **Missed-question log** — revisit your wrong answers every 3 days.\n4. **Weekly full-length practice test** (75–145 questions, timed).\n5. **Rest**: sleep and short walks are part of the plan too.\n\nWant me to break this down by week, or focus on a specific subject?`,
+      `Here's a simple NCLEX-style study plan.\n\n1. Group your content by system — cardio, neuro, pharm — and do one block per week.\n2. Answer 30 to 50 practice questions daily, and read the rationales, not just the correct letters.\n3. Keep a missed-question log and revisit your wrong answers every three days.\n4. Take one full-length timed practice test each week, 75 to 145 questions.\n5. Rest matters too — sleep and short walks are part of the plan.\n\nWant me to break this down by week, or focus on one subject?`,
   },
   {
     match: /blood pressure|bp|cuff|sphygmo/i,
     reply: () =>
-      `Measuring BP correctly in 6 steps:\n\n1. Patient seated, feet flat, arm supported at heart level.\n2. No caffeine/smoking 30 min prior; rest 5 min first.\n3. Use the correct cuff size (bladder covers ~80% of arm circumference).\n4. Palpate the radial pulse, inflate 30 mmHg above where it disappears.\n5. Deflate slowly (~2 mmHg/sec), note first Korotkoff sound (systolic) and its disappearance (diastolic).\n6. Record to the nearest 2 mmHg.\n\nCommon error: cuff too small → falsely high reading. Always verify with the opposite arm on first visit.`,
+      `Measuring blood pressure correctly in six steps.\n\n1. Seat the patient with feet flat and the arm supported at heart level.\n2. No caffeine or smoking for 30 minutes before, and rest for five minutes first.\n3. Use the right cuff size — the bladder should cover about 80 percent of the arm's circumference.\n4. Palpate the radial pulse, then inflate 30 mmHg above where it disappears.\n5. Deflate slowly, about 2 mmHg per second. Note the first Korotkoff sound as systolic and its disappearance as diastolic.\n6. Record to the nearest 2 mmHg.\n\nCommon error: a cuff that is too small gives a falsely high reading. Check the opposite arm on the first visit too.`,
   },
   {
     match: /ecg|ekg|electrocardiogram|heart rhythm/i,
     reply: () =>
-      `ECG made simple — the 5 boxes:\n\n- **P wave**: atrial depolarization.\n- **PR interval** (0.12–0.20s): delay at the AV node.\n- **QRS** (<0.12s): ventricular depolarization.\n- **QT interval**: ventricular repolarization.\n- **T wave**: repolarization.\n\nRapid approach: rate → rhythm → axis → intervals → morphology. For the NCLEX, memorize normal values and the classic patterns: peaked T (hyperkalemia), prolonged QT (hypokalemia/drugs), ST elevation (MI).\n\nWant me to quiz you on rhythms?`,
+      `ECG made simple — the five boxes.\n\n1. P wave: atrial depolarization.\n2. PR interval, 0.12 to 0.20 seconds: the delay at the AV node.\n3. QRS complex, under 0.12 seconds: ventricular depolarization.\n4. QT interval: ventricular repolarization.\n5. T wave: repolarization.\n\nA quick reading order is rate, rhythm, axis, intervals, then morphology. For the NCLEX, memorize the classic patterns: peaked T waves in hyperkalemia, prolonged QT in hypokalemia or certain drugs, and ST elevation in an MI.\n\nWant me to quiz you on rhythms?`,
   },
   {
     match: /drug|medication|pharm|dose|insulin|antibiotic/i,
     reply: () =>
-      `A simple medication study framework — the "5 Rights + 2":\n\n1. Right patient  2. Right drug  3. Right dose  4. Right route  5. Right time\n+ Right documentation + Right to refuse.\n\nFor each drug, learn: class → mechanism → indication → side effects → nursing considerations. Example — **Metformin**: biguanide, ↓ hepatic glucose output, watch for lactic acidosis (renal impairment), hold before contrast imaging.\n\nName a drug you're reviewing and I'll break it down the same way.`,
+      `A simple medication study framework — the five rights, plus two.\n\n1. Right patient.\n2. Right drug.\n3. Right dose.\n4. Right route.\n5. Right time.\nPlus documentation and the patient's right to refuse.\n\nFor each drug, learn class, mechanism, indication, side effects, then nursing considerations. Take metformin as an example: it is a biguanide that lowers hepatic glucose output; watch for lactic acidosis in renal impairment, and hold it before contrast imaging.\n\nName a drug you are reviewing and I will break it down the same way.`,
   },
   {
     match: /hello|hi |hey|good (morning|afternoon|evening)/i,
     reply: () =>
-      `Hello! 👋 I'm Florence, the FNAHS AI assistant — named after the lady with the lamp. I can help you with:\n\n- Study plans (NCLEX, board exams, finals)\n- Clinical skills refreshers (BP, ECG, meds, assessments)\n- Org info — events, attendance, the feed\n\nWhat do you need help with today?`,
+      `Hello! I'm Florence, the FNAHS AI assistant — named after the lady with the lamp. I can help you with study plans for the NCLEX, board exams, or finals, clinical skills like blood pressure and ECG, medication safety, and org info such as events, attendance, and the feed.\n\nWhat do you need help with today?`,
   },
 ]
 
@@ -231,7 +231,7 @@ export const SUGGESTIONS = [
 
 export function mockAiReply(question) {
   const hit = AI_REPLIES.find((r) => r.match.test(question))
-  return hit ? hit.reply(question) : `Good question about "${question.trim()}". I'm running in demo mode right now, so I'm using a canned response — once the Supabase edge function (florence-ai) is deployed with an API key, I'll answer from a real LLM.\n\nFor now, try asking about NCLEX study plans, blood pressure, ECG basics, or medication safety — those are the skills I've been trained on for FNAHS students. 🩺`
+  return hit ? hit.reply(question) : `Good question about "${question.trim()}". I'm running in demo mode right now, so this is a canned response — once the Supabase edge function (florence-ai) is deployed with an API key, I'll answer from a real LLM.\n\nFor now, try asking about NCLEX study plans, blood pressure, ECG basics, or medication safety — those are the skills I've been trained on for FNAHS students.`
 }
 
 /** Simulates a streaming reply: yields chunks with delays. */

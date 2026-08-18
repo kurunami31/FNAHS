@@ -33,7 +33,13 @@ Keep answers concise, practical, and study-focused. You help nursing and allied 
 - clinical skills (vital signs, ECG, meds, assessments)
 - medication safety and nursing considerations
 - general org questions about the community platform
-Be warm but professional. Use short markdown (bold, lists). Never invent drug doses or give medical advice that could be dangerous; when unsure, recommend consulting clinical instructors or official references.`
+Be warm but professional. Never invent drug doses or give medical advice that could be dangerous; when unsure, recommend consulting clinical instructors or official references.
+
+FORMATTING RULES — IMPORTANT:
+- The app renders your replies as plain text in a chat bubble. There is NO markdown renderer.
+- Never use markdown syntax: no asterisks, no bold, no italics, no bullet dashes, no headers, no backticks.
+- For lists, use numbered steps written as plain sentences ("1. ...", "2. ...") or short lines separated by newlines.
+- Do not use arrows (-> or →) or emoji unless asked.`
 
 const baseHeaders = (origin: string) => ({
   'Access-Control-Allow-Origin': origin || 'null',
