@@ -44,9 +44,9 @@ export default function Admin() {
       toast('Could not load the audit log', 'err')
     }
   }
-  const [feeQ, setFeeQ] = useState('')
+const [feeQ, setFeeQ] = useState('')
 const [searchQ, setSearchQ] = useState('')
-  const [feeFilter, setFeeFilter] = useState('all')
+const [feeFilter, setFeeFilter] = useState('all')
   const [feeModal, setFeeModal] = useState(null)
 
   const canFees = can(user, 'fees.view')
