@@ -11,7 +11,7 @@ import { attendanceWorkbook, feeReportWorkbook, downloadWorkbook } from '../lib/
 import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import Select from '../components/Select'
 
-const ROLES = ['student', 'moderator', 'superadmin']
+const ROLES = ['student', 'faculty', 'moderator', 'superadmin']
 
 export default function Admin() {
   const { user, toast, maintenance, setMaintenanceFlag } = useApp()

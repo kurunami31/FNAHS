@@ -93,6 +93,9 @@ export default function Directory() {
               {m.role === 'moderator' && !m.positions?.length && (
                 <span className="badge badge--done" style={{ marginLeft: 'auto' }}>moderator</span>
               )}
+              {m.role === 'faculty' && (
+                <span className="badge badge--warn" style={{ marginLeft: 'auto' }}>faculty</span>
+              )}
             </div>
           ))}
         </div>

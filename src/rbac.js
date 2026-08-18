@@ -9,6 +9,7 @@ import { useApp } from './context/AppContext'
 
 export const ROLES = {
   student: 'Student',
+  faculty: 'Faculty',
   moderator: 'Moderator',
   superadmin: 'Superadmin',
 }
@@ -55,6 +56,7 @@ export const SCOPE_LABELS = {
 export const ROLE_SCOPES = {
   superadmin: ['*'],
   moderator: ['feed.moderate', 'directory.view', 'attendance.scan', 'fees.view'],
+  faculty: [],
   student: [],
 }
 
