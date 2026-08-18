@@ -39,6 +39,13 @@ export default function AccountSheet({ shown = false, onClose, onLogout }) {
     setMfaMsg('')
     setMfaBusy(true)
     try {
+      // Discard half-finished enrollments from earlier attempts so a stale
+      // pending factor can never get in the way of a fresh setup.
+      if (mfaFactors?.length) {
+        await Promise.allSettled(
+          mfaFactors.filter((f) => f.status !== 'verified').map((f) => api.mfaUnenroll(f.id))
+        )
+      }
       const f = await api.mfaEnroll()
       setEnrolling({ factorId: f.id, totp: f.totp })
       setEnrollCode('')
@@ -54,12 +61,21 @@ export default function AccountSheet({ shown = false, onClose, onLogout }) {
     setMfaMsg('')
     setMfaBusy(true)
     try {
-      await api.mfaVerify(enrolling.factorId, await api.mfaChallenge(enrolling.factorId), enrollCode)
+      const challengeId = await api.mfaChallenge(enrolling.factorId)
+      await api.mfaVerify(enrolling.factorId, challengeId, enrollCode)
       setEnrolling(null)
       setMfaMsg('Two-factor authentication is on. A fresh code is required at every sign-in.')
       setMfaFactors(await api.mfaListFactors())
     } catch (err) {
-      setMfaMsg(err.message || 'That code did not match — try again.')
+      setEnrollCode('')
+      const code = err?.code || err?.error_code
+      if (code === 'mfa_verification_failed') {
+        setMfaMsg('That code was rejected — enter the 6-digit code shown in your app right now. If it keeps failing, make sure your phone clock is set to automatic time.')
+      } else if (code === 'otp_expired' || code === 'challenge_expired') {
+        setMfaMsg('That code expired. Enter the newest code from your authenticator app.')
+      } else {
+        setMfaMsg(err.message || 'That code did not match — try again.')
+      }
     } finally {
       setMfaBusy(false)
     }
@@ -337,7 +353,7 @@ export default function AccountSheet({ shown = false, onClose, onLogout }) {
           <h4>Security</h4>
           {!mfaFactors ? (
             <p className="mm-pic-hint">Loading two-factor status…</p>
-          ) : mfaFactors.length > 0 ? (
+          ) : mfaFactors.some((f) => f.status === 'verified') ? (
             <>
               <div className="sheet-row">
                 <div className="sr-txt">
