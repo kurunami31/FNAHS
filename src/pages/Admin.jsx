@@ -149,7 +149,9 @@ export default function Admin() {
   const exportAttXlsx = async () => {
     try {
       const ev = events.find((e) => e.id === attEventId)
-      const { workbook, filename } = await attendanceWorkbook(ev, attRows)
+      let payments = []
+      if (Number(ev?.fee_amount) > 0) payments = await api.getEventPayments(attEventId)
+      const { workbook, filename } = await attendanceWorkbook(ev, attRows, payments)
       await downloadWorkbook(workbook, filename)
       toast(`Exported ${attRows.length} record${attRows.length === 1 ? '' : 's'}`)
     } catch (e) {

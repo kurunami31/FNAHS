@@ -90,25 +90,35 @@ export async function downloadWorkbook(workbook, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 5000)
 }
 
-/** One-sheet attendance roster for a single event, sorted by scan time. */
-export async function attendanceWorkbook(event, attendance) {
+/** Attendance roster for a single event, sorted by scan time. When the
+    event has a contribution fee, adds a per-member fee status column and a
+    Contributions worksheet with the payments collected. */
+export async function attendanceWorkbook(event, attendance, eventPayments = []) {
   const { Workbook } = await excel()
   const wb = new Workbook()
   const ws = wb.addWorksheet('Attendance', { views: [{ showGridLines: false }] })
   const sorted = [...attendance].sort((a, b) => new Date(a.scanned_at || 0) - new Date(b.scanned_at || 0))
 
+  const fee = Number(event?.fee_amount) || 0
+  const hasFee = fee > 0
+  const paidBy = new Set((eventPayments || []).map((p) => p.member_id))
+
   brandHeader(
     ws,
     'FNAHS PULSO — Attendance Log',
-    `${event?.title || 'Event'} · ${event?.starts_at ? pht(event.starts_at) : ''}${event?.location ? ` · ${event.location}` : ''} · ${sorted.length} member(s) present`,
+    `${event?.title || 'Event'} · ${event?.starts_at ? pht(event.starts_at) : ''}${event?.location ? ` · ${event.location}` : ''} · ${sorted.length} member(s) present${hasFee ? ` · contribution fee ₱${fee.toLocaleString('en-PH')}` : ''}`,
   )
-  styledHeader(ws.getRow(4), ['#', 'Name', 'ID No', 'Program', 'Year Level', 'Email', 'Scanned At (PHT)', 'Status'])
+  const headers = ['#', 'Name', 'ID No', 'Program', 'Year Level', 'Email', 'Scanned At (PHT)', 'Status']
+  if (hasFee) headers.push('Contribution (₱)', 'Fee Status')
+  styledHeader(ws.getRow(4), headers)
+  const widths = [5, 28, 12, 16, 12, 26, 20, 10]
+  if (hasFee) widths.push(16, 12)
   styledBody(
     ws,
     5,
     sorted.map((a, i) => {
       const p = a.profiles || {}
-      return [
+      const row = [
         i + 1,
         p.full_name || a.user_id.slice(0, 10),
         p.id_no || '',
@@ -118,9 +128,47 @@ export async function attendanceWorkbook(event, attendance) {
         pht(a.scanned_at),
         'Present',
       ]
+      if (hasFee) {
+        const paid = paidBy.has(a.user_id)
+        row.push(paid ? fee.toLocaleString('en-PH') : 0, paid ? 'PAID' : 'UNPAID')
+      }
+      return row
     }),
-    [5, 28, 12, 16, 12, 26, 20, 10],
+    widths,
   )
+
+  if (hasFee) {
+    const cws = wb.addWorksheet('Contributions', { views: [{ showGridLines: false }] })
+    const paidCount = (eventPayments || []).length
+    const collected = (eventPayments || []).reduce((t, p) => t + Number(p.amount || 0), 0)
+    brandHeader(
+      cws,
+      'FNAHS PULSO — Event Contributions',
+      `${event?.title || 'Event'} · fee ₱${fee.toLocaleString('en-PH')} · ${paidCount} paid · ₱${collected.toLocaleString('en-PH')} collected`,
+    )
+    const unpaid = sorted.length - paidCount
+    cws.getCell('A3').value =
+      unpaid > 0
+        ? `${unpaid} of ${sorted.length} present member(s) have not paid the contribution yet.`
+        : 'All present members have paid the contribution.'
+    cws.getCell('A3').font = SUB_FONT
+    styledHeader(cws.getRow(5), ['#', 'Name', 'ID No', 'Amount (₱)', 'Paid At (PHT)'])
+    styledBody(
+      cws,
+      6,
+      (eventPayments || [])
+        .slice()
+        .sort((a, b) => new Date(a.paid_at || 0) - new Date(b.paid_at || 0))
+        .map((p, i) => [
+          i + 1,
+          p.profiles?.full_name || p.member_id.slice(0, 10),
+          p.profiles?.id_no || '',
+          Number(p.amount || 0).toLocaleString('en-PH'),
+          pht(p.paid_at),
+        ]),
+      [5, 28, 12, 12, 20],
+    )
+  }
 
   const stamp = todayStamp()
   return {
