@@ -98,6 +98,7 @@ function loadDb() {
         attendance: db.attendance || {},
         membershipFees: db.membershipFees || {},
         feePayments: db.feePayments || [],
+        eventPayments: db.eventPayments || [],
       }
     }
   } catch {
@@ -430,11 +431,28 @@ function mirrorEvents(events) {
     location: e.location || '',
     starts_at: e.starts_at,
     ends_at: e.ends_at,
+    fee_amount: Number(e.fee_amount) || 0,
     created_by: e.created_by,
     created_at: e.created_at,
     rsvps: e.rsvps || {},
   }))
   db.events = [...mapped, ...db.events.filter((d) => !mapped.some((m) => m.id === d.id))]
+  saveDb(db)
+}
+function mirrorEventPayments(rows) {
+  const mapped = (rows || []).map((r) => ({
+    id: r.id,
+    event_id: r.event_id,
+    member_id: r.member_id,
+    amount: r.amount,
+    paid_at: r.paid_at,
+    recorded_by: r.recorded_by || null,
+    created_at: r.created_at,
+  }))
+  db.eventPayments = [...mapped, ...db.eventPayments.filter((d) => !mapped.some((m) => m.id === d.id))]
+  for (const r of rows || []) {
+    if (r.profiles) mirrorProfileInto(r.profiles)
+  }
   saveDb(db)
 }
 function mirrorFeePayments(rows) {
@@ -1113,6 +1131,7 @@ export const api = {
             location: sanitizeText(ev.location, 200),
             starts_at: ev.starts_at,
             ends_at: ev.ends_at,
+            fee_amount: Number(ev.fee_amount) || 0,
             created_by: user.id,
           })
           .select()
@@ -1139,6 +1158,78 @@ export const api = {
           await supabase.from('rsvps').upsert({ event_id: eventId, user_id: user.id, status })
         }
       }, demoSetRsvp),
+
+  /* event contributions — members see their own rows, event managers record */
+  getEventPayments: offlineRead('getEventPayments', async (eventId) => {
+        let q = supabase
+          .from('event_payments')
+          .select('*, profiles(full_name, program, year_level, email)')
+          .order('paid_at', { ascending: false })
+        if (eventId) q = q.eq('event_id', eventId)
+        const { data, error } = await q
+        if (error) throw error
+        return data || []
+      }, async (eventId) => {
+        const rows = (db.eventPayments || [])
+          .filter((p) => !eventId || p.event_id === eventId)
+          .map((p) => {
+            const pr = db.profiles[p.member_id]
+            return {
+              ...p,
+              profiles: pr
+                ? { full_name: pr.full_name, program: pr.program, year_level: pr.year_level, email: pr.email }
+                : null,
+            }
+          })
+        return rows.sort((a, b) => new Date(b.paid_at) - new Date(a.paid_at))
+      }, mirrorEventPayments),
+
+  markEventPayment: offlineWrite('markEventPayment', async (eventId, memberId) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { data: ev, error: evErr } = await supabase.from('events').select('fee_amount').eq('id', eventId).single()
+        if (evErr) throw evErr
+        const amount = Number(ev?.fee_amount) || 0
+        if (amount <= 0) throw new Error('This event has no contribution fee.')
+        const { data, error } = await supabase
+          .from('event_payments')
+          .upsert(
+            { event_id: eventId, member_id: memberId, amount, paid_at: new Date().toISOString(), recorded_by: user.id },
+            { onConflict: 'event_id,member_id' }
+          )
+          .select('*')
+          .single()
+        if (error) throw error
+        return data
+      }, async (eventId, memberId) => {
+        const ev = db.events.find((e) => e.id === eventId)
+        const amount = Number(ev?.fee_amount) || 0
+        if (amount <= 0) throw new Error('This event has no contribution fee.')
+        const row = {
+          id: uid(),
+          event_id: eventId,
+          member_id: memberId,
+          amount,
+          paid_at: new Date().toISOString(),
+          recorded_by: demoCurrentUserId() || null,
+          created_at: new Date().toISOString(),
+        }
+        db.eventPayments = [...(db.eventPayments || []).filter((p) => !(p.event_id === eventId && p.member_id === memberId)), row]
+        saveDb(db)
+        return row
+      }, { localId: (p) => p?.id }),
+
+  unmarkEventPayment: offlineWrite('unmarkEventPayment', async (eventId, memberId) => {
+        const { error } = await supabase
+          .from('event_payments')
+          .delete()
+          .eq('event_id', eventId)
+          .eq('member_id', memberId)
+        if (error) throw error
+      }, async (eventId, memberId) => {
+        db.eventPayments = (db.eventPayments || []).filter((p) => !(p.event_id === eventId && p.member_id === memberId))
+        saveDb(db)
+      }),
 
   getAttendance: offlineRead('getAttendance', async (eventId) => {
         const { data, error } = await supabase

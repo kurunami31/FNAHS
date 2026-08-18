@@ -283,5 +283,6 @@ export function demoDb() {
   const attendance = {}
   const membershipFees = {}
   const feePayments = []
-  return { profiles, posts, events, feeds, attendance, membershipFees, feePayments }
+  const eventPayments = []
+  return { profiles, posts, events, feeds, attendance, membershipFees, feePayments, eventPayments }
 }

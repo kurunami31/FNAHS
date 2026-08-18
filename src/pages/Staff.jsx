@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2, Download } from 'lucide-react'
+import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2, Download, HandCoins } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
@@ -18,6 +18,7 @@ export default function Staff() {
   const scannerRef = useRef(null)
   const [last, setLast] = useState(null)
   const [tallies, setTallies] = useState([])
+  const [payments, setPayments] = useState([])
   const scanBoxRef = useRef(null)
   // Mirrors the current eventId so the scan handler never goes stale mid-scan.
   const eventIdRef = useRef('')
@@ -67,9 +68,46 @@ export default function Staff() {
     }
   }, [toast])
 
+  // event contribution payments for the active event (events with a fee only)
+  const loadPayments = useCallback(async () => {
+    const id = eventIdRef.current
+    if (!id) return
+    try {
+      setPayments(await api.getEventPayments(id))
+    } catch {
+      /* not a fee event or not visible — ignore */
+    }
+  }, [])
+
   useEffect(() => {
     loadAttendance()
-  }, [loadAttendance, eventId])
+    loadPayments()
+  }, [loadAttendance, loadPayments, eventId])
+
+  const activeEvent = events.find((e) => e.id === eventId)
+  const eventFee = Number(activeEvent?.fee_amount) || 0
+  const canManagePayments = can(user, 'events.manage')
+
+  const markPaid = async (memberId, name) => {
+    try {
+      await api.markEventPayment(eventIdRef.current, memberId)
+      toast(`${name} marked as paid`)
+      await loadPayments()
+    } catch (e) {
+      console.error(e)
+      toast(e.message?.includes('no contribution') ? 'This event has no contribution fee' : 'Could not mark payment', 'err')
+    }
+  }
+
+  const unmarkPaid = async (memberId, name) => {
+    try {
+      await api.unmarkEventPayment(eventIdRef.current, memberId)
+      toast(`${name}'s payment voided`)
+      await loadPayments()
+    } catch {
+      toast('Could not void payment', 'err')
+    }
+  }
 
   // Stop the camera when leaving the page, but never on the stopScan state
   // change — calling stop() twice throws synchronously and would crash React.
@@ -137,6 +175,7 @@ export default function Staff() {
       await api.markAttendance(eventIdRef.current, userId)
       toast(online ? 'Attendance recorded' : 'Attendance recorded — will sync when you’re back online')
       await loadAttendance()
+      if (eventFee > 0) loadPayments()
       // show the member's fee status next to the scan (fee viewers only)
       if (can(user, 'fees.view')) {
         Promise.all([api.getFeePayments(currentSchoolYear()), api.getAnnualFee()])
@@ -285,6 +324,7 @@ export default function Staff() {
         <div className="panel-head">
           <h2 className="panel-title"><Users size={16} /> Attendance log</h2>
           {attendance.length > 0 && <span className="chip chip--ok">{attendance.length} present</span>}
+          {eventFee > 0 && <span className="chip chip--gold">{payments.length} paid · ₱{fmtPeso(eventFee)}</span>}
           <button className="btn btn--tiny" onClick={exportCsv} disabled={attendance.length === 0}>
             <Download size={13} /> Export CSV
           </button>
@@ -315,6 +355,31 @@ export default function Staff() {
                   </div>
                 </div>
                 <span className="badge badge--ok">present</span>
+                {eventFee > 0 &&
+                  (payments.some((p) => p.member_id === a.user_id) ? (
+                    <>
+                      <span className="chip chip--ok">paid</span>
+                      {canManagePayments && (
+                        <button
+                          className="icon-btn"
+                          title="Void this payment"
+                          onClick={() => unmarkPaid(a.user_id, a.profiles?.full_name || 'member')}
+                        >
+                          <HandCoins size={15} />
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    canManagePayments && (
+                      <button
+                        className="icon-btn"
+                        title={`Mark paid — ₱${fmtPeso(eventFee)}`}
+                        onClick={() => markPaid(a.user_id, a.profiles?.full_name || 'member')}
+                      >
+                        <HandCoins size={15} />
+                      </button>
+                    )
+                  ))}
                 <button
                   className="icon-btn icon-btn--danger"
                   title="Remove from attendance"

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CalendarDays, MapPin, Clock, Plus, Check, X, Users } from 'lucide-react'
+import { CalendarDays, MapPin, Clock, Plus, Check, X, Users, HandCoins } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
 import { fmtDateTime, monthDay } from '../lib/format'
+import { fmtPeso } from '../lib/fees'
 import EventModal from '../components/EventModal'
 
 export default function Events() {
@@ -90,6 +91,9 @@ await load()
                 <span><Clock size={14} /> {fmtDateTime(e.starts_at)}</span>
                 <span><MapPin size={14} /> {e.location}</span>
                 <span><Users size={14} /> {going} going</span>
+                {Number(e.fee_amount) > 0 && (
+                  <span className="chip chip--gold"><HandCoins size={12} /> ₱{fmtPeso(e.fee_amount)}</span>
+                )}
               </div>
               <p className="event-desc">{e.description}</p>
             </div>
@@ -134,6 +138,7 @@ function CreateEventModal({ onClose, onCreate }) {
     location: '',
     starts_at: '',
     ends_at: '',
+    fee_amount: '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -141,6 +146,11 @@ function CreateEventModal({ onClose, onCreate }) {
   const submit = async () => {
     if (!form.title.trim() || !form.location.trim() || !form.starts_at) {
       setError('Title, location, and start time are required.')
+      return
+    }
+    const fee = Number(form.fee_amount)
+    if (form.fee_amount.trim() && (!Number.isFinite(fee) || fee < 0)) {
+      setError('Enter a valid contribution fee.')
       return
     }
     setSaving(true)
@@ -151,6 +161,7 @@ function CreateEventModal({ onClose, onCreate }) {
         location: form.location.trim(),
         starts_at: new Date(form.starts_at).toISOString(),
         ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : new Date(new Date(form.starts_at).getTime() + 2 * 3600e3).toISOString(),
+        fee_amount: form.fee_amount.trim() ? fee : 0,
       })
     } finally {
       setSaving(false)
@@ -181,6 +192,20 @@ function CreateEventModal({ onClose, onCreate }) {
         <div className="field">
           <label>Ends at <span className="hint">(optional)</span></label>
           <input type="datetime-local" value={form.ends_at} onChange={(e) => setForm({ ...form, ends_at: e.target.value })} />
+        </div>
+        <div className="field">
+          <label>Contribution fee <span className="field-hint">(₱, optional — 0 for free)</span></label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.fee_amount}
+            onChange={(e) => setForm({ ...form, fee_amount: e.target.value })}
+            placeholder="0.00"
+          />
+          <p className="field-note" style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--muted)' }}>
+            If set, the door scanner records each attendee's payment and the event page tracks who has contributed.
+          </p>
         </div>
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>

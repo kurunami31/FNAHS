@@ -366,7 +366,10 @@ export default function Admin() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{e.title}</div>
-                  <div className="ledger-meta">{e.location} · {timeAgo(e.starts_at)}</div>
+                  <div className="ledger-meta">
+                    {e.location} · {timeAgo(e.starts_at)}
+                    {Number(e.fee_amount) > 0 ? ` · fee ₱${fmtPeso(e.fee_amount)}` : ''}
+                  </div>
                 </div>
                 <div className="admin-actions">
                   <button className="icon-btn" title="Edit" onClick={() => setEventModal(e)}>
@@ -1018,6 +1021,7 @@ function EventEditModal({ event, onClose, onSaved }) {
     location: event.location || '',
     starts_at: event.starts_at ? event.starts_at.slice(0, 16) : '',
     ends_at: event.ends_at ? event.ends_at.slice(0, 16) : '',
+    fee_amount: event.fee_amount ? String(event.fee_amount) : '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -1025,6 +1029,11 @@ function EventEditModal({ event, onClose, onSaved }) {
   const submit = async () => {
     if (!form.title.trim() || !form.location.trim() || !form.starts_at) {
       setError('Title, location, and start time are required.')
+      return
+    }
+    const fee = Number(form.fee_amount)
+    if (form.fee_amount.trim() && (!Number.isFinite(fee) || fee < 0)) {
+      setError('Enter a valid contribution fee.')
       return
     }
     setSaving(true)
@@ -1035,6 +1044,7 @@ function EventEditModal({ event, onClose, onSaved }) {
         location: form.location.trim(),
         starts_at: new Date(form.starts_at).toISOString(),
         ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : new Date(new Date(form.starts_at).getTime() + 2 * 3600e3).toISOString(),
+        fee_amount: form.fee_amount.trim() ? fee : 0,
       })
       onSaved()
     } catch (e) {
@@ -1069,6 +1079,17 @@ function EventEditModal({ event, onClose, onSaved }) {
         <div className="field">
           <label>Ends at <span className="hint">(optional)</span></label>
           <input type="datetime-local" value={form.ends_at} onChange={(e) => setForm({ ...form, ends_at: e.target.value })} />
+        </div>
+        <div className="field">
+          <label>Contribution fee <span className="field-hint">(₱, 0 for free)</span></label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.fee_amount}
+            onChange={(e) => setForm({ ...form, fee_amount: e.target.value })}
+            placeholder="0.00"
+          />
         </div>
         <div className="modal-actions">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>

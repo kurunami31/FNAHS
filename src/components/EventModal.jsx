@@ -1,30 +1,43 @@
 import { useEffect, useState } from 'react'
-import { X, Clock, MapPin, Users, QrCode, Check, BarChart3, Plus } from 'lucide-react'
+import { X, Clock, MapPin, Users, QrCode, Check, BarChart3, Plus, HandCoins } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { canAny } from '../rbac'
 import { api } from '../lib/api'
 import { initials, monthDay, fmtDateTime } from '../lib/format'
+import { fmtPeso } from '../lib/fees'
 
 export default function EventModal({ event, onClose, onChanged }) {
   const { user, toast } = useApp()
   const [scanned, setScanned] = useState(null)
+  const [paid, setPaid] = useState(0)
+  const [myPaid, setMyPaid] = useState(false)
   const [busy, setBusy] = useState(false)
   const [polls, setPolls] = useState(null)
   const [pollForm, setPollForm] = useState({ question: '', options: ['', ''] })
 
   const isStaff = canAny(user, ['attendance.scan', 'events.manage'])
   const canPoll = canAny(user, ['polls.manage', 'events.manage'])
+  const fee = Number(event.fee_amount) || 0
 
   useEffect(() => {
     api
       .getAttendance(event.id)
       .then((rows) => setScanned(rows.length))
       .catch(() => {})
+    if (fee > 0) {
+      api
+        .getEventPayments(event.id)
+        .then((rows) => {
+          setPaid(rows.length)
+          setMyPaid(rows.some((r) => r.member_id === user?.id))
+        })
+        .catch(() => {})
+    }
     api
       .getPolls(event.id)
       .then(setPolls)
       .catch(() => setPolls([]))
-  }, [event.id])
+  }, [event.id, user?.id, fee])
 
   const castVote = async (pollId, optionId) => {
     try {
@@ -101,6 +114,19 @@ export default function EventModal({ event, onClose, onChanged }) {
                 <span className="chip chip--ok"><QrCode size={12} /> {scanned} scanned</span>
               )}
               <span className="chip">{new Date(event.starts_at) < Date.now() ? 'ongoing / past' : 'upcoming'}</span>
+            </div>
+            <div className="evm-tags" style={{ marginTop: 6 }}>
+              {fee > 0 && (
+                <>
+                  <span className="chip chip--gold"><HandCoins size={12} /> Fee ₱{fmtPeso(fee)}</span>
+                  {myPaid ? (
+                    <span className="chip chip--ok"><Check size={12} /> You've paid</span>
+                  ) : (
+                    <span className="chip">Not yet paid</span>
+                  )}
+                  {isStaff && <span className="chip">{paid} paid</span>}
+                </>
+              )}
             </div>
           </div>
           <button className="icon-btn" onClick={onClose} aria-label="Close event">
