@@ -1846,6 +1846,8 @@ html[data-theme='dark'] .id-card {
 }
 .privacy-body ul { margin: 0; padding-left: 18px; }
 .privacy-body li { color: var(--ink-soft); font-size: 0.9rem; line-height: 1.7; margin-bottom: 5px; }
+.privacy-modal { max-height: 84vh; overflow: auto; }
+.privacy-modal .privacy-body { overflow: visible; }
 .privacy-agree {
   display: flex;
   gap: 12px;

@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { ShieldCheck, ArrowRight, Lock, Database, Eye } from 'lucide-react'
+import { ShieldCheck, ArrowRight } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
+import PrivacyNoticeContent from './PrivacyNoticeContent'
 
 export default function PrivacyNotice() {
   const { orgFull, toast, refreshUser, logout } = useApp()
@@ -35,32 +36,7 @@ export default function PrivacyNotice() {
           This notice follows the spirit of the Philippine Data Privacy Act of 2012 (R.A. 10173).
         </p>
 
-        <div className="privacy-body">
-          <section>
-            <h2><Database size={15} /> What we collect</h2>
-            <ul>
-              <li>Your account details: name, email, program, year level, and ID photo.</li>
-              <li>Content you create: posts, comments, likes, event RSVPs, and attendance records.</li>
-              <li>Conversations with Florence, our AI assistant, which are kept on your own account history.</li>
-            </ul>
-          </section>
-          <section>
-            <h2><Eye size={15} /> How we use it</h2>
-            <ul>
-              <li>To run community features — the feed, events, directory, ID cards, and attendance.</li>
-              <li>For organization officers to manage events, verify attendance, and moderate content.</li>
-              <li>To answer your questions through Florence and improve the platform experience.</li>
-            </ul>
-          </section>
-          <section>
-            <h2><Lock size={15} /> Your rights</h2>
-            <ul>
-              <li>Your information is visible only to members of the {orgFull} community — it is never sold.</li>
-              <li>Role-based access control limits who can view or change sensitive records.</li>
-              <li>You may update your details anytime, or ask the organization moderators to delete your account and records.</li>
-            </ul>
-          </section>
-        </div>
+        <PrivacyNoticeContent />
 
         <label className="privacy-agree">
           <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} disabled={saving} />

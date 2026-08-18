@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, UserPlus, Info } from 'lucide-react'
+import { Eye, EyeOff, UserPlus, Info, ShieldCheck, X } from 'lucide-react'
 import Ecg from '../components/Ecg'
+import PrivacyNoticeContent from '../components/PrivacyNoticeContent'
 import { useApp } from '../context/AppContext'
 
 export default function Signup() {
@@ -11,6 +12,8 @@ export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
+  const [agree, setAgree] = useState(false)
+  const [noticeOpen, setNoticeOpen] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
@@ -18,6 +21,10 @@ export default function Signup() {
   const submit = async (e) => {
     e.preventDefault()
     setError('')
+    if (!agree) {
+      setError('Please read and agree to the Data Privacy Notice to create an account.')
+      return
+    }
     if (password.length < 6) {
       setError('Password must be at least 6 characters.')
       return
@@ -81,6 +88,21 @@ export default function Signup() {
               </button>
             </div>
           </div>
+          <label className="privacy-agree" style={{ marginBottom: 14 }}>
+            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+            <span>
+              I have read the{' '}
+              <button
+                type="button"
+                className="privacy-link"
+                style={{ color: 'var(--accent)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}
+                onClick={() => setNoticeOpen(true)}
+              >
+                Data Privacy Notice
+              </button>{' '}
+              and consent to the processing of my information as described.
+            </span>
+          </label>
           <button className="btn btn--primary btn--block btn--lg" disabled={busy}>
             <UserPlus size={17} /> {busy ? 'Creating account…' : 'Create account'}
           </button>
@@ -91,6 +113,24 @@ export default function Signup() {
           {isDemo ? 'Staff demo: staff@fnahs.edu.ph' : 'Reserved for the students of the Faculty of Nursing and Allied Health Sciences.'}
         </p>
       </div>
+
+      {noticeOpen && (
+        <div className="modal-backdrop" onClick={() => setNoticeOpen(false)}>
+          <div className="modal privacy-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Data Privacy Notice">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <ShieldCheck size={20} style={{ color: 'var(--accent)' }} />
+              <h2 style={{ margin: 0 }}>DATA PRIVACY NOTICE</h2>
+              <button className="icon-btn" onClick={() => setNoticeOpen(false)} aria-label="Close notice" style={{ marginLeft: 'auto' }}>
+                <X size={18} />
+              </button>
+            </div>
+            <PrivacyNoticeContent />
+            <div className="modal-actions">
+              <button className="btn btn--primary" onClick={() => setNoticeOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
