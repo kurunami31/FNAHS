@@ -356,7 +356,7 @@ export default function Staff() {
                 onChange={(e) => setAttQ(e.target.value)}
               />
             </div>
-            <div className="ledger">
+            <div className="ledger ledger-scroll">
               {attendance
                 .filter((a) => {
                   const n = attQ.trim().toLowerCase()

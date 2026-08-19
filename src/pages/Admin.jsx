@@ -915,7 +915,7 @@ const [feeFilter, setFeeFilter] = useState('all')
           {auditLogs.length === 0 ? (
             <p className="panel-muted">No audit entries yet.</p>
           ) : (
-            <div className="ledger">
+            <div className="ledger ledger-scroll">
               {auditLogs.map((l) => (
                 <div className="ledger-row" key={l.id}>
                   <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
