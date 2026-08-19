@@ -1235,7 +1235,7 @@ export const api = {
   getEventPayments: offlineRead('getEventPayments', async (eventId) => {
         let q = supabase
           .from('event_payments')
-          .select('*, profiles!member_id(full_name, program, year_level, email)')
+          .select('*, profiles!member_id(full_name, id_no, program, year_level, section, email)')
           .order('paid_at', { ascending: false })
         if (eventId) q = q.eq('event_id', eventId)
         const { data, error } = await q
@@ -1249,7 +1249,7 @@ export const api = {
             return {
               ...p,
               profiles: pr
-                ? { full_name: pr.full_name, program: pr.program, year_level: pr.year_level, email: pr.email }
+                ? { full_name: pr.full_name, id_no: pr.id_no, program: pr.program, year_level: pr.year_level, section: pr.section, email: pr.email }
                 : null,
             }
           })

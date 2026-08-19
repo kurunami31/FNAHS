@@ -108,10 +108,10 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
     'FNAHS PULSO — Attendance Log',
     `${event?.title || 'Event'} · ${event?.starts_at ? pht(event.starts_at) : ''}${event?.location ? ` · ${event.location}` : ''} · ${sorted.length} member(s) present${hasFee ? ` · contribution fee ₱${fee.toLocaleString('en-PH')}` : ''}`,
   )
-  const headers = ['#', 'Name', 'ID No', 'Program', 'Year Level', 'Email', 'Scanned At (PHT)', 'Status']
+  const headers = ['#', 'Name', 'ID No', 'Program', 'Year Level', 'Section', 'Email', 'Scanned At (PHT)', 'Status']
   if (hasFee) headers.push('Contribution (₱)', 'Fee Status')
   styledHeader(ws.getRow(4), headers)
-  const widths = [5, 28, 12, 16, 12, 26, 20, 10]
+  const widths = [5, 28, 12, 16, 12, 10, 26, 20, 10]
   if (hasFee) widths.push(16, 12)
   styledBody(
     ws,
@@ -124,6 +124,7 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
         p.id_no || '',
         p.program || '',
         p.year_level ? `Year ${p.year_level}` : '',
+        p.section || '',
         p.email || '',
         pht(a.scanned_at),
         'Present',
@@ -152,7 +153,7 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
         ? `${unpaid} of ${sorted.length} present member(s) have not paid the contribution yet.`
         : 'All present members have paid the contribution.'
     cws.getCell('A3').font = SUB_FONT
-    styledHeader(cws.getRow(5), ['#', 'Name', 'ID No', 'Amount (₱)', 'Paid At (PHT)'])
+    styledHeader(cws.getRow(5), ['#', 'Name', 'ID No', 'Section', 'Amount (₱)', 'Paid At (PHT)'])
     styledBody(
       cws,
       6,
@@ -163,10 +164,11 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
           i + 1,
           p.profiles?.full_name || p.member_id.slice(0, 10),
           p.profiles?.id_no || '',
+          p.profiles?.section || '',
           Number(p.amount || 0).toLocaleString('en-PH'),
           pht(p.paid_at),
         ]),
-      [5, 28, 12, 12, 20],
+      [5, 28, 12, 10, 12, 20],
     )
   }
 
@@ -226,7 +228,7 @@ export async function feeReportWorkbook({ members, feePayments, annualFee, schoo
   // ---- Details sheet ----
   const dws = wb.addWorksheet('Details', { views: [{ showGridLines: false }] })
   brandHeader(dws, 'Member Fee Details', `School Year ${schoolYear} · FULL = ₱${annualFee.toLocaleString('en-PH')} · HALF = ₱${(annualFee / 2).toLocaleString('en-PH')}`)
-  styledHeader(dws.getRow(4), ['#', 'Name', 'ID No', 'Program', 'Year Level', 'Email', 'Payments', 'Paid (₱)', 'Balance (₱)', 'Status'])
+  styledHeader(dws.getRow(4), ['#', 'Name', 'ID No', 'Program', 'Year Level', 'Section', 'Email', 'Payments', 'Paid (₱)', 'Balance (₱)', 'Status'])
   styledBody(
     dws,
     5,
@@ -239,19 +241,20 @@ export async function feeReportWorkbook({ members, feePayments, annualFee, schoo
         r.member.id_no || '',
         r.member.program || '',
         r.member.year_level || '',
+        r.member.section || '',
         r.member.email || '',
         r.payments.length,
         r.paid.toLocaleString('en-PH'),
         r.balance.toLocaleString('en-PH'),
         r.status,
       ]),
-    [5, 28, 12, 16, 12, 26, 9, 12, 12, 10],
+    [5, 28, 12, 16, 12, 10, 26, 9, 12, 12, 10],
   )
 
   // ---- Payments sheet ----
   const pws = wb.addWorksheet('Payments', { views: [{ showGridLines: false }] })
   brandHeader(pws, 'Fee Payments', `School Year ${schoolYear} · ${feePayments.length} payment(s) recorded`)
-  styledHeader(pws.getRow(4), ['#', 'Name', 'ID No', 'Type', 'Amount (₱)', 'Receipt / OR No', 'Paid At (PHT)', 'Recorded By'])
+  styledHeader(pws.getRow(4), ['#', 'Name', 'ID No', 'Section', 'Type', 'Amount (₱)', 'Receipt / OR No', 'Paid At (PHT)', 'Recorded By'])
   styledBody(
     pws,
     5,
@@ -264,6 +267,7 @@ export async function feeReportWorkbook({ members, feePayments, annualFee, schoo
           i + 1,
           m?.full_name || '',
           m?.id_no || '',
+          m?.section || '',
           p.payment_type === 'full' ? 'FULL' : 'HALF',
           Number(p.amount || 0).toLocaleString('en-PH'),
           p.receipt || '',
@@ -271,7 +275,7 @@ export async function feeReportWorkbook({ members, feePayments, annualFee, schoo
           p.recorded_by || '',
         ]
       }),
-    [5, 28, 12, 10, 12, 18, 20, 24],
+    [5, 28, 12, 10, 10, 12, 18, 20, 24],
   )
 
   const stamp = todayStamp()
