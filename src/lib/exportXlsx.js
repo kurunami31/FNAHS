@@ -14,6 +14,12 @@ const TITLE_FONT = { name: 'Calibri', size: 16, bold: true, color: { argb: NAVY 
 const SUB_FONT = { name: 'Calibri', size: 9, color: { argb: GREY } }
 const HEAD_FONT = { name: 'Calibri', size: 10, bold: true, color: { argb: WHITE } }
 
+// Numeric cell formats — values stay real numbers (sortable, summable,
+// no "number stored as text" warnings) while the display keeps the
+// peso sign / percent formatting.
+const PESO = '₱#,##0'
+const PCT = '0%'
+
 async function excel() {
   return import('exceljs')
 }
@@ -29,7 +35,7 @@ function styledHeader(row, labels) {
   })
 }
 
-function styledBody(sheet, startRow, rows, widths) {
+function styledBody(sheet, startRow, rows, widths, formats) {
   const zebra = (i) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: i % 2 === 1 ? CREAM : WHITE } })
   rows.forEach((r, i) => {
     const row = sheet.getRow(startRow + i)
@@ -40,6 +46,7 @@ function styledBody(sheet, startRow, rows, widths) {
       c.font = FONT
       c.fill = zebra(i)
       c.border = { bottom: { style: 'hair', color: { argb: 'D8D4C0' } } }
+      if (formats?.[j]) c.numFmt = formats[j]
     })
   })
   widths.forEach((w, j) => {
@@ -131,11 +138,12 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
       ]
       if (hasFee) {
         const paid = paidBy.has(a.user_id)
-        row.push(paid ? fee.toLocaleString('en-PH') : 0, paid ? 'PAID' : 'UNPAID')
+        row.push(paid ? fee : 0, paid ? 'PAID' : 'UNPAID')
       }
       return row
     }),
     widths,
+    hasFee ? [null, null, null, null, null, null, null, null, PESO] : null,
   )
 
   if (hasFee) {
@@ -165,10 +173,11 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
           p.profiles?.full_name || p.member_id.slice(0, 10),
           p.profiles?.id_no || '',
           p.profiles?.section || '',
-          Number(p.amount || 0).toLocaleString('en-PH'),
+          Number(p.amount || 0),
           pht(p.paid_at),
         ]),
       [5, 28, 12, 10, 12, 20],
+      [null, null, null, null, PESO],
     )
   }
 
@@ -211,17 +220,20 @@ export async function feeReportWorkbook({ members, feePayments, annualFee, schoo
     ws,
     5,
     [
-      ['Annual membership fee', `₱${annualFee.toLocaleString('en-PH')}`],
+      ['Annual membership fee', annualFee],
       ['Members (excl. admins)', totals.members],
       ['Fully paid', totals.paid],
       ['Partial', totals.partial],
       ['Unpaid', totals.unpaid],
-      ['Amount collected', `₱${totals.collected.toLocaleString('en-PH')}`],
-      ['Expected if all paid', `₱${totals.expected.toLocaleString('en-PH')}`],
-      ['Collection rate', `${totals.expected ? Math.round((totals.collected / totals.expected) * 100) : 0}%`],
+      ['Amount collected', totals.collected],
+      ['Expected if all paid', totals.expected],
+      ['Collection rate', totals.expected ? totals.collected / totals.expected : 0],
     ],
     [26, 20],
   )
+  // Per-metric value formats: pesos for money rows, percent for the rate.
+  const summaryFormats = { 5: PESO, 10: PESO, 11: PESO, 12: PCT }
+  for (const rowNum of [5, 10, 11, 12]) ws.getCell(`B${rowNum}`).numFmt = summaryFormats[rowNum]
   const collectedCell = ws.getCell('B10')
   collectedCell.font = { name: 'Calibri', size: 12, bold: true, color: { argb: GOLD } }
 
@@ -244,11 +256,12 @@ export async function feeReportWorkbook({ members, feePayments, annualFee, schoo
         r.member.section || '',
         r.member.email || '',
         r.payments.length,
-        r.paid.toLocaleString('en-PH'),
-        r.balance.toLocaleString('en-PH'),
+        r.paid,
+        r.balance,
         r.status,
       ]),
     [5, 28, 12, 16, 12, 10, 26, 9, 12, 12, 10],
+    [null, null, null, null, null, null, null, null, PESO, PESO],
   )
 
   // ---- Payments sheet ----
@@ -269,13 +282,14 @@ export async function feeReportWorkbook({ members, feePayments, annualFee, schoo
           m?.id_no || '',
           m?.section || '',
           p.payment_type === 'full' ? 'FULL' : 'HALF',
-          Number(p.amount || 0).toLocaleString('en-PH'),
+          Number(p.amount || 0),
           p.receipt || '',
           pht(p.paid_at),
           p.recorded_by || '',
         ]
       }),
     [5, 28, 12, 10, 10, 12, 18, 20, 24],
+    [null, null, null, null, null, PESO],
   )
 
   const stamp = todayStamp()
