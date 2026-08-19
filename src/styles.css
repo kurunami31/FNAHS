@@ -2480,6 +2480,7 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 .id-preview { width: min(430px, 100%); height: auto; border-radius: var(--r-lg); box-shadow: var(--sh-lg); display: block; margin: 0 auto; background: #fff; }
 .id-card-loading { width: min(430px, 100%); aspect-ratio: 680 / 430; border-radius: var(--r-lg); border: 1.5px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: var(--f-ocr); font-size: 0.8rem; letter-spacing: 0.1em; text-align: center; margin: 0 auto; background: var(--paper); }
 .id-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px; padding: 4px; }
+.id-grid-scroll { max-height: min(65vh, 600px); overflow-y: auto; align-content: start; }
 .id-card-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
 .id-card-cell .id-preview { width: 100%; height: auto; border-radius: var(--r-lg); box-shadow: var(--sh-md); background: #fff; }
 .id-card-cell .id-card-loading { width: 100%; }

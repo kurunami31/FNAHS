@@ -418,7 +418,7 @@ const [feeFilter, setFeeFilter] = useState('all')
               Digital IDs of all registered members — click Save PNG to export each card.
             </p>
           </div>
-          <div className="id-grid">
+          <div className="id-grid id-grid-scroll">
             {members.filter((m) => m.role !== 'superadmin').map((m) => (
               <MemberIdCard key={m.id} member={m} />
             ))}
