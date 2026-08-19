@@ -361,7 +361,7 @@ const [feeFilter, setFeeFilter] = useState('all')
               <Plus size={15} /> Add member
             </button>
           </div>
-          <div className="ledger">
+          <div className="ledger ledger-scroll">
             {visibleMembers.map((m) => (
               <div className="ledger-row mem-row" key={m.id}>
                 <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>
@@ -517,10 +517,13 @@ const [feeFilter, setFeeFilter] = useState('all')
           </p>
 
           <h3 style={{ margin: '18px 0 4px', fontSize: '1.02rem' }}>Event contributions</h3>
-<div style={{ marginTop: 16, fontSize: '0.85rem' }}>
-            <div className="dir-search">
-              <Search size={17} /> <input placeholder="Search names, IDs, or emails" value={searchQ} onChange={(e) => setSearchQ(e.target.value)} style={{ marginLeft: 8 }}/>
-</div>
+          <div className="dir-search" style={{ marginTop: 16 }}>
+            <Search size={17} />
+            <input
+              placeholder="Search names, IDs, or emails"
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+            />
           </div>
           <div className="admin-toolbar">
             <div className="field" style={{ marginBottom: 0, minWidth: 240, flex: 1 }}>
@@ -543,6 +546,14 @@ const [feeFilter, setFeeFilter] = useState('all')
             const collected = attPayments.reduce((t, p) => t + Number(p.amount || 0), 0)
             const unpaid = attRows.length - paidCount
             const paidBy = new Set(attPayments.map((p) => p.member_id))
+            const q = searchQ.trim().toLowerCase()
+            const shownAtt = q
+              ? attRows.filter((a) =>
+                  [a.profiles?.full_name, a.profiles?.id_no, a.profiles?.email, a.profiles?.program].some((v) =>
+                    v ? String(v).toLowerCase().includes(q) : false
+                  )
+                )
+              : attRows
             return (
               <>
                 <div className="tally-strip">
@@ -558,9 +569,11 @@ const [feeFilter, setFeeFilter] = useState('all')
                 </div>
                 {attRows.length === 0 ? (
                   <p className="panel-muted">No scans recorded for this event yet.</p>
+                ) : shownAtt.length === 0 ? (
+                  <p className="panel-muted">No members match “{searchQ}” for this event.</p>
                 ) : (
                   <div className="ledger">
-                    {attRows.map((a) => (
+                    {shownAtt.map((a) => (
                       <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
                         <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
                           {(a.profiles?.full_name || '?')
@@ -594,7 +607,13 @@ const [feeFilter, setFeeFilter] = useState('all')
           <h3 style={{ margin: '22px 0 4px', fontSize: '1.02rem' }}>Membership fees · {feeYear}</h3>
           {(() => {
             const roster = members.filter((m) => m.role !== 'superadmin')
-            const states = roster.map((m) => feeSummary(feePayments.filter((p) => p.member_id === m.id), annualFee))
+            const q = searchQ.trim().toLowerCase()
+            const shownRoster = q
+              ? roster.filter((m) =>
+                  [m.full_name, m.email, m.program, m.id_no].some((v) => v && String(v).toLowerCase().includes(q))
+                )
+              : roster
+            const states = shownRoster.map((m) => feeSummary(feePayments.filter((p) => p.member_id === m.id), annualFee))
             const paid = states.filter((s) => s.status === 'paid').length
             const partial = states.filter((s) => s.status === 'partial').length
             const unpaid = states.filter((s) => s.status === 'unpaid').length
@@ -618,10 +637,13 @@ const [feeFilter, setFeeFilter] = useState('all')
                     <b>₱{fmtPeso(collected)}</b> collected of ₱{fmtPeso(annualFee * roster.length)} potential
                   </span>
                 </div>
-                <div className="ledger">
-                  {roster.map((m) => {
-                    const s = feeSummary(feePayments.filter((p) => p.member_id === m.id), annualFee)
-                    return (
+                {shownRoster.length === 0 ? (
+                  <p className="panel-muted">No members match “{searchQ}”.</p>
+                ) : (
+                  <div className="ledger">
+                    {shownRoster.map((m) => {
+                      const s = feeSummary(feePayments.filter((p) => p.member_id === m.id), annualFee)
+                      return (
                       <div className="ledger-row" key={m.id}>
                         <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
                           {m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}
@@ -644,7 +666,8 @@ const [feeFilter, setFeeFilter] = useState('all')
                       </div>
                     )
                   })}
-                </div>
+                  </div>
+                )}
               </>
             )
           })()}
