@@ -217,6 +217,20 @@ export function clearSessionCache() {
 
 /* ---------------- api wrappers ---------------- */
 
+// No Supabase request may hang the UI forever on a flaky connection: if a
+// call does not settle in time it rejects with a "timed out" error, which
+// isOfflineError() treats as an offline condition (fall through to the demo
+// twin / write queue) instead of leaving spinners stuck.
+function withTimeout(p, method, ms = 20000) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${method} timed out`)), ms)
+    p.then(
+      (v) => { clearTimeout(t); resolve(v) },
+      (e) => { clearTimeout(t); reject(e) }
+    )
+  })
+}
+
 /**
  * Read path: Supabase first (mirroring the result into the local demo store
  * so offline reads serve real data), then the demo twin when offline.
@@ -226,7 +240,7 @@ export function offlineRead(method, supImpl, demoImpl, mirror) {
   if (!SUPABASE_ENABLED || !supabase) return demoImpl
   return async (...args) => {
     try {
-      const data = await supImpl(...args)
+      const data = await withTimeout(supImpl(...args), method)
       setOnline(true)
       if (mirror) {
         try {
@@ -255,7 +269,7 @@ export function offlineWrite(method, supImpl, demoImpl, opts = {}) {
   registerSync(method, supImpl)
   return async (...args) => {
     try {
-      const r = await supImpl(...args)
+      const r = await withTimeout(supImpl(...args), method)
       setOnline(true)
       return r
     } catch (e) {

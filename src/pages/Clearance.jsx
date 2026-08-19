@@ -176,6 +176,7 @@ export default function Clearance() {
     }
     if (!activeForm) return
     setAdding(true)
+    let ok = false
     try {
       await api.addClearanceRow(activeForm.id, {
         dates: rowForm.dates.trim(),
@@ -184,12 +185,13 @@ export default function Clearance() {
       })
       toast('Duty row added')
       setRowForm({ dates: '', concept: '', hours: '' })
-      await loadForms(student.id)
+      ok = true
     } catch (err) {
       toast(err?.message || 'Could not add the row', 'err')
     } finally {
       setAdding(false)
     }
+    if (ok && student) loadForms(student.id)
   }
 
   const clearRow = async (row) => {
@@ -344,15 +346,15 @@ export default function Clearance() {
             </div>
           ) : (
             <>
-              <div className="form-ok" style={{ marginTop: 0, marginBottom: 14 }}>
-                <b>{activeForm.placement}</b>
-                <span style={{ float: 'right' }}>
+              <div className="clearance-summary">
+                <b className="clearance-summary-placement">{activeForm.placement}</b>
+                <div className="clearance-chips">
                   <span className="chip chip--ok">{summary.cleared} cleared</span>
                   <span className="chip">{summary.pending} pending</span>
                   <span className="chip chip--gold">Merit total {summary.meritTotal}</span>
                   {summary.demeritTotal > 0 && <span className="chip chip--warn">Demerit {summary.demeritTotal}</span>}
                   {summary.daysExtension > 0 && <span className="chip chip--hn">Extension {summary.daysExtension}</span>}
-                </span>
+                </div>
               </div>
 
               {adding && (
