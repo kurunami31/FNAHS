@@ -2,3 +2,6 @@ project_id = "fnahs"
 
 [functions.florence-ai]
 verify_jwt = true
+
+[functions.sync-reports]
+verify_jwt = true
