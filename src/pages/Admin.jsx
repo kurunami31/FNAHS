@@ -572,7 +572,7 @@ const [feeFilter, setFeeFilter] = useState('all')
                 ) : shownAtt.length === 0 ? (
                   <p className="panel-muted">No members match “{searchQ}” for this event.</p>
                 ) : (
-                  <div className="ledger">
+                  <div className="ledger ledger-scroll">
                     {shownAtt.map((a) => (
                       <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
                         <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
@@ -640,7 +640,7 @@ const [feeFilter, setFeeFilter] = useState('all')
                 {shownRoster.length === 0 ? (
                   <p className="panel-muted">No members match “{searchQ}”.</p>
                 ) : (
-                  <div className="ledger">
+                  <div className="ledger ledger-scroll">
                     {shownRoster.map((m) => {
                       const s = feeSummary(feePayments.filter((p) => p.member_id === m.id), annualFee)
                       return (
