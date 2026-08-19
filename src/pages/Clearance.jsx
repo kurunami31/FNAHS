@@ -46,6 +46,7 @@ export default function Clearance() {
   const [placement, setPlacement] = useState('')
   const [creating, setCreating] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [rowForm, setRowForm] = useState({ dates: '', concept: '', hours: '' })
   const [busyRow, setBusyRow] = useState(null)
 
@@ -175,7 +176,7 @@ export default function Clearance() {
       return
     }
     if (!activeForm) return
-    setAdding(true)
+    setSaving(true)
     let ok = false
     try {
       await api.addClearanceRow(activeForm.id, {
@@ -189,7 +190,7 @@ export default function Clearance() {
     } catch (err) {
       toast(err?.message || 'Could not add the row', 'err')
     } finally {
-      setAdding(false)
+      setSaving(false)
     }
     if (ok && student) loadForms(student.id)
   }
@@ -389,10 +390,10 @@ export default function Clearance() {
                     />
                   </div>
                   <div className="clearance-add-row-actions">
-                    <button className="btn btn--primary" disabled={adding}>
-                      {adding ? <Loader2 size={15} className="spin" /> : <Plus size={15} />} Add row
+                    <button className="btn btn--primary" disabled={saving}>
+                      {saving ? <Loader2 size={15} className="spin" /> : <Plus size={15} />} Add row
                     </button>
-                    <button type="button" className="btn btn--ghost" onClick={() => setAdding(false)}>Cancel</button>
+                    <button type="button" className="btn btn--ghost" disabled={saving} onClick={() => setAdding(false)}>Cancel</button>
                   </div>
                 </form>
               )}
