@@ -33,8 +33,8 @@ async function testFacing(id) {
 }
 
 // Returns camera devices with the rear camera first (by label, then by a
-// live hardware check), then unlabeled, then front. Works on desktop (only
-// one webcam -> that one is returned) and on phones (rear camera first).
+// live hardware check), then unlabeled, then front. On desktop there is
+// usually a single webcam, so the list length is 1.
 export async function enumerateCameras() {
   try {
     await withPermission()
@@ -60,20 +60,21 @@ export async function enumerateCameras() {
   }
 }
 
-// Hard deviceId (exact) + soft facingMode hint. The exact deviceId is what
-// actually forces the rear camera on phones that ignore facingMode alone.
-export function cameraId(list, index) {
-  if (!list || list.length === 0) return 'any'
-  return list[index % list.length].id
-}
-
-export function cameraFor(list, index) {
-  if (!list || list.length === 0) return { facingMode: { ideal: 'environment' } }
+// Build the getUserMedia video constraints.
+// - Multiple cameras: force the chosen device by exact id (this is what
+//   actually selects the rear camera on phones that ignore facingMode).
+// - Single camera or none: toggle the lens through facingMode instead, so
+//   Flip still works on devices that report only one videoinput device.
+export function cameraConstraints(list, index, useEnv) {
+  if (!list || list.length <= 1) {
+    return { facingMode: { ideal: useEnv ? 'environment' : 'user' } }
+  }
   const cam = list[index % list.length]
-  return { deviceId: { exact: cam.id }, facingMode: { ideal: 'environment' } }
+  return { deviceId: { exact: cam.id }, facingMode: { ideal: useEnv ? 'environment' : 'user' } }
 }
 
-export function cameraLabel(list, index) {
-  if (!list || list.length === 0) return ''
-  return list[index % list.length].label || ''
+export function cameraLabel(list, index, useEnv) {
+  if (!list || list.length <= 1) return useEnv ? 'Rear lens' : 'Front lens'
+  const cam = list[index % list.length]
+  return cam.label || `Camera ${index + 1} of ${list.length}`
 }

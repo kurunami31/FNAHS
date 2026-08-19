@@ -2613,6 +2613,21 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 }
 .clearance-ctrl { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 .clearance-ctrl .btn--tiny { padding: 4px 7px; min-height: 24px; font-size: 0.72rem; }
+
+/* Scanner controls — keep the Flip button compact so it never overflows
+   the scan panel on narrow screens (btn--block is 100% width). */
+.scan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.scan-actions .btn { flex: 1 1 auto; min-width: 0; white-space: nowrap; }
+.scan-actions .btn--flip {
+  flex: 0 0 auto;
+  padding: 12px 14px;
+  min-height: 44px;
+}
 .clearance-ctrl .btn--on {
   background: var(--brand-grad);
   color: var(--accent-ink);
