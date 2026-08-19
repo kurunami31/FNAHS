@@ -2575,3 +2575,107 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
   .fee-row > div[style*="flex: 1"] { order: 3; flex-basis: 100% !important; }
   .fee-row > div[style*="flex-wrap"] { order: 4; flex-basis: 100% !important; justify-content: flex-start; }
 }
+
+/* ============================================================
+   ROTATIONAL CLEARANCE
+   ============================================================ */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+
+.clearance-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--paper); }
+.clearance-table { width: 100%; border-collapse: collapse; min-width: 860px; font-size: 0.82rem; }
+.clearance-table th {
+  text-align: left;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--accent-glow-soft);
+  font-family: var(--f-ocr);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.clearance-table td { padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+.clearance-table tbody tr:first-child td { border-top: none; }
+.clearance-table .clearance-empty { color: var(--muted); text-align: center; padding: 22px; font-size: 0.85rem; }
+.clearance-row--pending td { background: color-mix(in srgb, var(--warn) 7%, transparent); }
+.clearance-pending-tag {
+  font-family: var(--f-ocr);
+  font-size: 0.5rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--warn);
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.clearance-ctrl { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.clearance-ctrl .btn--tiny { padding: 4px 7px; min-height: 24px; font-size: 0.72rem; }
+.clearance-ctrl .btn--on {
+  background: var(--brand-grad);
+  color: var(--accent-ink);
+  border-color: transparent;
+  box-shadow: var(--sh-glow);
+}
+.clearance-val { font-weight: 700; color: var(--ink); min-width: 18px; display: inline-block; text-align: center; }
+.clearance-add-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 120px auto;
+  gap: 12px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  margin-bottom: 14px;
+}
+.clearance-add-row-actions { display: flex; gap: 8px; }
+@media (max-width: 720px) {
+  .clearance-add-row { grid-template-columns: 1fr; }
+}
+
+/* student-facing form block (My ID) */
+.clearance-form {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--paper);
+  box-shadow: var(--sh-sm);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.clearance-form:last-child { margin-bottom: 0; }
+.clearance-form-head { text-align: center; margin-bottom: 10px; }
+.clearance-form-head h3 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 1.05rem; letter-spacing: 0.03em; }
+.clearance-form-center { font-family: var(--f-ocr); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
+.clearance-form-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 12px; font-size: 0.85rem; }
+.clearance-form-meta b { font-family: var(--f-ocr); font-size: 0.62rem; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
+.clearance-form-tally { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+/* print-only document */
+.print-clearance-area { display: none; }
+@media print {
+  body * { visibility: hidden; }
+  .print-clearance-area,
+  .print-clearance-area * { visibility: visible; }
+  .print-clearance-area {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .clearance-print-doc { padding: 12px 6px; }
+  .clearance-form--print {
+    box-shadow: none;
+    border: 1px solid #000;
+    margin-bottom: 18px;
+    padding: 14px;
+    break-inside: avoid;
+  }
+  .clearance-form--print .clearance-table { min-width: 0; font-size: 0.72rem; }
+  .clearance-form--print .clearance-table th,
+  .clearance-form--print .clearance-table td { border-color: #000; padding: 5px 6px; }
+  .clearance-form--print .clearance-form-tally .chip { border-color: #000; }
+}

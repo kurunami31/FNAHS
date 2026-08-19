@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Stethoscope, CalendarDays, Shield, Megaphone, Vote, ScanLine, FileDown, Users, HandCoins, Wrench, BookOpen, KeyRound, Newspaper } from 'lucide-react'
+import { ArrowRight, Stethoscope, CalendarDays, Shield, Megaphone, Vote, ScanLine, FileDown, Users, HandCoins, Wrench, BookOpen, KeyRound, Newspaper, ClipboardCheck } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
 import { toolsFor } from '../rbac'
@@ -20,6 +20,7 @@ const TOOL_ICONS = {
   'members.edit': Users,
   'fees.view': HandCoins,
   'fees.manage': HandCoins,
+  'clearance.scan': ClipboardCheck,
   'console.access': Wrench,
   'directory.view': BookOpen,
   'settings.superadmin': KeyRound,

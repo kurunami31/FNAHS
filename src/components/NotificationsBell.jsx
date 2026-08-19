@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, CheckCheck, Megaphone, CalendarDays, BarChart3, BadgeCheck, Info } from 'lucide-react'
+import { Bell, BellRing, CheckCheck, Megaphone, CalendarDays, BarChart3, BadgeCheck, Info, ClipboardCheck } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
 import { supabase, SUPABASE_ENABLED } from '../supabase'
@@ -12,6 +12,7 @@ const KIND_ICON = {
   poll: BarChart3,
   attendance: BadgeCheck,
   mention: Info,
+  clearance: ClipboardCheck,
   system: Info,
 }
 
@@ -21,6 +22,7 @@ const KIND_LINK = {
   poll: '/app/feed',
   attendance: '/app/events',
   mention: '/app/feed',
+  clearance: '/app/idcard',
   system: '/app',
 }
 

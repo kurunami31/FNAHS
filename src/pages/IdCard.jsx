@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { Download, ShieldCheck, Loader2, HandCoins } from 'lucide-react'
+import { Download, ShieldCheck, Loader2, HandCoins, ClipboardCheck, Printer } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
-import { monthDay, timeAgo } from '../lib/format'
+import { monthDay, timeAgo, fullDate } from '../lib/format'
 import { drawIdCanvas } from '../lib/idCanvas'
 import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
+import { clearanceSummary, remarkLabel, fmtHours, semesterLabel } from '../lib/clearance'
 
 export default function IdCard() {
   const { user, toast } = useApp()
@@ -19,6 +20,7 @@ export default function IdCard() {
   const [history, setHistory] = useState([])
   const [fee, setFee] = useState(null)
   const [annualFee, setAnnualFee] = useState(200)
+  const [clearance, setClearance] = useState([])
 
   useEffect(() => {
     api
@@ -30,6 +32,10 @@ export default function IdCard() {
         setFee(payments.filter((p) => p.member_id === user?.id))
         setAnnualFee(annual)
       })
+      .catch(() => {})
+    api
+      .getMyClearance()
+      .then(setClearance)
       .catch(() => {})
   }, [user?.id])
 
@@ -250,6 +256,104 @@ export default function IdCard() {
           </div>
         )}
       </section>
+
+      <section className="sec" aria-labelledby="h-clearance" style={{ maxWidth: 860, margin: '34px auto 0', width: '100%' }}>
+        <div className="sec-head">
+          <h2 id="h-clearance"><ClipboardCheck size={18} /> Rotational Clearance</h2>
+          <span className="sec-kicker">
+            {clearance.length} form{clearance.length === 1 ? '' : 's'}
+            {clearance.length > 0 && (
+              <button className="btn btn--tiny" style={{ marginLeft: 10 }} onClick={() => window.print()}>
+                <Printer size={13} /> Print
+              </button>
+            )}
+          </span>
+        </div>
+        {clearance.length === 0 ? (
+          <p className="panel-muted">
+            Your Clinical Instructors record your rotational clearance here once they start signing your duties. Nothing on file yet.
+          </p>
+        ) : (
+          <div className="clearance-forms">
+            {clearance.map((form) => (
+              <StudentClearanceForm key={form.id} form={form} student={user} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {clearance.length > 0 && (
+        <div className="print-clearance-area">
+          <div className="clearance-print-doc">
+            {clearance.map((form) => (
+              <StudentClearanceForm key={form.id} form={form} student={user} print />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+function StudentClearanceForm({ form, student, print }) {
+  const summary = clearanceSummary(form.rows)
+  return (
+    <article className={`clearance-form${print ? ' clearance-form--print' : ''}`}>
+      <div className="clearance-form-head">
+        <h3>INDIVIDUAL CLINICAL ROTATIONAL CLEARANCE</h3>
+        <span className="clearance-form-center">(CENTER)</span>
+      </div>
+      <div className="clearance-form-meta">
+        <span><b>NAME:</b> {student?.full_name || form.member_id?.slice(0, 8)}</span>
+        <span><b>PLACEMENT:</b> {form.placement}</span>
+        <span><b>SCHOOL YEAR / SEMESTER:</b> {form.school_year} · {semesterLabel(form.semester)}</span>
+      </div>
+      <div className="clearance-scroll">
+        <table className="clearance-table">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>Inclusive Dates of Assignment</th>
+              <th>Concept</th>
+              <th>Number of Hours</th>
+              <th>Date of Clearance</th>
+              <th>Clinical Instructor's Signature</th>
+              <th>Merit</th>
+              <th>Demerit</th>
+              <th>Remarks</th>
+              <th>Days Extension</th>
+            </tr>
+          </thead>
+          <tbody>
+            {form.rows.length === 0 && (
+              <tr>
+                <td colSpan={10} className="clearance-empty">No duties recorded on this form yet.</td>
+              </tr>
+            )}
+            {form.rows.map((row, i) => (
+              <tr key={row.id}>
+                <td>{i + 1}</td>
+                <td>{row.dates}</td>
+                <td>{row.concept}</td>
+                <td>{fmtHours(row.hours)}</td>
+                <td>{row.cleared_at ? fullDate(row.cleared_at) : '—'}</td>
+                <td>{row.recorded_by_name || ''}</td>
+                <td>{row.merit ? `+${row.merit}` : ''}</td>
+                <td>{row.demerit || ''}</td>
+                <td>{row.remark ? remarkLabel(row.remark) : ''}</td>
+                <td>{row.days_extension || ''}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="clearance-form-tally">
+        <span className="chip chip--ok">{summary.cleared} cleared</span>
+        <span className="chip">{summary.pending} pending</span>
+        <span className="chip chip--gold">Merit total {summary.meritTotal}</span>
+        {summary.demeritTotal > 0 && <span className="chip chip--warn">Demerit {summary.demeritTotal}</span>}
+        {summary.daysExtension > 0 && <span className="chip chip--hn">Extension {summary.daysExtension}</span>}
+      </div>
+    </article>
   )
 }

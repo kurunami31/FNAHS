@@ -99,6 +99,7 @@ function loadDb() {
         membershipFees: db.membershipFees || {},
         feePayments: db.feePayments || [],
         eventPayments: db.eventPayments || [],
+        clearanceForms: db.clearanceForms || [],
       }
     }
   } catch {
@@ -389,6 +390,125 @@ async function demoRemoveAttendance(eventId, userId) {
   saveDb(db)
 }
 
+/* ---------------- rotational clearance (demo twins) ---------------- */
+
+function demoFindClearanceRow(rowId) {
+  for (const f of db.clearanceForms || []) {
+    const row = (f.rows || []).find((r) => r.id === rowId)
+    if (row) return { form: f, row }
+  }
+  return { form: null, row: null }
+}
+
+async function demoGetClearanceForms(studentId) {
+  return (db.clearanceForms || [])
+    .filter((f) => f.member_id === studentId)
+    .map((f) => ({ ...f, rows: [...(f.rows || [])] }))
+    .sort((a, b) => a.school_year.localeCompare(b.school_year) || a.semester.localeCompare(b.semester))
+}
+
+async function demoCreateClearanceForm(studentId, { school_year, semester, placement }) {
+  const form = {
+    id: uid(),
+    member_id: studentId,
+    school_year,
+    semester,
+    placement: sanitizeText(placement, 200),
+    created_by: demoCurrentUserId() || null,
+    created_at: new Date().toISOString(),
+    rows: [],
+  }
+  db.clearanceForms = [...(db.clearanceForms || []).filter((f) => !(f.member_id === studentId && f.school_year === school_year && f.semester === semester)), form]
+  saveDb(db)
+  return form
+}
+
+async function demoAddClearanceRow(formId, { dates, concept, hours }) {
+  const form = (db.clearanceForms || []).find((f) => f.id === formId)
+  if (!form) throw new Error('Clearance form not found')
+  const row = {
+    id: uid(),
+    form_id: formId,
+    dates: sanitizeText(dates, 200),
+    concept: sanitizeText(concept, 200),
+    hours: Number(hours) || 0,
+    cleared_at: null,
+    remark: null,
+    demerit: null,
+    days_extension: null,
+    merit: 0,
+    recorded_by: null,
+    recorded_by_name: null,
+    created_by: demoCurrentUserId() || null,
+    updated_by: null,
+    updated_by_name: null,
+    created_at: new Date().toISOString(),
+  }
+  form.rows = [...(form.rows || []), row]
+  saveDb(db)
+  demoNotify([
+    {
+      id: uid(),
+      user_id: form.member_id,
+      kind: 'clearance',
+      title: `New rotation row - ${form.placement || 'your rotation'}`,
+      body: `${row.concept} - ${row.dates}`,
+      link: '/app/idcard',
+      read_at: null,
+      created_at: new Date().toISOString(),
+    },
+  ])
+  return row
+}
+
+async function demoClearClearanceRow(rowId) {
+  const me = demoCurrentUserId()
+  const { form, row } = demoFindClearanceRow(rowId)
+  if (!row) throw new Error('Clearance row not found')
+  row.cleared_at = new Date().toISOString()
+  row.recorded_by = me || null
+  row.recorded_by_name = db.profiles[me]?.full_name || null
+  saveDb(db)
+  if (form) {
+    demoNotify([
+      {
+        id: uid(),
+        user_id: form.member_id,
+        kind: 'clearance',
+        title: `Clearance signed - ${form.placement || 'your rotation'}`,
+        body: `${row.concept} - ${row.dates}`,
+        link: '/app/idcard',
+        read_at: null,
+        created_at: new Date().toISOString(),
+      },
+    ])
+  }
+  return row
+}
+
+async function demoUpdateClearanceRow(rowId, patch) {
+  const me = demoCurrentUserId()
+  const { row } = demoFindClearanceRow(rowId)
+  if (!row) throw new Error('Clearance row not found')
+  if (patch.remark !== undefined) row.remark = patch.remark || null
+  if (patch.demerit !== undefined) row.demerit = patch.demerit || null
+  if (patch.days_extension !== undefined) row.days_extension = patch.days_extension || null
+  if (patch.merit !== undefined) row.merit = Math.max(0, Number(patch.merit) || 0)
+  row.updated_by = me || null
+  row.updated_by_name = db.profiles[me]?.full_name || null
+  row.updated_at = new Date().toISOString()
+  saveDb(db)
+  return row
+}
+
+async function demoDeleteClearanceRow(rowId) {
+  for (const f of db.clearanceForms || []) {
+    const before = f.rows?.length || 0
+    f.rows = (f.rows || []).filter((r) => r.id !== rowId)
+    if (f.rows.length !== before) saveDb(db)
+  }
+}
+
 /* ---------------- offline mirrors: supabase data → demo store ----------------
    Every successful Supabase read runs its mirror so the demo twins below can
    serve the user's REAL data while offline. */
@@ -471,6 +591,37 @@ function mirrorFeePayments(rows) {
   for (const r of rows || []) {
     if (r.profiles) mirrorProfileInto(r.profiles)
   }
+  saveDb(db)
+}
+function mirrorClearanceForms(forms) {
+  const mapped = (forms || []).map((f) => ({
+    id: f.id,
+    member_id: f.member_id,
+    school_year: f.school_year,
+    semester: f.semester,
+    placement: f.placement,
+    created_by: f.created_by,
+    created_at: f.created_at,
+    rows: (f.rows || []).map((r) => ({
+      id: r.id,
+      form_id: r.form_id,
+      dates: r.dates,
+      concept: r.concept,
+      hours: Number(r.hours) || 0,
+      cleared_at: r.cleared_at || null,
+      remark: r.remark || null,
+      demerit: r.demerit || null,
+      days_extension: r.days_extension || null,
+      merit: Number(r.merit) || 0,
+      recorded_by: r.recorded_by || null,
+      recorded_by_name: r.recorded_by_name || null,
+      created_by: r.created_by || null,
+      updated_by: r.updated_by || null,
+      updated_by_name: r.updated_by_name || null,
+      created_at: r.created_at,
+    })),
+  }))
+  db.clearanceForms = [...mapped, ...(db.clearanceForms || []).filter((d) => !mapped.some((m) => m.id === d.id))]
   saveDb(db)
 }
 function mirrorAnnouncements(list) {
@@ -1330,6 +1481,93 @@ export const api = {
         const { error } = await supabase.from('attendance').delete().eq('event_id', eventId).eq('user_id', userId)
         if (error) throw error
       }, demoRemoveAttendance),
+
+  /* ---------------- rotational clearance (officers + the student themself) ---------------- */
+  getClearanceForms: offlineRead('getClearanceForms', async (studentId) => {
+        const { data, error } = await supabase.rpc('get_clearance_forms', { p_student_id: studentId })
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
+        return data || []
+      }, async (studentId) => demoGetClearanceForms(studentId), mirrorClearanceForms),
+
+  getMyClearance: offlineRead('getMyClearance', async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return []
+        const { data, error } = await supabase.rpc('get_clearance_forms', { p_student_id: user.id })
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        return data || []
+      }, async () => demoGetClearanceForms(demoCurrentUserId() || DEMO_USER_ID), mirrorClearanceForms),
+
+  createClearanceForm: offlineWrite('createClearanceForm', async (studentId, { school_year, semester, placement }) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { data, error } = await supabase
+          .from('clearance_forms')
+          .insert({ member_id: studentId, school_year, semester, placement: sanitizeText(placement, 200), created_by: user.id })
+          .select('*')
+          .single()
+        if (error) throw error
+        api.logAudit('clearance.form.create', 'clearance_form', data.id, { member_id: studentId, school_year, semester })
+        return { ...data, rows: [] }
+      }, demoCreateClearanceForm, { localId: (f) => f?.id }),
+
+  addClearanceRow: offlineWrite('addClearanceRow', async (formId, { dates, concept, hours }) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { data, error } = await supabase
+          .from('clearance_rows')
+          .insert({ form_id: formId, dates: sanitizeText(dates, 200), concept: sanitizeText(concept, 200), hours: Number(hours) || 0, created_by: user.id })
+          .select('*')
+          .single()
+        if (error) throw error
+        api.logAudit('clearance.row.add', 'clearance_row', data.id, { form_id: formId, concept })
+        return data
+      }, demoAddClearanceRow, { localId: (r) => r?.id }),
+
+  clearClearanceRow: offlineWrite('clearClearanceRow', async (rowId) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { data, error } = await supabase
+          .from('clearance_rows')
+          .update({ cleared_at: new Date().toISOString(), recorded_by: user.id })
+          .eq('id', rowId)
+          .select('*')
+          .single()
+        if (error) throw error
+        api.logAudit('clearance.row.clear', 'clearance_row', rowId, { recorded_by: user.id })
+        return data
+      }, demoClearClearanceRow),
+
+  updateClearanceRow: offlineWrite('updateClearanceRow', async (rowId, patch) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const clean = { updated_by: user.id, updated_at: new Date().toISOString() }
+        if (patch.remark !== undefined) clean.remark = patch.remark || null
+        if (patch.demerit !== undefined) clean.demerit = patch.demerit || null
+        if (patch.days_extension !== undefined) clean.days_extension = patch.days_extension || null
+        if (patch.merit !== undefined) clean.merit = Math.max(0, Number(patch.merit) || 0)
+        const { data, error } = await supabase
+          .from('clearance_rows')
+          .update(clean)
+          .eq('id', rowId)
+          .select('*')
+          .single()
+        if (error) throw error
+        api.logAudit('clearance.row.update', 'clearance_row', rowId, { remark: clean.remark, demerit: clean.demerit, days_extension: clean.days_extension, merit: clean.merit })
+        return data
+      }, demoUpdateClearanceRow),
+
+  deleteClearanceRow: offlineWrite('deleteClearanceRow', async (rowId) => {
+        const { error } = await supabase.from('clearance_rows').delete().eq('id', rowId)
+        if (error) throw error
+        api.logAudit('clearance.row.delete', 'clearance_row', rowId)
+      }, demoDeleteClearanceRow),
 
   /* my attendance history */
   getMyAttendance: offlineRead('getMyAttendance', async () => {

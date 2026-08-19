@@ -6,10 +6,11 @@ import {
   Archive as ArchiveIcon,
   CalendarDays,
   HeartPulse,
-  Users,
+Users,
   CreditCard,
   ShieldCheck,
   Settings2,
+  ClipboardCheck,
   Search,
   Moon,
   Sun,
@@ -44,6 +45,7 @@ const SECTION = [
   ['/app/directory', 'directory'],
   ['/app/idcard', 'my id'],
   ['/app/staff', 'staff tools'],
+  ['/app/clearance', 'rotational clearance'],
   ['/app/admin', 'admin'],
   ['/app', 'home'],
 ]
@@ -67,6 +69,7 @@ export default function Layout() {
   const canScan = can(user, 'attendance.scan')
   const canConsole = can(user, 'console.access')
   const canDirectory = can(user, 'directory.view')
+  const canClearance = can(user, 'clearance.scan')
   const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || ['', 'FNAHS PULSO'])[1]
   const [dbNotice, setDbNotice] = useState(false)
 
@@ -145,6 +148,16 @@ export default function Layout() {
               <ShieldCheck size={21} strokeWidth={2} />
             </NavLink>
           )}
+          {canClearance && (
+            <NavLink
+              to="/app/clearance"
+              className={({ isActive }) => `rail-link${isActive ? ' rail-link--on' : ''}`}
+              aria-label="Rotational clearance"
+              title="Rotational clearance"
+            >
+              <ClipboardCheck size={21} strokeWidth={2} />
+            </NavLink>
+          )}
           {canConsole && (
             <NavLink
               to="/app/admin"
@@ -215,6 +228,12 @@ export default function Layout() {
           <NavLink to="/app/staff" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
             <ShieldCheck size={21} />
             <span>Staff</span>
+          </NavLink>
+        )}
+        {canClearance && (
+          <NavLink to="/app/clearance" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+            <ClipboardCheck size={21} />
+            <span>Clearance</span>
           </NavLink>
         )}
         <button className="tab" onClick={openSheet} aria-label="Account & more" title="Account & more">

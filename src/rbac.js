@@ -48,6 +48,7 @@ export const SCOPE_LABELS = {
   'members.edit': 'Edit member profiles & positions',
   'fees.view': 'See membership fee status',
   'fees.manage': 'Record membership fee payments',
+  'clearance.scan': 'Rotational clearance',
   'console.access': 'Open the admin console',
   'directory.view': 'Browse the member directory',
   'settings.superadmin': 'Registrar: roles, positions, structure',
@@ -56,7 +57,7 @@ export const SCOPE_LABELS = {
 export const ROLE_SCOPES = {
   superadmin: ['*'],
   moderator: ['feed.moderate', 'directory.view', 'attendance.scan', 'fees.view'],
-  faculty: [],
+  faculty: ['clearance.scan'],
   student: [],
 }
 
@@ -116,6 +117,7 @@ export const TOOLS = {
   'members.edit': { label: 'Member records', desc: 'Edit profiles & positions', route: '/app/admin' },
   'fees.view': { label: 'Fee status', desc: 'See membership fee standing', route: '/app/admin' },
   'fees.manage': { label: 'Fee ledger', desc: 'Record membership payments', route: '/app/admin' },
+  'clearance.scan': { label: 'Rotational clearance', desc: 'Sign & review student clearances', route: '/app/clearance' },
   'console.access': { label: 'Admin console', desc: 'Full org management', route: '/app/admin' },
   'directory.view': { label: 'Directory', desc: 'Browse member profiles', route: '/app/directory' },
   'settings.superadmin': { label: 'Registrar', desc: 'Roles, positions, structure', route: '/app/admin' },
