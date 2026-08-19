@@ -186,11 +186,11 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   v_out jsonb;
 begin
-  if not (public.is_clearance_officer() or auth.uid() = p_student_id) then
+  if not coalesce(public.is_clearance_officer() or auth.uid() = p_student_id, false) then
     raise exception 'insufficient privileges';
   end if;
 
-  select coalesce(jsonb_agg(j order by f.school_year, f.semester), '[]'::jsonb)
+  select coalesce(jsonb_agg(j), '[]'::jsonb)
   into v_out
   from (
     select jsonb_build_object(
@@ -205,6 +205,7 @@ begin
     ) j
     from public.clearance_forms f
     where f.member_id = p_student_id
+    order by f.school_year, f.semester
   ) s;
 
   return v_out;
