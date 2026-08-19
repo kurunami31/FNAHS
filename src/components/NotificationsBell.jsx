@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Bell, BellRing, CheckCheck, Megaphone, CalendarDays, BarChart3, BadgeCheck, Info } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
@@ -14,8 +15,18 @@ const KIND_ICON = {
   system: Info,
 }
 
+const KIND_LINK = {
+  announcement: '/app/feed#announcements',
+  event: '/app/events',
+  poll: '/app/feed',
+  attendance: '/app/events',
+  mention: '/app/feed',
+  system: '/app',
+}
+
 export default function NotificationsBell() {
   const { user, toast } = useApp()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [list, setList] = useState([])
   const [unread, setUnread] = useState(0)
@@ -85,6 +96,12 @@ export default function NotificationsBell() {
     }
   }
 
+  const openNotification = async (n) => {
+    markRead(n.id)
+    setOpen(false)
+    navigate(n.link || KIND_LINK[n.kind] || '/app')
+  }
+
   if (!user) return null
 
   const Icon = unread > 0 ? BellRing : Bell
@@ -124,7 +141,7 @@ export default function NotificationsBell() {
                 <button
                   key={n.id}
                   className={`notif-item${n.read_at ? '' : ' notif-item--unread'}`}
-                  onClick={() => markRead(n.id)}
+                  onClick={() => openNotification(n)}
                 >
                   <span className="notif-ic"><NIcon size={15} /></span>
                   <span className="notif-txt">

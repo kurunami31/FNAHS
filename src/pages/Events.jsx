@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { CalendarDays, MapPin, Clock, Plus, Check, X, Users, HandCoins, QrCode } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
@@ -14,6 +15,7 @@ export default function Events() {
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(false)
   const [selected, setSelected] = useState(null)
+  const [params, setParams] = useSearchParams()
 
   const canCreate = can(user, 'events.manage')
 
@@ -34,6 +36,14 @@ export default function Events() {
   useEffect(() => {
     load()
   }, [load])
+
+  // Deep link from a notification (?open=<id>) — open that event's modal.
+  const openId = params.get('open')
+  useEffect(() => {
+    if (!openId || !events.length) return
+    const ev = events.find((e) => e.id === openId)
+    if (ev) setSelected(ev)
+  }, [openId, events])
 
   const onRsvp = async (id, status) => {
     try {
@@ -129,7 +139,20 @@ await load()
       })}
 
       {modal && <CreateEventModal onClose={() => setModal(false)} onCreate={created} />}
-      {selected && <EventModal event={selected} onClose={() => setSelected(null)} onChanged={load} />}
+      {selected && (
+        <EventModal
+          event={selected}
+          onClose={() => {
+            setSelected(null)
+            if (openId) {
+              const next = new URLSearchParams(params)
+              next.delete('open')
+              setParams(next, { replace: true })
+            }
+          }}
+          onChanged={load}
+        />
+      )}
     </div>
   )
 }
