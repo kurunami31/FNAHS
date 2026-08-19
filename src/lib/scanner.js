@@ -63,18 +63,12 @@ export async function enumerateCameras() {
 // Build the getUserMedia video constraints.
 // - Multiple cameras: force the chosen device by exact id (this is what
 //   actually selects the rear camera on phones that ignore facingMode).
-// - Single camera or none: toggle the lens through facingMode instead, so
-//   Flip still works on devices that report only one videoinput device.
+// - Single camera or none: use the facingMode hint so the browser still
+//   picks the rear lens when only one videoinput device is reported.
 export function cameraConstraints(list, index, useEnv) {
   if (!list || list.length <= 1) {
     return { facingMode: { ideal: useEnv ? 'environment' : 'user' } }
   }
   const cam = list[index % list.length]
   return { deviceId: { exact: cam.id }, facingMode: { ideal: useEnv ? 'environment' : 'user' } }
-}
-
-export function cameraLabel(list, index, useEnv) {
-  if (!list || list.length <= 1) return useEnv ? 'Rear lens' : 'Front lens'
-  const cam = list[index % list.length]
-  return cam.label || `Camera ${index + 1} of ${list.length}`
 }

@@ -12,7 +12,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
-import { enumerateCameras, cameraConstraints, cameraLabel } from '../lib/scanner'
+import { enumerateCameras, cameraConstraints } from '../lib/scanner'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
@@ -70,8 +70,6 @@ export default function Clearance() {
   }, [])
 
   const [cams, setCams] = useState(null)
-  const [camIndex, setCamIndex] = useState(0)
-  const [useEnv, setUseEnv] = useState(true)
 
   const loadForms = useCallback(
     async (studentId) => {
@@ -84,18 +82,6 @@ export default function Clearance() {
     [toast]
   )
 
-  const launchScan = async (list, index, env) => {
-    const h5 = new Html5Qrcode('fnahs-clearance-scan-box')
-    await h5.start(
-      'any',
-      { fps: 10, qrbox: { width: 220, height: 220 }, videoConstraints: cameraConstraints(list, index, env) },
-      (decoded) => handleScan(decoded),
-      () => {}
-    )
-    scannerRef.current = h5
-    setScanning(true)
-  }
-
   const startScan = async () => {
     try {
       let list = cams
@@ -103,44 +89,18 @@ export default function Clearance() {
         list = await enumerateCameras()
         setCams(list)
       }
-      await launchScan(list, camIndex, useEnv)
+      const h5 = new Html5Qrcode('fnahs-clearance-scan-box')
+      await h5.start(
+        'any',
+        { fps: 10, qrbox: { width: 220, height: 220 }, videoConstraints: cameraConstraints(list, 0, true) },
+        (decoded) => handleScan(decoded),
+        () => {}
+      )
+      scannerRef.current = h5
+      setScanning(true)
     } catch (e) {
       console.error(e)
       toast('Could not start the camera — check permissions', 'err')
-    }
-  }
-
-  const flipCam = async () => {
-    let list = cams
-    if (!list) {
-      list = await enumerateCameras()
-      setCams(list)
-    }
-    const h5 = scannerRef.current
-    if (h5) {
-      try {
-        await h5.stop()
-        h5.clear()
-      } catch {
-        /* ignore */
-      }
-      scannerRef.current = null
-    }
-    setScanning(false)
-    let nextIndex = camIndex
-    let nextEnv = useEnv
-    if (list.length > 1) {
-      nextIndex = (camIndex + 1) % list.length
-    } else {
-      nextEnv = !useEnv
-    }
-    setCamIndex(nextIndex)
-    setUseEnv(nextEnv)
-    try {
-      await launchScan(list, nextIndex, nextEnv)
-    } catch (e) {
-      console.error(e)
-      toast('Could not switch the camera', 'err')
     }
   }
 
@@ -319,17 +279,7 @@ export default function Clearance() {
               <CameraOff size={16} /> Stop scanner
             </button>
           )}
-          {scanning && (
-            <button className="btn btn--flip" onClick={flipCam} title="Switch camera">
-              <Camera size={16} /> Flip
-            </button>
-          )}
         </div>
-        {scanning && (
-          <div className="panel-muted" style={{ marginTop: 8, fontSize: '0.78rem', textAlign: 'center' }}>
-            Active camera: <b>{cameraLabel(cams, camIndex, useEnv) || 'Rear lens'}</b>
-          </div>
-        )}
         {!online && (
           <div className="form-ok" style={{ marginTop: 12, marginBottom: 0 }}>
             Offline mode — changes are saved to this device and sync when the connection returns.

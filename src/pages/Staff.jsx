@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2, Download, HandCoins, Search } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
-import { enumerateCameras, cameraConstraints, cameraLabel } from '../lib/scanner'
+import { enumerateCameras, cameraConstraints } from '../lib/scanner'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
@@ -124,8 +124,6 @@ export default function Staff() {
   }, [])
 
   const [cams, setCams] = useState(null)
-  const [camIndex, setCamIndex] = useState(0)
-  const [useEnv, setUseEnv] = useState(true)
 
   const startScan = async () => {
     if (!eventId) {
@@ -141,7 +139,7 @@ export default function Staff() {
       const h5 = new Html5Qrcode('fnahs-scan-box')
       await h5.start(
         'any',
-        { fps: 10, qrbox: { width: 220, height: 220 }, videoConstraints: cameraConstraints(list, camIndex, useEnv) },
+        { fps: 10, qrbox: { width: 220, height: 220 }, videoConstraints: cameraConstraints(list, 0, true) },
         (decoded) => handleScan(decoded),
         () => {}
       )
@@ -150,48 +148,6 @@ export default function Staff() {
     } catch (e) {
       console.error(e)
       toast('Could not start the camera — check permissions', 'err')
-    }
-  }
-
-  const flipCam = async () => {
-    let list = cams
-    if (!list) {
-      list = await enumerateCameras()
-      setCams(list)
-    }
-    const h5 = scannerRef.current
-    if (h5) {
-      try {
-        await h5.stop()
-        h5.clear()
-      } catch {
-        /* ignore */
-      }
-      scannerRef.current = null
-    }
-    setScanning(false)
-    let nextIndex = camIndex
-    let nextEnv = useEnv
-    if (list.length > 1) {
-      nextIndex = (camIndex + 1) % list.length
-    } else {
-      nextEnv = !useEnv
-    }
-    setCamIndex(nextIndex)
-    setUseEnv(nextEnv)
-    try {
-      const n = new Html5Qrcode('fnahs-scan-box')
-      await n.start(
-        'any',
-        { fps: 10, qrbox: { width: 220, height: 220 }, videoConstraints: cameraConstraints(list, nextIndex, nextEnv) },
-        (decoded) => handleScan(decoded),
-        () => {}
-      )
-      scannerRef.current = n
-      setScanning(true)
-    } catch (e) {
-      console.error(e)
-      toast('Could not switch the camera', 'err')
     }
   }
 
@@ -348,17 +304,7 @@ export default function Staff() {
               <CameraOff size={16} /> Stop scanner
             </button>
           )}
-          {scanning && (
-            <button className="btn btn--flip" onClick={flipCam} title="Switch camera">
-              <Camera size={16} /> Flip
-            </button>
-          )}
         </div>
-        {scanning && (
-          <div className="panel-muted" style={{ marginTop: 8, fontSize: '0.78rem', textAlign: 'center' }}>
-            Active camera: <b>{cameraLabel(cams, camIndex, useEnv) || 'Rear lens'}</b>
-          </div>
-        )}
         {last && (
           <div className="form-ok" style={{ marginTop: 14, marginBottom: 0 }}>
             Last scan: <b>{last.id.slice(0, 8)}</b> · {timeAgo(last.at)}
