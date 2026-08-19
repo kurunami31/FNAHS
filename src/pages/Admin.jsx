@@ -714,14 +714,14 @@ const [feeFilter, setFeeFilter] = useState('all')
           {attRows.length === 0 ? (
             <p className="panel-muted">No scans recorded for this event yet.</p>
           ) : (
-            <div className="ledger">
-              {attRows
-                .filter((a) => {
-                  const n = attQ.trim().toLowerCase()
-                  if (!n) return true
-                  return (a.profiles?.full_name || '').toLowerCase().includes(n) || (a.profiles?.id_no || '').toLowerCase().includes(n)
-                })
-                .map((a) => (
+            (() => {
+              const n = attQ.trim().toLowerCase()
+              const shown = attRows.filter(
+                (a) => !n || (a.profiles?.full_name || '').toLowerCase().includes(n) || (a.profiles?.id_no || '').toLowerCase().includes(n)
+              )
+              return (
+                <div className={`ledger${shown.length > 10 ? ' ledger-scroll' : ''}`}>
+                  {shown.map((a) => (
                   <div className="ledger-row" key={`${a.event_id}-${a.user_id}`}>
                     <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
                       {(a.profiles?.full_name || '?')
@@ -748,7 +748,9 @@ const [feeFilter, setFeeFilter] = useState('all')
                     )}
                   </div>
                 ))}
-            </div>
+                </div>
+              )
+            })()
           )}
         </section>
       )}
