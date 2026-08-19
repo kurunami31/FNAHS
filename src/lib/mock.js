@@ -4,7 +4,7 @@ export const ORG_FULL = 'Faculty of Nursing and Allied Health Sciences'
 export const ORG_TAGLINE =
   'One community for the FNAHS squad — attend org events with a scan, keep up with students, learn from live feeds, and get help from Florence, the in-house AI assistant. Built for nursing and allied health students, by students.'
 
-export const PROGRAMS = ['BS Nursing', 'Faculty']
+export const PROGRAMS = ['BS Nursing']
 
 const now = Date.now()
 const h = 3600e3
