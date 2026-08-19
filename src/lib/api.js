@@ -825,7 +825,11 @@ export const api = {
           .eq('id', p.id)
           .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
-        if (error) throw error
+        if (error) {
+          if (error.code === '23505')
+            throw new Error('That ID no. is already registered to another account — one account per member.')
+          throw error
+        }
         return data
       }, async (p) => {
         const clean = { ...p, full_name: composeFullName(p) || sanitizeText(p.full_name, 120), avatar_url: sanitizeUrl(p.avatar_url) }
