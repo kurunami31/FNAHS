@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2, Download, HandCoins, Search } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
+import { pickRearCamera } from '../lib/scanner'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
@@ -130,7 +131,7 @@ export default function Staff() {
     try {
       const h5 = new Html5Qrcode('fnahs-scan-box')
       await h5.start(
-        { facingMode: 'environment' },
+        await pickRearCamera(),
         { fps: 10, qrbox: { width: 220, height: 220 } },
         (decoded) => handleScan(decoded),
         () => {}
