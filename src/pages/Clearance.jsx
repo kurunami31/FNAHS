@@ -47,7 +47,7 @@ export default function Clearance() {
   const [creating, setCreating] = useState(false)
   const [adding, setAdding] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [rowForm, setRowForm] = useState({ dates: '', concept: '', hours: '' })
+  const [rowForm, setRowForm] = useState({ dates: '', concept: '', hours: '', agency: '' })
   const [busyRow, setBusyRow] = useState(null)
 
   const isOfficer = can(user, 'clearance.scan')
@@ -183,9 +183,10 @@ export default function Clearance() {
         dates: rowForm.dates.trim(),
         concept: rowForm.concept.trim(),
         hours: Number(rowForm.hours) || 0,
+        agency: rowForm.agency.trim(),
       })
       toast('Duty row added')
-      setRowForm({ dates: '', concept: '', hours: '' })
+      setRowForm({ dates: '', concept: '', hours: '', agency: '' })
       ok = true
     } catch (err) {
       toast(err?.message || 'Could not add the row', 'err')
@@ -389,6 +390,15 @@ export default function Clearance() {
                       placeholder="e.g. 80"
                     />
                   </div>
+                  <div className="field">
+                    <label>Agency</label>
+                    <input
+                      value={rowForm.agency}
+                      onChange={(e) => setRowForm({ ...rowForm, agency: e.target.value })}
+                      placeholder="e.g. DDH District Hospital"
+                      maxLength={200}
+                    />
+                  </div>
                   <div className="clearance-add-row-actions">
                     <button className="btn btn--primary" disabled={saving}>
                       {saving ? <Loader2 size={15} className="spin" /> : <Plus size={15} />} Add row
@@ -411,6 +421,7 @@ export default function Clearance() {
                       <th>Inclusive Dates of Assignment</th>
                       <th>Concept</th>
                       <th>Hours</th>
+                      <th>Agency</th>
                       <th>Date of Clearance</th>
                       <th>Clinical Instructor's Signature</th>
                       <th>Merit</th>
@@ -423,7 +434,7 @@ export default function Clearance() {
                   <tbody>
                     {activeForm.rows.length === 0 && (
                       <tr>
-                        <td colSpan={11} className="clearance-empty">No duty rows yet — add the first one above.</td>
+                        <td colSpan={12} className="clearance-empty">No duty rows yet — add the first one above.</td>
                       </tr>
                     )}
                     {activeForm.rows.map((row, i) => {
@@ -434,6 +445,7 @@ export default function Clearance() {
                           <td>{row.dates}</td>
                           <td>{row.concept}</td>
                           <td>{fmtHours(row.hours)}</td>
+                          <td>{row.agency || ''}</td>
                           <td>{row.cleared_at ? fullDate(row.cleared_at) : <span className="clearance-pending-tag">pending</span>}</td>
                           <td>{row.recorded_by_name || (row.cleared_at ? '—' : '')}</td>
                           <td>

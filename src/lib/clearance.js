@@ -47,12 +47,13 @@ export function fmtHours(n) {
   return Number.isInteger(v) ? String(v) : v.toFixed(1)
 }
 
-/** the 10 column headers, in display order */
+/** the 11 column headers, in display order (matches the official form) */
 export const CLEARANCE_COLUMNS = [
   { key: 'no', label: 'No.' },
-  { key: 'dates', label: 'Inclusive Dates of Assignment' },
+  { key: 'dates', label: 'Inclusive Date of Assignment' },
   { key: 'concept', label: 'Concept' },
   { key: 'hours', label: 'Number of Hours' },
+  { key: 'agency', label: 'Agency' },
   { key: 'cleared_at', label: 'Date of Clearance' },
   { key: 'recorded_by', label: "Clinical Instructor's Signature" },
   { key: 'merit', label: 'Merit' },

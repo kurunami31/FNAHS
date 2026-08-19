@@ -2661,7 +2661,7 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 .clearance-val { font-weight: 700; color: var(--ink); min-width: 18px; display: inline-block; text-align: center; }
 .clearance-add-row {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 120px auto;
+  grid-template-columns: 1.3fr 1fr 100px 1.2fr auto;
   gap: 12px;
   align-items: end;
   padding: 14px;
@@ -2685,8 +2685,20 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
   margin-bottom: 16px;
 }
 .clearance-form:last-child { margin-bottom: 0; }
-.clearance-form-head { text-align: center; margin-bottom: 10px; }
-.clearance-form-head h3 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 1.05rem; letter-spacing: 0.03em; }
+.clearance-form-head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.clearance-print-logos { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.clearance-print-logos img { height: 52px; width: auto; object-fit: contain; }
+.clearance-print-institution { display: flex; flex-direction: column; line-height: 1.25; }
+.clearance-print-institution b { font-size: 0.95rem; letter-spacing: 0.02em; }
+.clearance-print-institution span { font-size: 0.78rem; color: var(--muted); }
+.clearance-form-title {
+  margin: 0 0 12px;
+  text-align: center;
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+}
 .clearance-form-center { font-family: var(--f-ocr); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
 .clearance-form-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 12px; font-size: 0.85rem; }
 .clearance-form-meta b { font-family: var(--f-ocr); font-size: 0.62rem; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
@@ -2713,7 +2725,10 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
     padding: 14px;
     break-inside: avoid;
   }
+  .clearance-form--print .clearance-print-institution span { color: #000; }
+  .clearance-form--print .clearance-form-meta b { color: #000; }
   .clearance-form--print .clearance-table { min-width: 0; font-size: 0.72rem; }
+  .clearance-form--print .clearance-table th { white-space: normal; }
   .clearance-form--print .clearance-table th,
   .clearance-form--print .clearance-table td { border-color: #000; padding: 5px 6px; }
   .clearance-form--print .clearance-form-tally .chip { border-color: #000; }

@@ -151,7 +151,7 @@ grant select, insert, update, delete on public.clearance_rows to authenticated;
 -- rows as json with recorder names (used by get_clearance_forms)
 create or replace function public.clearance_rows_json(p_form_id uuid)
 returns jsonb language sql security definer set search_path = public as $$
-  select coalesce(jsonb_agg(j order by r.created_at, r.id), '[]'::jsonb)
+  select coalesce(jsonb_agg(j), '[]'::jsonb)
   from (
     select jsonb_build_object(
       'id', r.id,
@@ -159,6 +159,7 @@ returns jsonb language sql security definer set search_path = public as $$
       'dates', r.dates,
       'concept', r.concept,
       'hours', r.hours,
+      'agency', r.agency,
       'cleared_at', r.cleared_at,
       'remark', r.remark,
       'demerit', r.demerit,
@@ -175,6 +176,7 @@ returns jsonb language sql security definer set search_path = public as $$
     left join public.profiles rec on rec.id = r.recorded_by
     left join public.profiles up on up.id = r.updated_by
     where r.form_id = p_form_id
+    order by r.created_at, r.id
   ) sub;
 $$;
 

@@ -423,7 +423,7 @@ async function demoCreateClearanceForm(studentId, { school_year, semester, place
   return form
 }
 
-async function demoAddClearanceRow(formId, { dates, concept, hours }) {
+async function demoAddClearanceRow(formId, { dates, concept, hours, agency }) {
   const form = (db.clearanceForms || []).find((f) => f.id === formId)
   if (!form) throw new Error('Clearance form not found')
   const row = {
@@ -432,6 +432,7 @@ async function demoAddClearanceRow(formId, { dates, concept, hours }) {
     dates: sanitizeText(dates, 200),
     concept: sanitizeText(concept, 200),
     hours: Number(hours) || 0,
+    agency: sanitizeText(agency, 200) || null,
     cleared_at: null,
     remark: null,
     demerit: null,
@@ -608,6 +609,7 @@ function mirrorClearanceForms(forms) {
       dates: r.dates,
       concept: r.concept,
       hours: Number(r.hours) || 0,
+      agency: r.agency || null,
       cleared_at: r.cleared_at || null,
       remark: r.remark || null,
       demerit: r.demerit || null,
@@ -1517,12 +1519,12 @@ export const api = {
         return { ...data, rows: [] }
       }, demoCreateClearanceForm, { localId: (f) => f?.id }),
 
-  addClearanceRow: offlineWrite('addClearanceRow', async (formId, { dates, concept, hours }) => {
+  addClearanceRow: offlineWrite('addClearanceRow', async (formId, { dates, concept, hours, agency }) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in.')
         const { data, error } = await supabase
           .from('clearance_rows')
-          .insert({ form_id: formId, dates: sanitizeText(dates, 200), concept: sanitizeText(concept, 200), hours: Number(hours) || 0, created_by: user.id })
+          .insert({ form_id: formId, dates: sanitizeText(dates, 200), concept: sanitizeText(concept, 200), hours: Number(hours) || 0, agency: sanitizeText(agency, 200) || null, created_by: user.id })
           .select('*')
           .single()
         if (error) throw error

@@ -300,9 +300,16 @@ function StudentClearanceForm({ form, student, print }) {
   return (
     <article className={`clearance-form${print ? ' clearance-form--print' : ''}`}>
       <div className="clearance-form-head">
-        <h3>INDIVIDUAL CLINICAL ROTATIONAL CLEARANCE</h3>
-        <span className="clearance-form-center">(CENTER)</span>
+        <div className="clearance-print-logos">
+          <img src="/dorsu-logo.png" alt="DORSU" />
+          <img src="/FNAHS.png" alt="FNAHS" />
+        </div>
+        <div className="clearance-print-institution">
+          <b>Bachelor of Science in Nursing</b>
+          <span>Related Learning Experience Manual</span>
+        </div>
       </div>
+      <h3 className="clearance-form-title">INDIVIDUAL CLINICAL ROTATION CLEARANCE</h3>
       <div className="clearance-form-meta">
         <span><b>NAME:</b> {student?.full_name || form.member_id?.slice(0, 8)}</span>
         <span><b>PLACEMENT:</b> {form.placement}</span>
@@ -310,50 +317,55 @@ function StudentClearanceForm({ form, student, print }) {
       </div>
       <div className="clearance-scroll">
         <table className="clearance-table">
+          <colgroup>
+            <col style={{ width: '16%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '16%' }} />
+            <col style={{ width: '14%' }} />
+          </colgroup>
           <thead>
             <tr>
-              <th>No.</th>
-              <th>Inclusive Dates of Assignment</th>
+              <th>Inclusive Date of Assignment</th>
               <th>Concept</th>
               <th>Number of Hours</th>
+              <th>Agency</th>
               <th>Date of Clearance</th>
               <th>Clinical Instructor's Signature</th>
-              <th>Merit</th>
-              <th>Demerit</th>
               <th>Remarks</th>
-              <th>Days Extension</th>
             </tr>
           </thead>
           <tbody>
             {form.rows.length === 0 && (
               <tr>
-                <td colSpan={10} className="clearance-empty">No duties recorded on this form yet.</td>
+                <td colSpan={7} className="clearance-empty">No duties recorded on this form yet.</td>
               </tr>
             )}
-            {form.rows.map((row, i) => (
+            {form.rows.map((row) => (
               <tr key={row.id}>
-                <td>{i + 1}</td>
                 <td>{row.dates}</td>
                 <td>{row.concept}</td>
                 <td>{fmtHours(row.hours)}</td>
-                <td>{row.cleared_at ? fullDate(row.cleared_at) : '—'}</td>
+                <td>{row.agency || ''}</td>
+                <td>{row.cleared_at ? fullDate(row.cleared_at) : ''}</td>
                 <td>{row.recorded_by_name || ''}</td>
-                <td>{row.merit ? `+${row.merit}` : ''}</td>
-                <td>{row.demerit || ''}</td>
                 <td>{row.remark ? remarkLabel(row.remark) : ''}</td>
-                <td>{row.days_extension || ''}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="clearance-form-tally">
-        <span className="chip chip--ok">{summary.cleared} cleared</span>
-        <span className="chip">{summary.pending} pending</span>
-        <span className="chip chip--gold">Merit total {summary.meritTotal}</span>
-        {summary.demeritTotal > 0 && <span className="chip chip--warn">Demerit {summary.demeritTotal}</span>}
-        {summary.daysExtension > 0 && <span className="chip chip--hn">Extension {summary.daysExtension}</span>}
-      </div>
+      {!print && (
+        <div className="clearance-form-tally">
+          <span className="chip chip--ok">{summary.cleared} cleared</span>
+          <span className="chip">{summary.pending} pending</span>
+          <span className="chip chip--gold">Merit total {summary.meritTotal}</span>
+          {summary.demeritTotal > 0 && <span className="chip chip--warn">Demerit {summary.demeritTotal}</span>}
+          {summary.daysExtension > 0 && <span className="chip chip--hn">Extension {summary.daysExtension}</span>}
+        </div>
+      )}
     </article>
   )
 }
