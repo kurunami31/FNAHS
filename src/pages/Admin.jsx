@@ -591,6 +591,7 @@ const [feeFilter, setFeeFilter] = useState('all')
                             {a.profiles?.id_no ? `ID ${a.profiles.id_no} · ` : ''}
                             {a.profiles?.program || '—'}
                             {a.profiles?.year_level ? ` (Yr ${a.profiles.year_level})` : ''}
+                            {a.profiles?.section ? ` · Sec ${a.profiles.section}` : ''}
                           </div>
                         </div>
                         <span className={`chip${paidBy.has(a.user_id) ? ' chip--ok' : ''}`}>
@@ -652,6 +653,7 @@ const [feeFilter, setFeeFilter] = useState('all')
                           <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{m.full_name}</div>
                           <div className="ledger-meta">
                             {m.email} · {m.program || '—'} · YR {m.year_level || '—'}
+                            {m.section ? ` · Sec ${m.section}` : ''}
                           </div>
                         </div>
                         <span

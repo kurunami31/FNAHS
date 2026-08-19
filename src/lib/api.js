@@ -1308,7 +1308,7 @@ export const api = {
   getAttendance: offlineRead('getAttendance', async (eventId) => {
         const { data, error } = await supabase
           .from('attendance')
-          .select('*, profiles(full_name, program, year_level, email, id_no)')
+          .select('*, profiles(full_name, program, year_level, section, email, id_no)')
           .eq('event_id', eventId)
         if (error) throw error
         return data || []
