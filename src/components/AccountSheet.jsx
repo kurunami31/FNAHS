@@ -192,15 +192,9 @@ export default function AccountSheet({ onClose, onLogout }) {
   return (
     <div className="sheet" role="dialog" aria-label="Account settings">
       <div className="sheet-head">
-        {user?.role === 'superadmin' ? (
-          <div className="avatar avatar--ring">
-            {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
-          </div>
-        ) : (
-          <button className="avatar avatar--ring avatar-btn" onClick={() => fileRef.current?.click()} aria-label="Change photo">
-            {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
-          </button>
-        )}
+        <button className="avatar avatar--ring avatar-btn" onClick={() => fileRef.current?.click()} aria-label="Change photo">
+          {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initials(user?.full_name)}
+        </button>
         <div className="who">
           <h3>{user?.full_name || 'Member'}</h3>
           <span>
@@ -215,8 +209,7 @@ export default function AccountSheet({ onClose, onLogout }) {
 
       <div className="sheet-sec">
         <h4>Profile</h4>
-        {user?.role !== 'superadmin' && (
-          <div className="mm-pic">
+        <div className="mm-pic">
             <button
               className="avatar avatar--ring avatar-btn"
               style={{ width: 56, height: 56, fontSize: 16, flex: 'none' }}
@@ -238,7 +231,6 @@ export default function AccountSheet({ onClose, onLogout }) {
             </div>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPick} />
           </div>
-        )}
         <div className="field">
           <label>Surname</label>
           <input
@@ -314,11 +306,9 @@ export default function AccountSheet({ onClose, onLogout }) {
             </div>
           </>
         )}
-        {user?.role === 'student' && (
-          <button className="btn btn--primary btn--block" onClick={save} disabled={saving}>
-            {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save profile
-          </button>
-        )}
+        <button className="btn btn--primary btn--block" onClick={save} disabled={saving}>
+          {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save profile
+        </button>
       </div>
 
       <div className="sheet-sec">
