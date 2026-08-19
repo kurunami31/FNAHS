@@ -440,7 +440,7 @@ const [feeFilter, setFeeFilter] = useState('all')
               <input placeholder="Search posts…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
           </div>
-          <div className="ledger">
+          <div className="ledger ledger-scroll">
             {posts
               .filter((p) => !needle || p.content?.toLowerCase().includes(needle) || p.author?.full_name?.toLowerCase().includes(needle))
               .map((p) => (
@@ -468,7 +468,7 @@ const [feeFilter, setFeeFilter] = useState('all')
 
       {tab === 'events' && (
         <section className="panel">
-          <div className="ledger">
+          <div className="ledger ledger-scroll">
             {events.map((e) => (
               <div className="ledger-row" key={e.id}>
                 <div className="round-date" style={{ borderRight: 'none', width: 44 }}>
@@ -804,7 +804,7 @@ const [feeFilter, setFeeFilter] = useState('all')
               PAID once the sum of payments reaches the annual fee.
             </p>
           </div>
-          <div className="ledger">
+          <div className="ledger ledger-scroll">
             {members
               .filter((m) => m.role !== 'superadmin')
               .filter((m) => {
