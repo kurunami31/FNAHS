@@ -133,7 +133,7 @@ export default function Home() {
               <p>Faculty accounts appear here once approved.</p>
             </div>
           ) : (
-            <div className="ledger">
+            <div className="ledger ledger-scroll">
               {faculty.map((f) => (
                 <div className="ledger-row mem-row" key={f.id}>
                   <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>
