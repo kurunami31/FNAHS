@@ -401,10 +401,36 @@ function demoFindClearanceRow(rowId) {
 }
 
 async function demoGetClearanceForms(studentId) {
+  const p = db.profiles[studentId]
+  if (p && p.year_level === '1') return []
   return (db.clearanceForms || [])
     .filter((f) => f.member_id === studentId)
     .map((f) => ({ ...f, rows: [...(f.rows || [])] }))
     .sort((a, b) => a.school_year.localeCompare(b.school_year) || a.semester.localeCompare(b.semester))
+}
+
+async function demoSearchStudents(q) {
+  if (!demoIsClearanceOfficer()) throw new Error('Only Clinical Instructors or the administrator may search students.')
+  const needle = (q || '').trim().toLowerCase()
+  if (!needle) return []
+  return Object.values(db.profiles)
+    .filter((p) => p.role === 'student' && p.year_level !== '1')
+    .filter((p) => [p.full_name, p.id_no, p.email].some((v) => (v ? String(v).toLowerCase().includes(needle) : false)))
+    .slice(0, 20)
+    .map((p) => ({ id: p.id, full_name: p.full_name, id_no: p.id_no, program: p.program, year_level: p.year_level, section: p.section, avatar_url: p.avatar_url, role: p.role }))
+}
+
+async function demoGetPopulationBreakdown() {
+  const counts = {}
+  for (const p of Object.values(db.profiles)) {
+    if (p.role !== 'student') continue
+    const y = p.year_level || '—'
+    counts[y] = (counts[y] || 0) + 1
+  }
+  const order = { 1: 1, 2: 2, 3: 3, 4: 4 }
+  return Object.entries(counts)
+    .map(([year_level, count]) => ({ year_level, count }))
+    .sort((a, b) => (order[a.year_level] || 5) - (order[b.year_level] || 5))
 }
 
 /* Mirrors the SQL is_clearance_officer() gate for offline mutations —
@@ -1543,6 +1569,26 @@ export const api = {
         }
         return data || []
       }, async () => demoGetClearanceForms(demoCurrentUserId() || DEMO_USER_ID), mirrorClearanceForms),
+
+  searchStudents: offlineRead('searchStudents', async (q) => {
+        const { data, error } = await supabase.rpc('search_students', { p_q: q || '' })
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
+        return data || []
+      }, demoSearchStudents),
+
+  getPopulationBreakdown: offlineRead('getPopulationBreakdown', async () => {
+        const { data, error } = await supabase.rpc('population_breakdown')
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
+        return data || []
+      }, demoGetPopulationBreakdown),
 
   createClearanceForm: offlineWrite('createClearanceForm', async (studentId, { school_year, semester, placement }) => {
         const { data: { user } } = await supabase.auth.getUser()

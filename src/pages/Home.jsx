@@ -9,6 +9,7 @@ import { seedFeeds, ORG_TAGLINE, PROGRAMS } from '../lib/mock'
 import { timeAgo } from '../lib/format'
 import EventModal from '../components/EventModal'
 import Announcements from '../components/Announcements'
+import PopulationBreakdown from '../components/PopulationBreakdown'
 
 const TOOL_ICONS = {
   'feed.moderate': Shield,
@@ -106,6 +107,8 @@ export default function Home() {
       </section>
 
       {user && <Announcements />}
+
+      {user && <PopulationBreakdown title="Enrollment by Year Level" kicker="population" />}
 
       {user && tools.length > 0 && (
         <section className="sec" aria-labelledby="h-tools">

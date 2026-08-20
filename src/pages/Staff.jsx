@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
 import { timeAgo } from '../lib/format'
+import PopulationBreakdown from '../components/PopulationBreakdown'
 import { attendanceWorkbook, downloadWorkbook } from '../lib/exportXlsx'
 import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import Select from '../components/Select'
@@ -247,6 +248,8 @@ export default function Staff() {
         ATTENDANCE <span className="page-kicker">staff tools</span>
       </h1>
       <p className="page-sub">Pick the event on duty, start the scanner, and the door log fills in live.</p>
+
+      <PopulationBreakdown title="Population by Year Level" kicker="members" />
 
       <section className="panel">
         <div className="panel-head">

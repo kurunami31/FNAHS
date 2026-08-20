@@ -10,6 +10,7 @@ import { drawIdCanvas } from '../lib/idCanvas'
 import { attendanceWorkbook, feeReportWorkbook, downloadWorkbook } from '../lib/exportXlsx'
 import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import Select from '../components/Select'
+import PopulationBreakdown from '../components/PopulationBreakdown'
 
 const ROLES = ['student', 'faculty', 'moderator', 'superadmin']
 
@@ -352,6 +353,7 @@ const [feeFilter, setFeeFilter] = useState('all')
 
       {tab === 'members' && (
         <section className="panel">
+          <PopulationBreakdown title="Population by Year Level" kicker="members" />
           <div className="admin-toolbar">
             <div className="dir-search">
               <Search size={17} />

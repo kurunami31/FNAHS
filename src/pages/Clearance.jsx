@@ -9,6 +9,8 @@ import {
   Trash2,
   Pencil,
   FileSignature,
+  Search,
+  ArrowRight,
   X,
   Loader2,
 } from 'lucide-react'
@@ -17,7 +19,7 @@ import { enumerateCameras, cameraConstraints } from '../lib/scanner'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
-import { fullDate, initials } from '../lib/format'
+import { fullDateTime, initials } from '../lib/format'
 import { currentSchoolYear } from '../lib/fees'
 import {
   currentSemester,
@@ -57,6 +59,9 @@ export default function Clearance() {
   const [placementDraft, setPlacementDraft] = useState('')
   const [editRowId, setEditRowId] = useState(null)
   const [editDraft, setEditDraft] = useState({ dates: '', concept: '', hours: '', agency: '' })
+  const [searchQ, setSearchQ] = useState('')
+  const [results, setResults] = useState([])
+  const [searching, setSearching] = useState(false)
 
   const isOfficer = can(user, 'clearance.scan')
   const yearOptions = useMemo(() => {
@@ -90,6 +95,51 @@ export default function Clearance() {
     },
     [toast]
   )
+
+  useEffect(() => {
+    const q = searchQ.trim()
+    if (!q) {
+      setResults([])
+      return
+    }
+    let cancel = false
+    const t = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const r = await api.searchStudents(q)
+        if (!cancel) setResults(r)
+      } catch {
+        if (!cancel) setResults([])
+      } finally {
+        if (!cancel) setSearching(false)
+      }
+    }, 350)
+    return () => {
+      cancel = true
+      clearTimeout(t)
+    }
+  }, [searchQ])
+
+  // Open a student's clearance: first-years are locked out entirely.
+  const selectStudent = async (p) => {
+    setStudent(p)
+    setResults([])
+    setSearchQ('')
+    if (p.year_level === '1') {
+      setForms([])
+      return false
+    }
+    await loadForms(p.id)
+    return true
+  }
+
+  const openResult = async (p) => {
+    const ok = await selectStudent(p)
+    toast(
+      ok ? `${p.full_name || 'Member'} — clearance opened` : 'First-year students are not yet eligible for rotational clearance',
+      ok ? '' : 'info'
+    )
+  }
 
   const startScan = async () => {
     try {
@@ -143,9 +193,15 @@ export default function Clearance() {
     try {
       const p = await api.getProfile(userId)
       if (!p) throw new Error('No member found for that ID')
-      setStudent(p)
-      await loadForms(p.id)
-      toast(online ? `${p.full_name || 'Member'} — clearance opened` : 'Member found — showing saved clearance')
+      const ok = await selectStudent(p)
+      toast(
+        ok
+          ? online
+            ? `${p.full_name || 'Member'} — clearance opened`
+            : 'Member found — showing saved clearance'
+          : 'First-year students are not yet eligible for rotational clearance',
+        ok ? '' : 'info'
+      )
     } catch (e) {
       console.error(e)
       toast('Could not find that member', 'err')
@@ -364,6 +420,46 @@ export default function Clearance() {
         )}
       </section>
 
+      <section className="panel">
+        <div className="panel-head">
+          <h2 className="panel-title"><Search size={16} /> Find a student</h2>
+        </div>
+        <div className="dir-search" style={{ marginBottom: 10 }}>
+          <Search size={17} />
+          <input
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
+            placeholder="Search by name, ID number, or email…"
+            autoComplete="off"
+          />
+          {searching && <Loader2 size={15} className="spin" />}
+        </div>
+        {results.length > 0 && (
+          <div className="search-results">
+            {results.map((r) => (
+              <button key={r.id} className="search-result" onClick={() => openResult(r)}>
+                <div className="avatar">
+                  {r.avatar_url ? <img src={r.avatar_url} alt="" /> : initials(r.full_name)}
+                </div>
+                <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                  <b>{r.full_name}</b>
+                  <div className="ledger-meta">
+                    {r.id_no ? `ID ${r.id_no} · ` : ''}
+                    {r.program || ''}
+                    {r.year_level ? ` · Yr ${r.year_level}` : ''}
+                    {r.section ? ` · Sec ${r.section}` : ''}
+                  </div>
+                </div>
+                <ArrowRight size={15} />
+              </button>
+            ))}
+          </div>
+        )}
+        {!searching && searchQ.trim() && results.length === 0 && (
+          <p className="panel-muted">No students match “{searchQ}”.</p>
+        )}
+      </section>
+
       {student && (
         <section className="panel">
           <div className="panel-head">
@@ -388,6 +484,14 @@ export default function Clearance() {
             </button>
           </div>
 
+          {student.year_level === '1' ? (
+            <div className="empty-state" style={{ border: '1px dashed var(--line-strong)', borderRadius: 'var(--r-lg)', padding: 28 }}>
+              <ClipboardCheck size={36} />
+              <h3>First-year students are not yet eligible</h3>
+              <p>Rotational clearance opens for them starting their second year. You can still search and scan other students.</p>
+            </div>
+          ) : (
+            <>
           <div className="form-grid" style={{ marginBottom: 16 }}>
             <div className="field" style={{ marginBottom: 0 }}>
               <label>School year</label>
@@ -557,7 +661,10 @@ export default function Clearance() {
                             {isEditing ? (
                               <input className="clearance-inline-input" value={editDraft.dates} onChange={(e) => setEditDraft({ ...editDraft, dates: e.target.value })} maxLength={200} />
                             ) : (
-                              row.dates
+                              <>
+                                {row.dates}
+                                {row.created_at && <div className="clearance-row-stamp">Added {fullDateTime(row.created_at)}</div>}
+                              </>
                             )}
                           </td>
                           <td>
@@ -581,7 +688,18 @@ export default function Clearance() {
                               row.agency || ''
                             )}
                           </td>
-                          <td>{row.cleared_at ? fullDate(row.cleared_at) : <span className="clearance-pending-tag">pending</span>}</td>
+                          <td>
+                            {row.cleared_at ? (
+                              <>
+                                {fullDateTime(row.cleared_at)}
+                                {row.updated_at && row.updated_at !== row.cleared_at && (
+                                  <div className="clearance-row-stamp">Edited {fullDateTime(row.updated_at)}</div>
+                                )}
+                              </>
+                            ) : (
+                              <span className="clearance-pending-tag">pending</span>
+                            )}
+                          </td>
                           <td>{row.recorded_by_name || (row.cleared_at ? '—' : '')}</td>
                           <td>
                             <div className="clearance-ctrl">
@@ -699,6 +817,8 @@ export default function Clearance() {
               <p className="page-sub" style={{ marginTop: 12, marginBottom: 0 }}>
                 <Check size={12} /> A scan signs one row at a time. Signed rows can only be edited by the CI who cleared them (or a superadmin).
               </p>
+            </>
+          )}
             </>
           )}
         </section>

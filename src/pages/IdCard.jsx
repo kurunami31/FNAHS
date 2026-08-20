@@ -4,7 +4,7 @@ import { Download, ShieldCheck, Loader2, HandCoins, ClipboardCheck, Printer, Pen
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
-import { monthDay, timeAgo, fullDate } from '../lib/format'
+import { monthDay, timeAgo, fullDateTime } from '../lib/format'
 import { drawIdCanvas } from '../lib/idCanvas'
 import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import { clearanceSummary, remarkLabel, fmtHours, semesterLabel } from '../lib/clearance'
@@ -33,11 +33,13 @@ export default function IdCard() {
         setAnnualFee(annual)
       })
       .catch(() => {})
-    api
-      .getMyClearance()
-      .then(setClearance)
-      .catch(() => {})
-  }, [user?.id])
+    if (user?.year_level !== '1') {
+      api
+        .getMyClearance()
+        .then(setClearance)
+        .catch(() => {})
+    }
+  }, [user?.id, user?.year_level])
 
   const name = user?.full_name || 'Student Member'
   const qrValue = JSON.stringify({ t: 'fnahs-id', id: user?.id || 'demo', n: name, v: 1 })
@@ -269,7 +271,11 @@ export default function IdCard() {
             )}
           </span>
         </div>
-        {clearance.length === 0 ? (
+        {user?.year_level === '1' ? (
+          <p className="panel-muted">
+            Rotational clearance opens for first-year students starting their second year.
+          </p>
+        ) : clearance.length === 0 ? (
           <p className="panel-muted">
             Your Clinical Instructors record your rotational clearance here once they start signing your duties. Nothing on file yet.
           </p>
@@ -413,11 +419,25 @@ function StudentClearanceForm({ form, student, print, refresh }) {
             )}
             {form.rows.map((row) => (
               <tr key={row.id}>
-                <td>{row.dates}</td>
+                <td>
+                  {row.dates}
+                  {row.created_at && <div className="clearance-row-stamp">Added {fullDateTime(row.created_at)}</div>}
+                </td>
                 <td>{row.concept}</td>
                 <td>{fmtHours(row.hours)}</td>
                 <td>{row.agency || ''}</td>
-                <td>{row.cleared_at ? fullDate(row.cleared_at) : ''}</td>
+                <td>
+                  {row.cleared_at ? (
+                    <>
+                      {fullDateTime(row.cleared_at)}
+                      {row.updated_at && row.updated_at !== row.cleared_at && (
+                        <div className="clearance-row-stamp">Edited {fullDateTime(row.updated_at)}</div>
+                      )}
+                    </>
+                  ) : (
+                    ''
+                  )}
+                </td>
                 <td>{row.recorded_by_name || ''}</td>
                 <td>{row.remark ? remarkLabel(row.remark) : ''}</td>
               </tr>
