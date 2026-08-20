@@ -1474,6 +1474,30 @@ html[data-theme='dark'] .id-card {
 /* shorter dropdown popups for the in-table merit / demerit selects (1-12) */
 .clearance-table .sel-pop { max-height: 150px; }
 .clearance-table .sel-opt { padding: 6px 8px; font-size: 0.85rem; }
+/* previously scanned students on the CI clearance page */
+.clearance-scan-history { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line-strong); }
+.clearance-scan-history-title {
+  font-weight: 700;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.clearance-scan-history button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.clearance-scan-history button:hover { background: var(--accent-glow-soft); }
 .form-error {
   background: color-mix(in srgb, var(--danger) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);

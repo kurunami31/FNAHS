@@ -68,9 +68,10 @@ export default function Clearance() {
   const [searching, setSearching] = useState(false)
   const [lastScanned, setLastScanned] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('fnahs-clearance-last-scan') || 'null')
+      const arr = JSON.parse(localStorage.getItem('fnahs-clearance-last-scans') || '[]')
+      return Array.isArray(arr) ? arr.slice(0, 5) : []
     } catch {
-      return null
+      return []
     }
   })
 
@@ -205,24 +206,41 @@ export default function Clearance() {
     try {
       const p = await api.getProfile(userId)
       if (!p) throw new Error('No member found for that ID')
-      const ok = await selectStudent(p)
       const record = { id: p.id, id_no: p.id_no || null, name: p.full_name || null, at: Date.now() }
-      setLastScanned(record)
-      try {
-        localStorage.setItem('fnahs-clearance-last-scan', JSON.stringify(record))
-      } catch {
-        /* storage may be full — the in-memory value still updates */
-      }
-      toast(
-        ok
-          ? online
-            ? `${p.full_name || 'Member'} — clearance opened`
-            : 'Member found — showing saved clearance'
-          : 'First-year students are not yet eligible for rotational clearance',
-        ok ? '' : 'info'
-      )
+      setLastScanned((prev) => {
+        const next = [record, ...(prev || []).filter((s) => s.id !== record.id)].slice(0, 5)
+        try {
+          localStorage.setItem('fnahs-clearance-last-scans', JSON.stringify(next))
+        } catch {
+          /* storage may be full — the in-memory value still updates */
+        }
+        return next
+      })
+      openStudent(p)
     } catch (e) {
       console.error(e)
+      toast('Could not find that member', 'err')
+    }
+  }
+
+  const openStudent = async (p) => {
+    const ok = await selectStudent(p)
+    toast(
+      ok
+        ? online
+          ? `${p.full_name || 'Member'} — clearance opened`
+          : 'Member found — showing saved clearance'
+        : 'First-year students are not yet eligible for rotational clearance',
+      ok ? '' : 'info'
+    )
+  }
+
+  const reopenScanned = async (s) => {
+    try {
+      const p = await api.getProfile(s.id)
+      if (!p) throw new Error('No member found for that ID')
+      openStudent(p)
+    } catch {
       toast('Could not find that member', 'err')
     }
   }
@@ -469,11 +487,16 @@ export default function Clearance() {
             Offline mode — changes are saved to this device and sync when the connection returns.
           </div>
         )}
-        {lastScanned && (
-          <div className="form-ok" style={{ marginTop: 12, marginBottom: 0 }}>
-            Last scanned: <b>ID {lastScanned.id_no || lastScanned.id?.slice(0, 8)}</b>
-            {lastScanned.name ? ` — ${lastScanned.name}` : ''}
-            {lastScanned.at ? ` · ${timeAgo(lastScanned.at)}` : ''}
+        {lastScanned.length > 0 && (
+          <div className="clearance-scan-history">
+            <div className="clearance-scan-history-title">Previously scanned</div>
+            {lastScanned.map((s) => (
+              <button key={s.id} type="button" title="Reopen this student's clearance" onClick={() => reopenScanned(s)}>
+                <b>ID {s.id_no || s.id?.slice(0, 8)}</b>
+                {s.name ? ` — ${s.name}` : ''}
+                {s.at ? ` · ${timeAgo(s.at)}` : ''}
+              </button>
+            ))}
           </div>
         )}
       </section>
