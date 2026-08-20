@@ -33,6 +33,9 @@ const REMARK_OPTIONS = [
   { value: 'absent', label: 'Absent' },
   { value: 'late', label: 'Late' },
   { value: 'ir', label: 'IR' },
+  { value: 'inc', label: 'INC' },
+  { value: 'deficient', label: 'Deficient/With Deficiency' },
+  { value: 'good_standing', label: 'Good Standing' },
 ]
 
 export default function Clearance() {

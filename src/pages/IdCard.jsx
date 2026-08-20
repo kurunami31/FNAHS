@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { Download, ShieldCheck, Loader2, HandCoins, ClipboardCheck, Printer } from 'lucide-react'
+import { Download, ShieldCheck, Loader2, HandCoins, ClipboardCheck, Printer, Pencil, Trash2, Check, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
@@ -276,7 +276,7 @@ export default function IdCard() {
         ) : (
           <div className="clearance-forms">
             {clearance.map((form) => (
-              <StudentClearanceForm key={form.id} form={form} student={user} />
+              <StudentClearanceForm key={form.id} form={form} student={user} refresh={() => api.getMyClearance().then(setClearance)} />
             ))}
           </div>
         )}
@@ -295,8 +295,48 @@ export default function IdCard() {
   )
 }
 
-function StudentClearanceForm({ form, student, print }) {
+function StudentClearanceForm({ form, student, print, refresh }) {
+  const { toast } = useApp()
   const summary = clearanceSummary(form.rows)
+  const canManage = !print && can(student, 'clearance.scan')
+  const [editPlacement, setEditPlacement] = useState(false)
+  const [placementDraft, setPlacementDraft] = useState(form.placement)
+  const [busy, setBusy] = useState(false)
+
+  const savePlacement = async (e) => {
+    e.preventDefault()
+    const value = placementDraft.trim()
+    if (!value) {
+      toast('Placement cannot be empty', 'info')
+      return
+    }
+    setBusy(true)
+    try {
+      await api.updateClearanceForm(form.id, { placement: value })
+      toast('Placement updated')
+      setEditPlacement(false)
+      if (refresh) await refresh()
+    } catch (err) {
+      toast(err?.message || 'Could not update the placement', 'err')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const removeForm = async () => {
+    if (!window.confirm(`Delete this clearance form (${form.school_year} · ${semesterLabel(form.semester)}) and ALL of its rows? This cannot be undone.`)) return
+    setBusy(true)
+    try {
+      await api.deleteClearanceForm(form.id)
+      toast('Clearance form deleted')
+      if (refresh) await refresh()
+    } catch (err) {
+      toast(err?.message || 'Could not delete the form', 'err')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <article className={`clearance-form${print ? ' clearance-form--print' : ''}`}>
       <div className="clearance-form-head">
@@ -312,8 +352,33 @@ function StudentClearanceForm({ form, student, print }) {
       <h3 className="clearance-form-title">INDIVIDUAL CLINICAL ROTATION CLEARANCE</h3>
       <div className="clearance-form-meta">
         <span><b>NAME:</b> {student?.full_name || form.member_id?.slice(0, 8)}</span>
-        <span><b>PLACEMENT:</b> {form.placement}</span>
+        <span className="clearance-meta-placement">
+          <b>PLACEMENT:</b>{' '}
+          {canManage && editPlacement ? (
+            <form className="clearance-placement-edit" onSubmit={savePlacement}>
+              <input autoFocus value={placementDraft} onChange={(e) => setPlacementDraft(e.target.value)} placeholder="Placement / center" maxLength={200} />
+              <button className="btn btn--tiny btn--primary" disabled={busy}>
+                {busy ? <Loader2 size={12} className="spin" /> : <Check size={12} />} Save
+              </button>
+              <button type="button" className="btn btn--tiny btn--ghost" onClick={() => setEditPlacement(false)} disabled={busy}>
+                <X size={12} /> Cancel
+              </button>
+            </form>
+          ) : (
+            form.placement
+          )}
+        </span>
         <span><b>SCHOOL YEAR / SEMESTER:</b> {form.school_year} · {semesterLabel(form.semester)}</span>
+        {canManage && !editPlacement && (
+          <span className="clearance-meta-actions">
+            <button className="btn btn--tiny" title="Edit placement" disabled={busy} onClick={() => { setPlacementDraft(form.placement); setEditPlacement(true) }}>
+              <Pencil size={12} />
+            </button>
+            <button className="btn btn--tiny btn--danger" title="Delete this clearance form" disabled={busy} onClick={removeForm}>
+              {busy ? <Loader2 size={12} className="spin" /> : <Trash2 size={12} />}
+            </button>
+          </span>
+        )}
       </div>
       <div className="clearance-scroll">
         <table className="clearance-table">

@@ -18,7 +18,14 @@ export function semesterLabel(s) {
   return `${s} Semester`
 }
 
-const REMARK_LABELS = { absent: 'Absent', late: 'Late', ir: 'IR' }
+const REMARK_LABELS = {
+  absent: 'Absent',
+  late: 'Late',
+  ir: 'IR',
+  inc: 'INC',
+  deficient: 'Deficient/With Deficiency',
+  good_standing: 'Good Standing',
+}
 
 export function remarkLabel(r) {
   return REMARK_LABELS[r] || ''
