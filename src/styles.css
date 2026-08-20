@@ -1471,6 +1471,9 @@ html[data-theme='dark'] .id-card {
 .sel-opt:hover, .sel-opt--hi { background: var(--accent-glow-soft); }
 .sel-opt--on { color: var(--gold); font-weight: 600; }
 .sel--compact .sel-trigger { padding: 8px 10px; font-size: 0.85rem; border-radius: var(--r-sm); }
+/* shorter dropdown popups for the in-table merit / demerit selects (1-12) */
+.clearance-table .sel-pop { max-height: 150px; }
+.clearance-table .sel-opt { padding: 6px 8px; font-size: 0.85rem; }
 .form-error {
   background: color-mix(in srgb, var(--danger) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
