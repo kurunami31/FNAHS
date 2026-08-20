@@ -2732,7 +2732,7 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 .clearance-form-center { font-family: var(--f-ocr); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
 .clearance-form-meta {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 8px 18px;
   margin-bottom: 12px;
   font-size: 0.85rem;
@@ -2748,12 +2748,12 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
 }
 .clearance-meta-item { min-width: 0; }
 .clearance-meta-item > span { word-break: break-word; }
-.clearance-meta-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.clearance-meta-actions { grid-column: 4; display: flex; gap: 6px; align-items: end; }
 .clearance-meta-item .clearance-placement-edit { width: 100%; }
 .clearance-meta-item .clearance-placement-edit input { width: 100%; min-width: 0; max-width: none; }
 @media (max-width: 560px) {
   .clearance-form-meta { grid-template-columns: 1fr; align-items: start; }
-  .clearance-meta-actions { justify-content: flex-start; }
+  .clearance-meta-actions { grid-column: auto; justify-content: flex-start; }
 }
 .clearance-form-tally { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 
