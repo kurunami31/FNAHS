@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { Download, ShieldCheck, Loader2, HandCoins, ClipboardCheck, Printer, Pencil, Trash2, Check, X } from 'lucide-react'
+import { Html5Qrcode } from 'html5-qrcode'
+import { enumerateCameras, cameraConstraints } from '../lib/scanner'
+import { Download, ShieldCheck, Loader2, HandCoins, ClipboardCheck, Printer, Pencil, Trash2, Check, X, QrCode, Camera, CameraOff } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
@@ -23,6 +25,11 @@ export default function IdCard() {
   const [fee, setFee] = useState(null)
   const [annualFee, setAnnualFee] = useState(200)
   const [clearance, setClearance] = useState([])
+  const [scanOpen, setScanOpen] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const scannerRef = useRef(null)
+  const scanBoxRef = useRef(null)
+  const lastScanRef = useRef({ id: null, at: 0 })
 
   useEffect(() => {
     api
@@ -159,6 +166,98 @@ export default function IdCard() {
 
   const isStaff = can(user, 'feed.moderate') || can(user, 'events.manage') || can(user, 'attendance.scan')
 
+  // Stop the camera when leaving the page, but never on the stopScan state
+  // change — calling stop() twice throws synchronously and would crash React.
+  useEffect(() => {
+    return () => {
+      try {
+        scannerRef.current?.stop().catch(() => {})
+      } catch {
+        /* already stopped */
+      }
+    }
+  }, [])
+
+  const openScanner = () => {
+    setScanOpen(true)
+  }
+
+  const closeScanner = async () => {
+    const h5 = scannerRef.current
+    scannerRef.current = null
+    if (h5) {
+      try {
+        await h5.stop()
+        h5.clear()
+      } catch {
+        /* ignore */
+      }
+    }
+    setScanning(false)
+    setScanOpen(false)
+  }
+
+  const startScan = async () => {
+    try {
+      const list = await enumerateCameras()
+      const h5 = new Html5Qrcode('fnahs-my-class-scan-box')
+      await h5.start(
+        'any',
+        { fps: 10, qrbox: { width: 220, height: 220 }, videoConstraints: cameraConstraints(list, 0, true) },
+        (decoded) => handleClassScan(decoded),
+        () => {}
+      )
+      scannerRef.current = h5
+      setScanning(true)
+    } catch (e) {
+      console.error(e)
+      toast('Could not start the camera — check permissions', 'err')
+    }
+  }
+
+  const stopScan = async () => {
+    const h5 = scannerRef.current
+    scannerRef.current = null
+    if (h5) {
+      try {
+        await h5.stop()
+        h5.clear()
+      } catch {
+        /* ignore */
+      }
+    }
+    setScanning(false)
+  }
+
+  const handleClassScan = async (decoded) => {
+    let sessionId
+    try {
+      const obj = JSON.parse(decoded)
+      if (obj.t !== 'fnahs-class' || !obj.s) throw new Error('not a class QR')
+      sessionId = obj.s
+    } catch {
+      toast('That QR is not a class session code', 'err')
+      return
+    }
+    const now = Date.now()
+    const prev = lastScanRef.current
+    if (prev.id === sessionId && now - prev.at < 3000) return
+    lastScanRef.current = { id: sessionId, at: now }
+    try {
+      await api.markMyClassAttendance(sessionId)
+      toast('Present! Your class attendance is recorded')
+      await closeScanner()
+      api
+        .getMyClassAttendance()
+        .then(setClassHistory)
+        .catch(() => {})
+    } catch (e) {
+      console.error(e)
+      toast(e?.message || 'Could not record your attendance', 'err')
+      await closeScanner()
+    }
+  }
+
   return (
     <div className="page-c">
       <h1 className="page-title">
@@ -268,7 +367,12 @@ export default function IdCard() {
       <section className="sec" aria-labelledby="h-class-history" style={{ maxWidth: 640, margin: '34px auto 0', width: '100%' }}>
         <div className="sec-head">
           <h2 id="h-class-history">My Class Attendance</h2>
-          <span className="sec-kicker">{classHistory.length} record{classHistory.length === 1 ? '' : 's'}</span>
+          <span className="sec-kicker">
+            {classHistory.length} record{classHistory.length === 1 ? '' : 's'}
+            <button className="btn btn--tiny btn--primary" style={{ marginLeft: 10 }} onClick={openScanner}>
+              <QrCode size={13} /> Scan class QR
+            </button>
+          </span>
         </div>
         {classHistory.length === 0 ? (
           <p className="panel-muted">Your instructors record your class attendance here — nothing on file yet.</p>
@@ -326,6 +430,37 @@ export default function IdCard() {
             {clearance.map((form) => (
               <ClearancePrintDoc key={form.id} form={form} student={user} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {scanOpen && (
+        <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && closeScanner()}>
+          <div className="modal" role="dialog" aria-label="Scan class QR" onClick={(e) => e.stopPropagation()}>
+            <h2><QrCode size={18} /> Scan class QR</h2>
+            <p className="modal-sub" style={{ margin: '-10px 0 16px', color: 'var(--muted)', fontSize: '0.82rem' }}>
+              Point your camera at the QR your instructor is showing. This records your attendance for that class session.
+            </p>
+            <div className="scan-stage">
+              <div className="scan-box" id="fnahs-my-class-scan-box" ref={scanBoxRef} />
+              {!scanning && (
+                <div className="scan-placeholder">
+                  Camera off<br /><br />Press start to scan the class QR
+                </div>
+              )}
+              {scanning && <div className="scan-overlay" />}
+            </div>
+            <div className="scan-actions" style={{ marginTop: 16 }}>
+              {!scanning ? (
+                <button className="btn btn--primary btn--block" onClick={startScan}>
+                  <Camera size={16} /> Start camera
+                </button>
+              ) : (
+                <button className="btn btn--danger btn--block" onClick={stopScan}>
+                  <CameraOff size={16} /> Stop camera
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

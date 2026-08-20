@@ -532,6 +532,28 @@ async function demoRemoveClassAttendance(sessionId, userId) {
   saveDb(db)
 }
 
+async function demoMarkMyClassAttendance(sessionId) {
+  const me = demoCurrentUserId() || DEMO_USER_ID
+  const s = (db.classSessions || []).find((x) => x.id === sessionId)
+  if (!s || s.ended_at) throw new Error('Class session not found or already ended')
+  db.classAttendance[sessionId] = db.classAttendance[sessionId] || {}
+  db.classAttendance[sessionId][me] = new Date().toISOString()
+  const sub = (db.subjects || []).find((x) => x.id === s.subject_id)
+  demoNotify([
+    {
+      id: uid(),
+      user_id: me,
+      kind: 'attendance',
+      title: 'Present!',
+      body: `${sub?.name || 'Class'} — attendance recorded.`,
+      link: '/app/id',
+      read_at: null,
+      created_at: new Date().toISOString(),
+    },
+  ])
+  saveDb(db)
+}
+
 async function demoGetMyClassAttendance() {
   const me = demoCurrentUserId() || DEMO_USER_ID
   const rows = []
@@ -1855,6 +1877,12 @@ export const api = {
         }
         saveDb(db)
       }),
+
+  /* students scan the faculty's session QR to mark their own attendance */
+  markMyClassAttendance: offlineWrite('markMyClassAttendance', async (sessionId) => {
+        const { error } = await supabase.rpc('mark_my_class_attendance', { p_session: sessionId })
+        if (error) throw error
+      }, async (sessionId) => demoMarkMyClassAttendance(sessionId)),
 
   /* ---------------- rotational clearance (officers + the student themself) ---------------- */
   getClearanceForms: offlineRead('getClearanceForms', async (studentId) => {

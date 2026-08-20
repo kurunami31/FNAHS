@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ShieldCheck, Camera, CameraOff, QrCode, Trash2, Download, Plus, GraduationCap, Play, Square, Search, BookOpen } from 'lucide-react'
-import { Html5Qrcode } from 'html5-qrcode'
-import { enumerateCameras, cameraConstraints } from '../lib/scanner'
+import { ShieldCheck, QrCode, Trash2, Download, Plus, GraduationCap, Play, Square, Search, BookOpen, Maximize2, X } from 'lucide-react'
+import QRCode from 'qrcode'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
@@ -10,20 +9,16 @@ import { classWorkbook, downloadWorkbook } from '../lib/exportXlsx'
 import Select from '../components/Select'
 
 export default function ClassAttendance() {
-  const { user, toast, online } = useApp()
+  const { user, toast } = useApp()
   const [subjects, setSubjects] = useState([])
   const [newSubject, setNewSubject] = useState('')
   const [sessions, setSessions] = useState([])
   const [sessionId, setSessionId] = useState('')
   const [attendance, setAttendance] = useState([])
-  const [scanning, setScanning] = useState(false)
-  const scannerRef = useRef(null)
-  const [last, setLast] = useState(null)
   const [attQ, setAttQ] = useState('')
-  const scanBoxRef = useRef(null)
   const sessionIdRef = useRef('')
-  const lastScanRef = useRef({ id: null, at: 0 })
-  const [cams, setCams] = useState(null)
+  const [qr, setQr] = useState(null)
+  const [qrOpen, setQrOpen] = useState(false)
 
   const canClass = can(user, 'class.manage')
 
@@ -57,6 +52,26 @@ export default function ClassAttendance() {
 
   const activeSession = sessions.find((s) => s.id === sessionId)
   const activeSubject = subjects.find((s) => s.id === activeSession?.subject_id) || activeSession?.subject || null
+  const openSession = sessions.find((s) => !s.ended_at)
+
+  useEffect(() => {
+    let alive = true
+    if (openSession?.id) {
+      QRCode.toDataURL(
+        JSON.stringify({ t: 'fnahs-class', s: openSession.id }),
+        { width: 640, margin: 1, color: { dark: '#2b2410', light: '#ffffff' }, errorCorrectionLevel: 'M' }
+      )
+        .then((url) => {
+          if (alive) setQr(url)
+        })
+        .catch(() => {})
+    } else {
+      setQr(null)
+    }
+    return () => {
+      alive = false
+    }
+  }, [openSession?.id])
 
   const loadAttendance = useCallback(async () => {
     const id = sessionIdRef.current
@@ -72,18 +87,6 @@ export default function ClassAttendance() {
   useEffect(() => {
     loadAttendance()
   }, [loadAttendance, sessionId])
-
-  // Stop the camera when leaving the page, but never on the stopScan state
-  // change — calling stop() twice throws synchronously and would crash React.
-  useEffect(() => {
-    return () => {
-      try {
-        scannerRef.current?.stop().catch(() => {})
-      } catch {
-        /* already stopped */
-      }
-    }
-  }, [])
 
   const addSubject = async () => {
     const name = newSubject.trim()
@@ -131,7 +134,7 @@ export default function ClassAttendance() {
       setSessions((s) => [row, ...s])
       setSessionId(row.id)
       setAttendance([])
-      toast('Session started — scanner is live')
+      toast('Session started — show the QR to your students')
     } catch (e) {
       console.error(e)
       toast('Could not start the session', 'err')
@@ -144,77 +147,10 @@ export default function ClassAttendance() {
     try {
       await api.endSession(activeSession.id)
       setSessions((s) => s.map((x) => (x.id === activeSession.id ? { ...x, ended_at: new Date().toISOString() } : x)))
-      toast('Session ended')
+      toast('Session ended — the QR no longer records attendance')
     } catch (e) {
       console.error(e)
       toast('Could not end the session', 'err')
-    }
-  }
-
-  const startScan = async () => {
-    if (!sessionId) {
-      toast('Start a session first', 'info')
-      return
-    }
-    if (activeSession?.ended_at) {
-      toast('This session is already ended', 'info')
-      return
-    }
-    try {
-      let list = cams
-      if (!list) {
-        list = await enumerateCameras()
-        setCams(list)
-      }
-      const h5 = new Html5Qrcode('fnahs-class-scan-box')
-      await h5.start(
-        'any',
-        { fps: 10, qrbox: { width: 220, height: 220 }, videoConstraints: cameraConstraints(list, 0, true) },
-        (decoded) => handleScan(decoded),
-        () => {}
-      )
-      scannerRef.current = h5
-      setScanning(true)
-    } catch (e) {
-      console.error(e)
-      toast('Could not start the camera — check permissions', 'err')
-    }
-  }
-
-  const stopScan = async () => {
-    const h5 = scannerRef.current
-    scannerRef.current = null
-    if (h5) {
-      try {
-        await h5.stop()
-        h5.clear()
-      } catch {
-        /* ignore */
-      }
-    }
-    setScanning(false)
-  }
-
-  const handleScan = async (decoded) => {
-    let userId = decoded
-    try {
-      const obj = JSON.parse(decoded)
-      if (obj.t === 'fnahs-id' && obj.id) userId = obj.id
-    } catch {
-      /* raw id text */
-    }
-    const now = Date.now()
-    const prev = lastScanRef.current
-    if (prev.id === userId && now - prev.at < 3000) return
-    lastScanRef.current = { id: userId, at: now }
-    setLast({ id: userId, at: new Date().toISOString() })
-    try {
-      await api.markClassAttendance(sessionIdRef.current, userId)
-      toast(online ? 'Present recorded' : 'Present recorded — will sync when you’re back online')
-      await loadAttendance()
-    } catch (e) {
-      console.error(e)
-      toast('Could not record the scan', 'err')
     }
   }
 
@@ -248,7 +184,7 @@ export default function ClassAttendance() {
       <div className="empty-state">
         <ShieldCheck size={44} />
         <h3>Class attendance</h3>
-        <p>This page is for faculty — add the subjects you teach, start a session, and scan student IDs.</p>
+        <p>This page is for faculty — add the subjects you teach, start a session, and show the QR your students scan.</p>
       </div>
     )
   }
@@ -260,7 +196,7 @@ export default function ClassAttendance() {
       <h1 className="page-title">
         CLASS <span className="page-kicker">faculty tools</span>
       </h1>
-      <p className="page-sub">Add the subjects you teach, start a session per meeting, and scan IDs as students arrive.</p>
+      <p className="page-sub">Add the subjects you teach, start a session per meeting, and put the QR up for your students to scan as they come in.</p>
 
       <section className="panel">
         <div className="panel-head">
@@ -378,36 +314,32 @@ export default function ClassAttendance() {
 
       <section className="panel">
         <div className="panel-head">
-          <h2 className="panel-title"><QrCode size={16} /> Scanner</h2>
+          <h2 className="panel-title"><QrCode size={16} /> Student scan</h2>
+          {openSession && <span className="chip chip--ok">live</span>}
         </div>
-        <div className="scan-stage">
-          <div className="scan-box" id="fnahs-class-scan-box" ref={scanBoxRef} />
-          {!scanning && (
-            <div className="scan-placeholder">
-              Camera off<br /><br />Press start to scan IDs
+        {!openSession ? (
+          <p className="panel-muted">Start a session to show the QR your students scan.</p>
+        ) : (
+          <>
+            <p className="page-sub" style={{ marginTop: 0 }}>
+              Students open <b>My ID → Scan class QR</b> and point their camera at this code to record attendance.
+            </p>
+            <div className="qr-stage">
+              <img src={qr} alt="Class session QR" className="qr-img" />
+              <div className="qr-caption">
+                {activeSubject?.name ||
+                  subjects.find((s) => s.id === openSession.subject_id)?.name ||
+                  'Class'}{' '}
+                · {new Date(openSession.started_at).toLocaleTimeString()} ·{' '}
+                {openSession.attendance_count ?? 0} present
+              </div>
             </div>
-          )}
-          {scanning && <div className="scan-overlay" />}
-        </div>
-        <div className="scan-actions">
-          {!scanning ? (
-            <button className="btn btn--primary btn--block" onClick={startScan} disabled={!activeSession || !!activeSession.ended_at}>
-              <Camera size={16} /> Start scanner
-            </button>
-          ) : (
-            <button className="btn btn--danger btn--block" onClick={stopScan}>
-              <CameraOff size={16} /> Stop scanner
-            </button>
-          )}
-        </div>
-        {!activeSession && <p className="panel-muted">Start a session to unlock the scanner.</p>}
-        {activeSession?.ended_at && !scanning && (
-          <p className="panel-muted">This session has ended — you can still review and export the log.</p>
-        )}
-        {last && (
-          <div className="form-ok" style={{ marginTop: 14, marginBottom: 0 }}>
-            Last scan: <b>{last.id.slice(0, 8)}</b> · {timeAgo(last.at)}
-          </div>
+            <div className="scan-actions">
+              <button className="btn btn--block" onClick={() => setQrOpen(true)}>
+                <Maximize2 size={16} /> Expand for projection
+              </button>
+            </div>
+          </>
         )}
       </section>
 
@@ -493,6 +425,28 @@ export default function ClassAttendance() {
           </>
         )}
       </section>
+
+      {qrOpen && openSession && qr && (
+        <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setQrOpen(false)}>
+          <div className="qr-fullscreen" role="dialog" aria-label="Class session QR">
+            <div className="qr-fullscreen-head">
+              <span>
+                {activeSubject?.name ||
+                  subjects.find((s) => s.id === openSession.subject_id)?.name ||
+                  'Class'}{' '}
+                · {new Date(openSession.started_at).toLocaleTimeString()}
+              </span>
+              <button className="icon-btn" onClick={() => setQrOpen(false)} title="Close">
+                <X size={18} />
+              </button>
+            </div>
+            <img src={qr} alt="Class session QR" />
+            <p>
+              Students: open <b>My ID</b> → <b>Scan class QR</b>, then point your camera here.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
