@@ -31,20 +31,35 @@ export function remarkLabel(r) {
   return REMARK_LABELS[r] || ''
 }
 
-/** roll up a form's rows: counts + summed merit/demerit/extension */
+/** merit/demerit dropdown range (1-12) */
+export const SCORE_OPTIONS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: String(i + 1) }))
+
+/** merit options: 0 (none) up to 12 */
+export const MERIT_OPTIONS = [{ value: 0, label: '0' }, ...SCORE_OPTIONS]
+
+/** demerit options: null (none) up to 12 */
+export const DEMERIT_OPTIONS = [{ value: null, label: 'None' }, ...SCORE_OPTIONS]
+
+/** roll up a form's rows: counts + summed merit/demerit.
+    Auto-deduction: merits neutralize demerits 1:1, then every 3 leftover
+    demerits auto-convert to 1 day of extension (3 demerits = 1 day). */
 export function clearanceSummary(rows = []) {
   const s = { total: 0, cleared: 0, pending: 0, meritTotal: 0, demeritTotal: 0, absent: 0, late: 0, ir: 0, daysExtension: 0 }
   for (const r of rows || []) {
     s.total++
     s.meritTotal += Number(r.merit) || 0
     s.demeritTotal += Number(r.demerit) || 0
-    s.daysExtension += Number(r.days_extension) || 0
     if (r.cleared_at) s.cleared++
     else s.pending++
     if (r.remark === 'absent') s.absent++
     else if (r.remark === 'late') s.late++
     else if (r.remark === 'ir') s.ir++
   }
+  const effective = Math.max(0, s.demeritTotal - s.meritTotal)
+  s.effectiveDemerits = effective
+  s.autoDays = Math.floor(effective / 3)
+  s.demeritBalance = effective % 3
+  s.daysExtension = s.autoDays
   return s
 }
 

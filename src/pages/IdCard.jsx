@@ -8,6 +8,7 @@ import { monthDay, timeAgo, fullDateTime } from '../lib/format'
 import { drawIdCanvas } from '../lib/idCanvas'
 import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
 import { clearanceSummary, remarkLabel, fmtHours, semesterLabel } from '../lib/clearance'
+import ClearancePrintDoc from '../components/ClearancePrintDoc'
 
 export default function IdCard() {
   const { user, toast } = useApp()
@@ -292,7 +293,7 @@ export default function IdCard() {
         <div className="print-clearance-area">
           <div className="clearance-print-doc">
             {clearance.map((form) => (
-              <StudentClearanceForm key={form.id} form={form} student={user} print />
+              <ClearancePrintDoc key={form.id} form={form} student={user} />
             ))}
           </div>
         </div>
@@ -301,10 +302,10 @@ export default function IdCard() {
   )
 }
 
-function StudentClearanceForm({ form, student, print, refresh }) {
+function StudentClearanceForm({ form, student, refresh }) {
   const { toast } = useApp()
   const summary = clearanceSummary(form.rows)
-  const canManage = !print && can(student, 'clearance.edit')
+  const canManage = can(student, 'clearance.edit')
   const [editPlacement, setEditPlacement] = useState(false)
   const [placementDraft, setPlacementDraft] = useState(form.placement)
   const [busy, setBusy] = useState(false)
@@ -344,7 +345,7 @@ function StudentClearanceForm({ form, student, print, refresh }) {
   }
 
   return (
-    <article className={`clearance-form${print ? ' clearance-form--print' : ''}`}>
+    <article className="clearance-form">
       <div className="clearance-form-head">
         <div className="clearance-print-logos">
           <img src="/dorsu-logo.png" alt="DORSU" />
@@ -445,15 +446,13 @@ function StudentClearanceForm({ form, student, print, refresh }) {
           </tbody>
         </table>
       </div>
-      {!print && (
-        <div className="clearance-form-tally">
+      <div className="clearance-form-tally">
           <span className="chip chip--ok">{summary.cleared} cleared</span>
           <span className="chip">{summary.pending} pending</span>
           <span className="chip chip--gold">Merit total {summary.meritTotal}</span>
-          {summary.demeritTotal > 0 && <span className="chip chip--warn">Demerit {summary.demeritTotal}</span>}
-          {summary.daysExtension > 0 && <span className="chip chip--hn">Extension {summary.daysExtension}</span>}
+          {summary.demeritTotal > 0 && <span className="chip chip--warn">Demerit {summary.demeritBalance} of {summary.demeritTotal}</span>}
+          {summary.autoDays > 0 && <span className="chip chip--hn">Extension {summary.autoDays} day{summary.autoDays === 1 ? '' : 's'}</span>}
         </div>
-      )}
     </article>
   )
 }

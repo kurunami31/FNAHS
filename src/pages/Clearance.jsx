@@ -13,13 +13,14 @@ import {
   ArrowRight,
   X,
   Loader2,
+  Printer,
 } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { enumerateCameras, cameraConstraints } from '../lib/scanner'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
-import { fullDateTime, initials } from '../lib/format'
+import { fullDateTime, initials, timeAgo } from '../lib/format'
 import { currentSchoolYear } from '../lib/fees'
 import {
   currentSemester,
@@ -28,8 +29,11 @@ import {
   fmtHours,
   SEMESTERS,
   semesterLabel,
+  MERIT_OPTIONS,
+  DEMERIT_OPTIONS,
 } from '../lib/clearance'
 import Select from '../components/Select'
+import ClearancePrintDoc from '../components/ClearancePrintDoc'
 
 const REMARK_OPTIONS = [
   { value: 'absent', label: 'Absent' },
@@ -62,6 +66,13 @@ export default function Clearance() {
   const [searchQ, setSearchQ] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const [lastScanned, setLastScanned] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('fnahs-clearance-last-scan') || 'null')
+    } catch {
+      return null
+    }
+  })
 
   const isOfficer = can(user, 'clearance.scan')
   const canEdit = can(user, 'clearance.edit')
@@ -195,6 +206,13 @@ export default function Clearance() {
       const p = await api.getProfile(userId)
       if (!p) throw new Error('No member found for that ID')
       const ok = await selectStudent(p)
+      const record = { id: p.id, id_no: p.id_no || null, name: p.full_name || null, at: Date.now() }
+      setLastScanned(record)
+      try {
+        localStorage.setItem('fnahs-clearance-last-scan', JSON.stringify(record))
+      } catch {
+        /* storage may be full — the in-memory value still updates */
+      }
       toast(
         ok
           ? online
@@ -382,9 +400,8 @@ export default function Clearance() {
   }
 
   const toggleRemark = (row, value) => updateRow(row, { remark: row.remark === value ? null : value })
-  const toggleDemerit = (row, value) => updateRow(row, { demerit: row.demerit === value ? null : value })
-  const toggleExtension = (row, value) => updateRow(row, { days_extension: row.days_extension === value ? null : value })
-  const addMerit = (row, amount) => updateRow(row, { merit: (Number(row.merit) || 0) + amount })
+  const setMerit = (row, value) => updateRow(row, { merit: Number(value) })
+  const setDemerit = (row, value) => updateRow(row, { demerit: value ? Number(value) : null })
 
   const deleteRow = async (row) => {
     if (!canEdit) {
@@ -452,6 +469,13 @@ export default function Clearance() {
             Offline mode — changes are saved to this device and sync when the connection returns.
           </div>
         )}
+        {lastScanned && (
+          <div className="form-ok" style={{ marginTop: 12, marginBottom: 0 }}>
+            Last scanned: <b>ID {lastScanned.id_no || lastScanned.id?.slice(0, 8)}</b>
+            {lastScanned.name ? ` — ${lastScanned.name}` : ''}
+            {lastScanned.at ? ` · ${timeAgo(lastScanned.at)}` : ''}
+          </div>
+        )}
       </section>
 
       <section className="panel">
@@ -498,6 +522,11 @@ export default function Clearance() {
         <section className="panel">
           <div className="panel-head">
             <h2 className="panel-title"><ClipboardCheck size={16} /> Student clearance</h2>
+            {activeForm && activeForm.rows.length > 0 && (
+              <button className="btn btn--tiny" onClick={() => window.print()} title="Print this student's rotational clearance">
+                <Printer size={13} /> Print
+              </button>
+            )}
           </div>
 
           <div className="ledger-row" style={{ border: 'none', padding: '0 0 16px' }}>
@@ -587,8 +616,14 @@ export default function Clearance() {
                   <span className="chip chip--ok">{summary.cleared} cleared</span>
                   <span className="chip">{summary.pending} pending</span>
                   <span className="chip chip--gold">Merit total {summary.meritTotal}</span>
-                  {summary.demeritTotal > 0 && <span className="chip chip--warn">Demerit {summary.demeritTotal}</span>}
-                  {summary.daysExtension > 0 && <span className="chip chip--hn">Extension {summary.daysExtension}</span>}
+                  {summary.demeritTotal > 0 && (
+                    <span className="chip chip--warn" title="Demerits after merits are deducted 1:1">
+                      Demerit {summary.demeritBalance} of {summary.demeritTotal}
+                    </span>
+                  )}
+                  {summary.autoDays > 0 && (
+                    <span className="chip chip--hn">Extension {summary.autoDays} day{summary.autoDays === 1 ? '' : 's'} (auto)</span>
+                  )}
                 </div>
                 <div className="clearance-summary-actions">
                   {canEdit && (
@@ -685,14 +720,13 @@ export default function Clearance() {
                       <th>Merit</th>
                       <th>Demerit</th>
                       <th>Remarks</th>
-                      <th>Days Extension</th>
                       <th />
                     </tr>
                   </thead>
                   <tbody>
                     {activeForm.rows.length === 0 && (
                       <tr>
-                        <td colSpan={12} className="clearance-empty">No duty rows yet — add the first one above.</td>
+                        <td colSpan={11} className="clearance-empty">No duty rows yet — add the first one above.</td>
                       </tr>
                     )}
                     {activeForm.rows.map((row, i) => {
@@ -746,31 +780,29 @@ export default function Clearance() {
                           </td>
                           <td>{row.recorded_by_name || (row.cleared_at ? '—' : '')}</td>
                           <td>
-                            <div className="clearance-ctrl">
-                              {editable ? (
-                                <>
-                                  <button className="btn btn--tiny" onClick={() => addMerit(row, 1)} disabled={busyRow === row.id}>+1</button>
-                                  <button className="btn btn--tiny" onClick={() => addMerit(row, 2)} disabled={busyRow === row.id}>+2</button>
-                                  <button className="btn btn--tiny" onClick={() => addMerit(row, 3)} disabled={busyRow === row.id}>+3</button>
-                                </>
-                              ) : null}
+                            {editable ? (
+                              <Select
+                                compact
+                                value={row.merit || 0}
+                                onChange={(v) => setMerit(row, v)}
+                                options={MERIT_OPTIONS}
+                                ariaLabel={`Merit points for ${row.concept}`}
+                                disabled={busyRow === row.id}
+                              />
+                            ) : (
                               <span className="clearance-val">{Number(row.merit) || 0}</span>
-                            </div>
+                            )}
                           </td>
                           <td>
                             {editable ? (
-                              <div className="clearance-ctrl">
-                                {[1, 2, 3].map((d) => (
-                                  <button
-                                    key={d}
-                                    className={`btn btn--tiny${row.demerit === d ? ' btn--on' : ''}`}
-                                    onClick={() => toggleDemerit(row, d)}
-                                    disabled={busyRow === row.id}
-                                  >
-                                    {d}
-                                  </button>
-                                ))}
-                              </div>
+                              <Select
+                                compact
+                                value={row.demerit ?? null}
+                                onChange={(v) => setDemerit(row, v)}
+                                options={DEMERIT_OPTIONS}
+                                ariaLabel={`Demerit points for ${row.concept}`}
+                                disabled={busyRow === row.id}
+                              />
                             ) : (
                               <span className="clearance-val">{row.demerit || ''}</span>
                             )}
@@ -791,24 +823,6 @@ export default function Clearance() {
                               </div>
                             ) : (
                               <span className="clearance-val">{row.remark ? remarkLabel(row.remark) : ''}</span>
-                            )}
-                          </td>
-                          <td>
-                            {editable ? (
-                              <div className="clearance-ctrl">
-                                {[1, 2, 3].map((d) => (
-                                  <button
-                                    key={d}
-                                    className={`btn btn--tiny${row.days_extension === d ? ' btn--on' : ''}`}
-                                    onClick={() => toggleExtension(row, d)}
-                                    disabled={busyRow === row.id}
-                                  >
-                                    {d}
-                                  </button>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="clearance-val">{row.days_extension || ''}</span>
                             )}
                           </td>
                           <td>
@@ -877,10 +891,19 @@ export default function Clearance() {
             <li>Scan the student's ID QR to open their clearance form.</li>
             <li>Add duty rows with the inclusive dates, concept, and number of hours.</li>
             <li>When the student completes a duty, scan again and press <b>Clear</b> on that row — only that row is signed, with you recorded as the Clinical Instructor.</li>
-            <li>Mark remarks (Absent / Late / IR), demerit, days extension, and merit points per row — these stay editable by the CI who cleared the row.</li>
+            <li>Mark remarks (Absent / Late / IR), and set merit / demerit points per row from 1 to 12 — these stay editable by the CI who cleared the row.</li>
+            <li>Merits deduct from demerits 1:1, and every 3 demerits left over auto-convert to 1 day of extension.</li>
             <li>The student sees the same form read-only on their My ID page, with a printable copy.</li>
           </ol>
         </section>
+      )}
+
+      {student && activeForm && (
+        <div className="print-clearance-area">
+          <div className="clearance-print-doc">
+            <ClearancePrintDoc form={activeForm} student={student} />
+          </div>
+        </div>
       )}
     </div>
   )
