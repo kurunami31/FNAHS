@@ -7,6 +7,7 @@ import {
   Plus,
   Check,
   Trash2,
+  Pencil,
   FileSignature,
   X,
   Loader2,
@@ -49,6 +50,10 @@ export default function Clearance() {
   const [saving, setSaving] = useState(false)
   const [rowForm, setRowForm] = useState({ dates: '', concept: '', hours: '', agency: '' })
   const [busyRow, setBusyRow] = useState(null)
+  const [editPlacement, setEditPlacement] = useState(false)
+  const [placementDraft, setPlacementDraft] = useState('')
+  const [editRowId, setEditRowId] = useState(null)
+  const [editDraft, setEditDraft] = useState({ dates: '', concept: '', hours: '', agency: '' })
 
   const isOfficer = can(user, 'clearance.scan')
   const yearOptions = useMemo(() => {
@@ -222,6 +227,71 @@ export default function Clearance() {
     }
   }
 
+  const savePlacement = async (e) => {
+    e.preventDefault()
+    if (!activeForm) return
+    const value = placementDraft.trim()
+    if (!value) {
+      toast('Placement cannot be empty', 'info')
+      return
+    }
+    setBusyRow('__form')
+    try {
+      await api.updateClearanceForm(activeForm.id, { placement: value })
+      toast('Placement updated')
+      setEditPlacement(false)
+      await loadForms(student.id)
+    } catch (err) {
+      toast(err?.message || 'Could not update the placement', 'err')
+    } finally {
+      setBusyRow(null)
+    }
+  }
+
+  const removeForm = async () => {
+    if (!activeForm) return
+    if (!window.confirm(`Delete this clearance form (${activeForm.school_year} · ${semesterLabel(activeForm.semester)}) and ALL of its rows? This cannot be undone.`)) return
+    setBusyRow('__form')
+    try {
+      await api.deleteClearanceForm(activeForm.id)
+      toast('Clearance form deleted')
+      await loadForms(student.id)
+    } catch (err) {
+      toast(err?.message || 'Could not delete the form', 'err')
+    } finally {
+      setBusyRow(null)
+    }
+  }
+
+  const startEditRow = (row) => {
+    setEditRowId(row.id)
+    setEditDraft({ dates: row.dates, concept: row.concept, hours: String(row.hours ?? ''), agency: row.agency || '' })
+  }
+
+  const saveEditRow = async (row) => {
+    const patch = {
+      dates: editDraft.dates.trim(),
+      concept: editDraft.concept.trim(),
+      hours: Number(editDraft.hours) || 0,
+      agency: editDraft.agency.trim(),
+    }
+    if (!patch.dates || !patch.concept) {
+      toast('Dates and concept are required', 'info')
+      return
+    }
+    setBusyRow(row.id)
+    try {
+      await api.updateClearanceRow(row.id, patch)
+      toast('Duty row updated')
+      setEditRowId(null)
+      await loadForms(student.id)
+    } catch (err) {
+      toast(err?.message || 'Could not update the row', 'err')
+    } finally {
+      setBusyRow(null)
+    }
+  }
+
   const toggleRemark = (row, value) => updateRow(row, { remark: row.remark === value ? null : value })
   const toggleDemerit = (row, value) => updateRow(row, { demerit: row.demerit === value ? null : value })
   const toggleExtension = (row, value) => updateRow(row, { days_extension: row.days_extension === value ? null : value })
@@ -349,13 +419,50 @@ export default function Clearance() {
           ) : (
             <>
               <div className="clearance-summary">
-                <b className="clearance-summary-placement">{activeForm.placement}</b>
+                {editPlacement ? (
+                  <form className="clearance-placement-edit" onSubmit={savePlacement}>
+                    <input
+                      autoFocus
+                      value={placementDraft}
+                      onChange={(e) => setPlacementDraft(e.target.value)}
+                      placeholder="Placement / center"
+                      maxLength={200}
+                    />
+                    <button className="btn btn--tiny btn--primary" disabled={busyRow === '__form'}>
+                      {busyRow === '__form' ? <Loader2 size={12} className="spin" /> : <Check size={12} />} Save
+                    </button>
+                    <button type="button" className="btn btn--tiny btn--ghost" onClick={() => setEditPlacement(false)}>Cancel</button>
+                  </form>
+                ) : (
+                  <b className="clearance-summary-placement">{activeForm.placement}</b>
+                )}
                 <div className="clearance-chips">
                   <span className="chip chip--ok">{summary.cleared} cleared</span>
                   <span className="chip">{summary.pending} pending</span>
                   <span className="chip chip--gold">Merit total {summary.meritTotal}</span>
                   {summary.demeritTotal > 0 && <span className="chip chip--warn">Demerit {summary.demeritTotal}</span>}
                   {summary.daysExtension > 0 && <span className="chip chip--hn">Extension {summary.daysExtension}</span>}
+                </div>
+                <div className="clearance-summary-actions">
+                  <button
+                    className="btn btn--tiny"
+                    title="Edit placement"
+                    disabled={busyRow === '__form'}
+                    onClick={() => {
+                      setPlacementDraft(activeForm.placement)
+                      setEditPlacement(true)
+                    }}
+                  >
+                    <Pencil size={12} />
+                  </button>
+                  <button
+                    className="btn btn--tiny btn--danger"
+                    title="Delete this clearance form"
+                    disabled={busyRow === '__form'}
+                    onClick={removeForm}
+                  >
+                    {busyRow === '__form' ? <Loader2 size={12} className="spin" /> : <Trash2 size={12} />}
+                  </button>
                 </div>
               </div>
 
@@ -439,13 +546,38 @@ export default function Clearance() {
                     )}
                     {activeForm.rows.map((row, i) => {
                       const editable = canEditRow(row)
+                      const isEditing = editRowId === row.id
                       return (
                         <tr key={row.id} className={row.cleared_at ? '' : 'clearance-row--pending'}>
                           <td>{i + 1}</td>
-                          <td>{row.dates}</td>
-                          <td>{row.concept}</td>
-                          <td>{fmtHours(row.hours)}</td>
-                          <td>{row.agency || ''}</td>
+                          <td>
+                            {isEditing ? (
+                              <input className="clearance-inline-input" value={editDraft.dates} onChange={(e) => setEditDraft({ ...editDraft, dates: e.target.value })} maxLength={200} />
+                            ) : (
+                              row.dates
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input className="clearance-inline-input" value={editDraft.concept} onChange={(e) => setEditDraft({ ...editDraft, concept: e.target.value })} maxLength={200} />
+                            ) : (
+                              row.concept
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input className="clearance-inline-input clearance-inline-hours" type="number" min="0" step="0.5" value={editDraft.hours} onChange={(e) => setEditDraft({ ...editDraft, hours: e.target.value })} />
+                            ) : (
+                              fmtHours(row.hours)
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input className="clearance-inline-input" value={editDraft.agency} onChange={(e) => setEditDraft({ ...editDraft, agency: e.target.value })} maxLength={200} />
+                            ) : (
+                              row.agency || ''
+                            )}
+                          </td>
                           <td>{row.cleared_at ? fullDate(row.cleared_at) : <span className="clearance-pending-tag">pending</span>}</td>
                           <td>{row.recorded_by_name || (row.cleared_at ? '—' : '')}</td>
                           <td>
@@ -516,19 +648,41 @@ export default function Clearance() {
                           </td>
                           <td>
                             <div className="clearance-ctrl">
-                              {!row.cleared_at && (
-                                <button
-                                  className="btn btn--tiny btn--primary"
-                                  onClick={() => clearRow(row)}
-                                  disabled={busyRow === row.id}
-                                >
-                                  {busyRow === row.id ? <Loader2 size={12} className="spin" /> : <FileSignature size={12} />} Clear
-                                </button>
-                              )}
-                              {editable && (
-                                <button className="btn btn--tiny btn--danger" onClick={() => deleteRow(row)} disabled={busyRow === row.id}>
-                                  <Trash2 size={12} />
-                                </button>
+                              {isEditing ? (
+                                <>
+                                  <button
+                                    className="btn btn--tiny btn--primary"
+                                    onClick={() => saveEditRow(row)}
+                                    disabled={busyRow === row.id}
+                                  >
+                                    {busyRow === row.id ? <Loader2 size={12} className="spin" /> : <Check size={12} />} Save
+                                  </button>
+                                  <button className="btn btn--tiny btn--ghost" onClick={() => setEditRowId(null)} disabled={busyRow === row.id}>
+                                    <X size={12} /> Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  {editable && (
+                                    <button className="btn btn--tiny" title="Edit dates, concept, hours or agency" onClick={() => startEditRow(row)} disabled={busyRow === row.id}>
+                                      <Pencil size={12} />
+                                    </button>
+                                  )}
+                                  {!row.cleared_at && (
+                                    <button
+                                      className="btn btn--tiny btn--primary"
+                                      onClick={() => clearRow(row)}
+                                      disabled={busyRow === row.id}
+                                    >
+                                      {busyRow === row.id ? <Loader2 size={12} className="spin" /> : <FileSignature size={12} />} Clear
+                                    </button>
+                                  )}
+                                  {editable && (
+                                    <button className="btn btn--tiny btn--danger" onClick={() => deleteRow(row)} disabled={busyRow === row.id}>
+                                      <Trash2 size={12} />
+                                    </button>
+                                  )}
+                                </>
                               )}
                             </div>
                           </td>

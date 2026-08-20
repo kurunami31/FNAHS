@@ -2648,6 +2648,29 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
   gap: 6px;
   margin-left: auto;
 }
+.clearance-summary-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.clearance-placement-edit { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.clearance-placement-edit input {
+  min-width: 180px;
+  max-width: 320px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+.clearance-inline-input {
+  width: 100%;
+  min-width: 90px;
+  padding: 5px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+.clearance-inline-hours { min-width: 60px; width: 70px; }
 @media (max-width: 560px) {
   .clearance-summary { align-items: flex-start; flex-direction: column; }
   .clearance-chips { margin-left: 0; }

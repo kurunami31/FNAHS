@@ -491,6 +491,10 @@ async function demoUpdateClearanceRow(rowId, patch) {
   const me = demoCurrentUserId()
   const { row } = demoFindClearanceRow(rowId)
   if (!row) throw new Error('Clearance row not found')
+  if (patch.dates !== undefined) row.dates = sanitizeText(patch.dates, 200)
+  if (patch.concept !== undefined) row.concept = sanitizeText(patch.concept, 200)
+  if (patch.hours !== undefined) row.hours = Number(patch.hours) || 0
+  if (patch.agency !== undefined) row.agency = sanitizeText(patch.agency, 200) || null
   if (patch.remark !== undefined) row.remark = patch.remark || null
   if (patch.demerit !== undefined) row.demerit = patch.demerit || null
   if (patch.days_extension !== undefined) row.days_extension = patch.days_extension || null
@@ -500,6 +504,19 @@ async function demoUpdateClearanceRow(rowId, patch) {
   row.updated_at = new Date().toISOString()
   saveDb(db)
   return row
+}
+
+async function demoUpdateClearanceForm(formId, { placement }) {
+  const form = (db.clearanceForms || []).find((f) => f.id === formId)
+  if (!form) throw new Error('Clearance form not found')
+  form.placement = sanitizeText(placement, 200)
+  saveDb(db)
+  return form
+}
+
+async function demoDeleteClearanceForm(formId) {
+  db.clearanceForms = (db.clearanceForms || []).filter((f) => f.id !== formId)
+  saveDb(db)
 }
 
 async function demoDeleteClearanceRow(rowId) {
@@ -1550,6 +1567,10 @@ export const api = {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in.')
         const clean = { updated_by: user.id, updated_at: new Date().toISOString() }
+        if (patch.dates !== undefined) clean.dates = sanitizeText(patch.dates, 200)
+        if (patch.concept !== undefined) clean.concept = sanitizeText(patch.concept, 200)
+        if (patch.hours !== undefined) clean.hours = Number(patch.hours) || 0
+        if (patch.agency !== undefined) clean.agency = sanitizeText(patch.agency, 200) || null
         if (patch.remark !== undefined) clean.remark = patch.remark || null
         if (patch.demerit !== undefined) clean.demerit = patch.demerit || null
         if (patch.days_extension !== undefined) clean.days_extension = patch.days_extension || null
@@ -1561,7 +1582,7 @@ export const api = {
           .select('*')
           .single()
         if (error) throw error
-        api.logAudit('clearance.row.update', 'clearance_row', rowId, { remark: clean.remark, demerit: clean.demerit, days_extension: clean.days_extension, merit: clean.merit })
+        api.logAudit('clearance.row.update', 'clearance_row', rowId, { dates: clean.dates, concept: clean.concept, hours: clean.hours, agency: clean.agency, remark: clean.remark, demerit: clean.demerit, days_extension: clean.days_extension, merit: clean.merit })
         return data
       }, demoUpdateClearanceRow),
 
@@ -1570,6 +1591,28 @@ export const api = {
         if (error) throw error
         api.logAudit('clearance.row.delete', 'clearance_row', rowId)
       }, demoDeleteClearanceRow),
+
+  updateClearanceForm: offlineWrite('updateClearanceForm', async (formId, { placement }) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { data, error } = await supabase
+          .from('clearance_forms')
+          .update({ placement: sanitizeText(placement, 200) })
+          .eq('id', formId)
+          .select('*')
+          .single()
+        if (error) throw error
+        api.logAudit('clearance.form.update', 'clearance_form', formId, { placement })
+        return data
+      }, demoUpdateClearanceForm, { localId: (f) => f?.id }),
+
+  deleteClearanceForm: offlineWrite('deleteClearanceForm', async (formId) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('You must be signed in.')
+        const { error } = await supabase.from('clearance_forms').delete().eq('id', formId)
+        if (error) throw error
+        api.logAudit('clearance.form.delete', 'clearance_form', formId)
+      }, demoDeleteClearanceForm),
 
   /* my attendance history */
   getMyAttendance: offlineRead('getMyAttendance', async () => {
