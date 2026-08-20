@@ -407,7 +407,20 @@ async function demoGetClearanceForms(studentId) {
     .sort((a, b) => a.school_year.localeCompare(b.school_year) || a.semester.localeCompare(b.semester))
 }
 
+/* Mirrors the SQL is_clearance_officer() gate for offline mutations —
+   students must not be able to edit/delete clearance even locally. */
+function demoIsClearanceOfficer() {
+  const me = demoCurrentUserId()
+  const role = me ? db.profiles[me]?.role : null
+  return role === 'faculty' || role === 'superadmin'
+}
+
+function demoRequireClearanceOfficer() {
+  if (!demoIsClearanceOfficer()) throw new Error('Only Clinical Instructors or the administrator may edit or delete clearance records.')
+}
+
 async function demoCreateClearanceForm(studentId, { school_year, semester, placement }) {
+  demoRequireClearanceOfficer()
   const form = {
     id: uid(),
     member_id: studentId,
@@ -424,6 +437,7 @@ async function demoCreateClearanceForm(studentId, { school_year, semester, place
 }
 
 async function demoAddClearanceRow(formId, { dates, concept, hours, agency }) {
+  demoRequireClearanceOfficer()
   const form = (db.clearanceForms || []).find((f) => f.id === formId)
   if (!form) throw new Error('Clearance form not found')
   const row = {
@@ -463,6 +477,7 @@ async function demoAddClearanceRow(formId, { dates, concept, hours, agency }) {
 }
 
 async function demoClearClearanceRow(rowId) {
+  demoRequireClearanceOfficer()
   const me = demoCurrentUserId()
   const { form, row } = demoFindClearanceRow(rowId)
   if (!row) throw new Error('Clearance row not found')
@@ -488,6 +503,7 @@ async function demoClearClearanceRow(rowId) {
 }
 
 async function demoUpdateClearanceRow(rowId, patch) {
+  demoRequireClearanceOfficer()
   const me = demoCurrentUserId()
   const { row } = demoFindClearanceRow(rowId)
   if (!row) throw new Error('Clearance row not found')
@@ -507,6 +523,7 @@ async function demoUpdateClearanceRow(rowId, patch) {
 }
 
 async function demoUpdateClearanceForm(formId, { placement }) {
+  demoRequireClearanceOfficer()
   const form = (db.clearanceForms || []).find((f) => f.id === formId)
   if (!form) throw new Error('Clearance form not found')
   form.placement = sanitizeText(placement, 200)
@@ -515,11 +532,13 @@ async function demoUpdateClearanceForm(formId, { placement }) {
 }
 
 async function demoDeleteClearanceForm(formId) {
+  demoRequireClearanceOfficer()
   db.clearanceForms = (db.clearanceForms || []).filter((f) => f.id !== formId)
   saveDb(db)
 }
 
 async function demoDeleteClearanceRow(rowId) {
+  demoRequireClearanceOfficer()
   for (const f of db.clearanceForms || []) {
     const before = f.rows?.length || 0
     f.rows = (f.rows || []).filter((r) => r.id !== rowId)
