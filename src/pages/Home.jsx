@@ -108,7 +108,7 @@ export default function Home() {
 
       {user && <Announcements />}
 
-      {user && <PopulationBreakdown title="Enrollment by Year Level" kicker="population" />}
+      <PopulationBreakdown title="Enrollment by Year Level" />
 
       {user && tools.length > 0 && (
         <section className="sec" aria-labelledby="h-tools">
