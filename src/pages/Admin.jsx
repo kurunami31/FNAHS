@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download, HandCoins, RefreshCw, FileText } from 'lucide-react'
+import { ShieldAlert, Users, Newspaper, CalendarDays, Wrench, Plus, Pencil, Trash2, X, Search, IdCard, Download, HandCoins, RefreshCw, FileText, GraduationCap } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can, POSITIONS, positionLabel, roleLabel } from '../rbac'
 import { api } from '../lib/api'
@@ -270,6 +270,30 @@ const [feeFilter, setFeeFilter] = useState('all')
     }
   }
 
+  const pendingFaculty = members.filter((m) => m.requested_role === 'faculty' && m.role !== 'faculty')
+
+  const approveFacultyRequest = async (m) => {
+    try {
+      await api.resolveFacultyRequest(m.id, true)
+      setMembers((ms) => ms.map((x) => (x.id === m.id ? { ...x, role: 'faculty', requested_role: null } : x)))
+      toast(`${m.full_name} is now faculty`)
+    } catch (e) {
+      console.error(e)
+      toast(e.message || 'Could not approve the faculty request', 'err')
+    }
+  }
+
+  const dismissFacultyRequest = async (m) => {
+    try {
+      await api.resolveFacultyRequest(m.id, false)
+      setMembers((ms) => ms.map((x) => (x.id === m.id ? { ...x, requested_role: null } : x)))
+      toast(`Faculty request from ${m.full_name} dismissed`)
+    } catch (e) {
+      console.error(e)
+      toast(e.message || 'Could not dismiss the request', 'err')
+    }
+  }
+
   const removeMember = async (m) => {
     if (m.id === user.id) {
       toast('You cannot delete your own account', 'err')
@@ -363,6 +387,32 @@ const [feeFilter, setFeeFilter] = useState('all')
               <Plus size={15} /> Add member
             </button>
           </div>
+          {isSuperadmin && pendingFaculty.length > 0 && (
+            <div className="panel" style={{ marginBottom: 12, padding: 12, borderColor: 'var(--gold)' }}>
+              <div style={{ fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <GraduationCap size={16} /> Pending faculty requests ({pendingFaculty.length})
+              </div>
+              <div className="ledger ledger-scroll" style={{ maxHeight: 220 }}>
+                {pendingFaculty.map((m) => (
+                  <div className="ledger-row mem-row" key={m.id}>
+                    <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>
+                      {m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{m.full_name}</div>
+                      <div className="ledger-meta">{m.email}</div>
+                    </div>
+                    <button className="btn btn--primary btn--sm" onClick={() => approveFacultyRequest(m)}>
+                      Approve as faculty
+                    </button>
+                    <button className="btn btn--ghost btn--sm" onClick={() => dismissFacultyRequest(m)}>
+                      Dismiss
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="ledger ledger-scroll">
             {visibleMembers.map((m) => (
               <div className="ledger-row mem-row" key={m.id}>
@@ -378,6 +428,11 @@ const [feeFilter, setFeeFilter] = useState('all')
                         <span key={p} className="badge">{positionLabel(p)}</span>
                       ))}
                     </div>
+                  )}
+                  {m.requested_role === 'faculty' && m.role !== 'faculty' && (
+                    <span className="badge" style={{ background: 'var(--gold)', color: '#000', marginTop: 4 }}>
+                      Awaiting faculty approval
+                    </span>
                   )}
                 </div>
                 <Select

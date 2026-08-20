@@ -1048,21 +1048,23 @@ export const api = {
     })
   },
 
-  async signUp(full_name, email, password) {
+  async signUp(full_name, email, password, role) {
     if (!SUPABASE_ENABLED) {
       const id = uid()
-      const p = { id, full_name, email, program: PROGRAMS[0], year_level: '1', role: 'student', avatar_url: null, created_at: new Date().toISOString() }
+      const p = { id, full_name, email, program: PROGRAMS[0], year_level: '1', role: 'student', requested_role: role === 'faculty' ? 'faculty' : null, avatar_url: null, created_at: new Date().toISOString() }
       await demoUpsertProfile(p)
       demoLogin(id)
       return { user: p }
     }
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name } } })
+    const data = { full_name }
+    if (role === 'faculty') data.requested_role = 'faculty'
+    const { data: signed, error } = await supabase.auth.signUp({ email, password, options: { data } })
     if (error) throw error
-    if (!data.session) {
+    if (!signed.session) {
       // confirmation email flow — profile will be created by trigger
       return { user: null, needsConfirmation: true }
     }
-    return { user: await api.getProfile(data.user.id) }
+    return { user: await api.getProfile(signed.user.id) }
   },
 
   async signOut() {
@@ -1384,6 +1386,21 @@ export const api = {
         api.logAudit('positions.set', 'profile', id, { positions })
       }, async (id, positions) => {
         db.profiles[id] = { ...db.profiles[id], positions }
+        saveDb(db)
+      }),
+
+  /* superadmin resolves a pending faculty signup request (approve promotes
+     the member to faculty; dismiss just clears the request) */
+  resolveFacultyRequest: offlineWrite('resolveFacultyRequest', async (id, approve) => {
+        const { error } = await supabase.rpc('resolve_faculty_request', { p_target: id, p_approve: !!approve })
+        if (error) throw error
+        api.logAudit('faculty.request', 'profile', id, { approve: !!approve })
+      }, async (id, approve) => {
+        const p = db.profiles[id]
+        if (p) {
+          if (approve) p.role = 'faculty'
+          p.requested_role = null
+        }
         saveDb(db)
       }),
 

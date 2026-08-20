@@ -112,8 +112,8 @@ export function AppProvider({ children }) {
     return user
   }, [])
 
-  const signup = useCallback(async (name, email, password) => {
-    const res = await api.signUp(name, email, password)
+  const signup = useCallback(async (name, email, password, role) => {
+    const res = await api.signUp(name, email, password, role)
     if (!res.needsConfirmation) setUser(res.user)
     return res
   }, [])

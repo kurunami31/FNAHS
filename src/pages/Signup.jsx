@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, UserPlus, Info, ShieldCheck, X } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import PrivacyNoticeContent from '../components/PrivacyNoticeContent'
+import Select from '../components/Select'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/api'
 
@@ -19,6 +20,7 @@ export default function Signup() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [accountType, setAccountType] = useState('student')
   const [show, setShow] = useState(false)
   const [agree, setAgree] = useState(false)
   const [noticeOpen, setNoticeOpen] = useState(false)
@@ -39,11 +41,15 @@ export default function Signup() {
     }
     setBusy(true)
     try {
-      const res = await signup(name, email, password)
+      const res = await signup(name, email, password, accountType)
       if (res.needsConfirmation) {
-        setNotice(`We sent a confirmation link to ${email}. Check your inbox, then log in.`)
+        setNotice(
+          accountType === 'faculty'
+            ? `We sent a confirmation link to ${email}. Once you confirm, your faculty request goes to an administrator for approval before you can sign in as faculty.`
+            : `We sent a confirmation link to ${email}. Check your inbox, then log in.`
+        )
       } else {
-        toast('Account created — welcome to FNAHS!')
+        toast(accountType === 'faculty' ? 'Account created — your faculty request is pending admin approval.' : 'Account created — welcome to FNAHS!')
         navigate('/app')
       }
     } catch (err) {
@@ -82,6 +88,25 @@ export default function Signup() {
           <div className="field">
             <label>Full name</label>
             <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Juan Dela Cruz" autoComplete="name" />
+          </div>
+          <div className="field">
+            <label>Account type</label>
+            <Select
+              value={accountType}
+              onChange={setAccountType}
+              ariaLabel="Account type"
+              options={[
+                { value: 'student', label: 'Student' },
+                { value: 'faculty', label: 'Faculty' },
+              ]}
+            />
+            <p className="field-hint" style={{ marginTop: 6 }}>
+              {accountType === 'faculty' ? (
+                <>Faculty accounts are created as <b>pending</b> — an administrator approves them before you get faculty access.</>
+              ) : (
+                <>Students sign up instantly and are ready to go.</>
+              )}
+            </p>
           </div>
           <div className="field">
             <label>Email</label>

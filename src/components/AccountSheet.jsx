@@ -23,7 +23,7 @@ export default function AccountSheet({ onClose, onLogout }) {
   const saveTimer = useRef(null)
 
   // ---- MFA (TOTP) state ----
-  const isOfficer = can(user, 'attendance.scan') || can(user, 'console.access') || can(user, 'fees.manage')
+  const isOfficer = user?.role === 'faculty' || can(user, 'attendance.scan') || can(user, 'console.access') || can(user, 'fees.manage')
   const [mfaFactors, setMfaFactors] = useState(null)
   const [enrolling, setEnrolling] = useState(null) // { factorId, totp }
   const [enrollCode, setEnrollCode] = useState('')
