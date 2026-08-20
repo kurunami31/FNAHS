@@ -8,9 +8,10 @@ import {
   HeartPulse,
 Users,
   CreditCard,
-  ShieldCheck,
+ShieldCheck,
   Settings2,
   ClipboardCheck,
+  BookOpen,
   Search,
   Moon,
   Sun,
@@ -46,6 +47,7 @@ const SECTION = [
   ['/app/idcard', 'my id'],
   ['/app/staff', 'staff tools'],
   ['/app/clearance', 'rotational clearance'],
+  ['/app/class', 'class attendance'],
   ['/app/admin', 'admin'],
   ['/app', 'home'],
 ]
@@ -70,6 +72,7 @@ export default function Layout() {
   const canConsole = can(user, 'console.access')
   const canDirectory = can(user, 'directory.view')
   const canClearance = can(user, 'clearance.scan')
+  const canClass = can(user, 'class.manage')
   const section = (SECTION.find(([p]) => loc.pathname.startsWith(p)) || ['', 'FNAHS PULSO'])[1]
   const [dbNotice, setDbNotice] = useState(false)
 
@@ -158,6 +161,16 @@ export default function Layout() {
               <ClipboardCheck size={21} strokeWidth={2} />
             </NavLink>
           )}
+          {canClass && (
+            <NavLink
+              to="/app/class"
+              className={({ isActive }) => `rail-link${isActive ? ' rail-link--on' : ''}`}
+              aria-label="Class attendance"
+              title="Class attendance"
+            >
+              <BookOpen size={21} strokeWidth={2} />
+            </NavLink>
+          )}
           {canConsole && (
             <NavLink
               to="/app/admin"
@@ -234,6 +247,12 @@ export default function Layout() {
           <NavLink to="/app/clearance" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
             <ClipboardCheck size={21} />
             <span>Clearance</span>
+          </NavLink>
+        )}
+        {canClass && (
+          <NavLink to="/app/class" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+            <BookOpen size={21} />
+            <span>Class</span>
           </NavLink>
         )}
         <button className="tab" onClick={openSheet} aria-label="Account & more" title="Account & more">

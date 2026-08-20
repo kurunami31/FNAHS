@@ -143,7 +143,7 @@ export default function Home() {
                     <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{f.full_name}</div>
                     <div className="ledger-meta">{f.program || '—'}</div>
                   </div>
-                  <span className="badge" style={{ background: 'var(--gold)', color: '#000' }}>Faculty</span>
+                  <span className="badge" style={{ background: 'var(--gold)', color: '#000' }}>FACULTY</span>
                 </div>
               ))}
             </div>

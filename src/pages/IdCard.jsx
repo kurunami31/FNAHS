@@ -19,6 +19,7 @@ export default function IdCard() {
   const [format, setFormat] = useState('png')
   const [saveImage, setSaveImage] = useState(null)
   const [history, setHistory] = useState([])
+  const [classHistory, setClassHistory] = useState([])
   const [fee, setFee] = useState(null)
   const [annualFee, setAnnualFee] = useState(200)
   const [clearance, setClearance] = useState([])
@@ -27,6 +28,10 @@ export default function IdCard() {
     api
       .getMyAttendance()
       .then(setHistory)
+      .catch(() => {})
+    api
+      .getMyClassAttendance()
+      .then(setClassHistory)
       .catch(() => {})
     Promise.all([api.getFeePayments(currentSchoolYear()), api.getAnnualFee()])
       .then(([payments, annual]) => {
@@ -252,6 +257,32 @@ export default function IdCard() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{h.title}</div>
                   <div className="ledger-meta">{h.location || '—'} · scanned {timeAgo(h.scanned_at)}</div>
+                </div>
+                <span className="badge badge--ok">present</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="sec" aria-labelledby="h-class-history" style={{ maxWidth: 640, margin: '34px auto 0', width: '100%' }}>
+        <div className="sec-head">
+          <h2 id="h-class-history">My Class Attendance</h2>
+          <span className="sec-kicker">{classHistory.length} record{classHistory.length === 1 ? '' : 's'}</span>
+        </div>
+        {classHistory.length === 0 ? (
+          <p className="panel-muted">Your instructors record your class attendance here — nothing on file yet.</p>
+        ) : (
+          <div className="ledger">
+            {classHistory.map((h) => (
+              <div key={`${h.session_id}-${h.scanned_at}`} className="ledger-row">
+                <div className="round-date" style={{ borderRight: 'none', width: 44 }}>
+                  <b style={{ fontSize: '1.15rem' }}>{monthDay(h.started_at).day}</b>
+                  <span>{monthDay(h.started_at).month}</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{h.subject_name}</div>
+                  <div className="ledger-meta">class {fullDateTime(h.started_at)} · scanned {timeAgo(h.scanned_at)}</div>
                 </div>
                 <span className="badge badge--ok">present</span>
               </div>

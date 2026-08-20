@@ -188,6 +188,45 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
   }
 }
 
+/** Attendance roster for a single class session (faculty subjects). */
+export async function classWorkbook(session, subject, attendance = []) {
+  const { Workbook } = await excel()
+  const wb = new Workbook()
+  const ws = wb.addWorksheet('Class Attendance', { views: [{ showGridLines: false }] })
+  const sorted = [...attendance].sort((a, b) => new Date(a.scanned_at || 0) - new Date(b.scanned_at || 0))
+  const ended = session?.ended_at ? ` · ended ${pht(session.ended_at)}` : ''
+  brandHeader(
+    ws,
+    'FNAHS PULSO — Class Attendance',
+    `${subject?.name || 'Subject'} · started ${pht(session?.started_at)}${ended} · ${sorted.length} student(s) present`,
+  )
+  styledHeader(ws.getRow(4), ['#', 'Name', 'ID No', 'Program', 'Year Level', 'Section', 'Email', 'Scanned At (PHT)', 'Status'])
+  styledBody(
+    ws,
+    5,
+    sorted.map((a, i) => {
+      const p = a.profiles || {}
+      return [
+        i + 1,
+        p.full_name || a.user_id.slice(0, 10),
+        p.id_no || '',
+        p.program || '',
+        p.year_level ? `Year ${p.year_level}` : '',
+        p.section || '',
+        p.email || '',
+        pht(a.scanned_at),
+        'Present',
+      ]
+    }),
+    [5, 28, 12, 16, 12, 10, 26, 20, 10],
+  )
+  const stamp = todayStamp()
+  return {
+    workbook: wb,
+    filename: `class-${slug(subject?.name || 'session')}-${stamp}.xlsx`,
+  }
+}
+
 /** Three-sheet membership fee report: Summary, Details, Payments. */
 export async function feeReportWorkbook({ members, feePayments, annualFee, schoolYear }) {
   const { Workbook } = await excel()

@@ -18,6 +18,7 @@ const Directory = lazy(() => import('./pages/Directory'))
 const IdCard = lazy(() => import('./pages/IdCard'))
 const Staff = lazy(() => import('./pages/Staff'))
 const Clearance = lazy(() => import('./pages/Clearance'))
+const ClassAttendance = lazy(() => import('./pages/Class'))
 const Admin = lazy(() => import('./pages/Admin'))
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="idcard" element={<Page><IdCard /></Page>} />
           <Route path="staff" element={<Page><Staff /></Page>} />
           <Route path="clearance" element={<Page><RequireScope scope="clearance.scan"><Clearance /></RequireScope></Page>} />
+          <Route path="class" element={<Page><RequireScope scope="class.manage"><ClassAttendance /></RequireScope></Page>} />
           <Route path="admin" element={<Page><Admin /></Page>} />
         </Route>
         <Route path="*" element={<Navigate to="/app" replace />} />

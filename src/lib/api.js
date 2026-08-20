@@ -97,6 +97,7 @@ function pruneDb(db) {
   if (Array.isArray(db.eventPayments) && db.eventPayments.length > 900) db.eventPayments = db.eventPayments.slice(-900)
   if (Array.isArray(db.feePayments) && db.feePayments.length > 900) db.feePayments = db.feePayments.slice(-900)
   if (Array.isArray(db.clearanceForms) && db.clearanceForms.length > 400) db.clearanceForms = db.clearanceForms.slice(-400)
+  if (Array.isArray(db.classSessions) && db.classSessions.length > 200) db.classSessions = db.classSessions.slice(-200)
 }
 
 function loadDb() {
@@ -112,6 +113,9 @@ function loadDb() {
         events: db.events?.length ? db.events : fresh.events,
         feeds: db.feeds || fresh.feeds,
         attendance: db.attendance || {},
+        subjects: db.subjects || [],
+        classSessions: db.classSessions || [],
+        classAttendance: db.classAttendance || {},
         membershipFees: db.membershipFees || {},
         feePayments: db.feePayments || [],
         eventPayments: db.eventPayments || [],
@@ -447,6 +451,106 @@ async function demoMarkAttendance(eventId, userId) {
 async function demoRemoveAttendance(eventId, userId) {
   delete (db.attendance[eventId] || {})[userId]
   saveDb(db)
+}
+
+/* ---------------- class attendance (demo twins) ---------------- */
+
+async function demoGetMySubjects() {
+  const me = demoCurrentUserId() || DEMO_USER_ID
+  return (db.subjects || []).filter((s) => s.faculty_id === me)
+}
+
+async function demoAddSubject(name) {
+  const me = demoCurrentUserId() || DEMO_USER_ID
+  const row = { id: uid(), faculty_id: me, name: sanitizeText(name, 60), created_at: new Date().toISOString() }
+  db.subjects = [...(db.subjects || []), row]
+  saveDb(db)
+  return row
+}
+
+async function demoRemoveSubject(id) {
+  db.subjects = (db.subjects || []).filter((s) => s.id !== id)
+  db.classSessions = (db.classSessions || []).filter((s) => s.subject_id !== id)
+  for (const s of db.classSessions) delete db.classAttendance[s.id]
+  saveDb(db)
+}
+
+async function demoStartSession(subjectId) {
+  const me = demoCurrentUserId() || DEMO_USER_ID
+  const row = { id: uid(), subject_id: subjectId, faculty_id: me, started_at: new Date().toISOString(), ended_at: null }
+  db.classSessions = [...(db.classSessions || []), row]
+  saveDb(db)
+  return row
+}
+
+async function demoEndSession(sessionId) {
+  const s = (db.classSessions || []).find((x) => x.id === sessionId)
+  if (s) {
+    s.ended_at = new Date().toISOString()
+    saveDb(db)
+  }
+}
+
+async function demoGetSessions() {
+  const me = demoCurrentUserId() || DEMO_USER_ID
+  return (db.classSessions || [])
+    .filter((s) => s.faculty_id === me)
+    .map((s) => ({
+      ...s,
+      subject: (db.subjects || []).find((x) => x.id === s.subject_id) || null,
+      attendance_count: Object.keys(db.classAttendance[s.id] || {}).length,
+    }))
+    .sort((a, b) => new Date(b.started_at) - new Date(a.started_at))
+}
+
+async function demoGetSessionAttendance(sessionId) {
+  return Object.entries(db.classAttendance[sessionId] || {}).map(([user_id, scanned_at]) => ({ user_id, scanned_at }))
+}
+
+async function demoMarkClassAttendance(sessionId, userId) {
+  db.classAttendance[sessionId] = db.classAttendance[sessionId] || {}
+  db.classAttendance[sessionId][userId] = new Date().toISOString()
+  const s = (db.classSessions || []).find((x) => x.id === sessionId)
+  const sub = (db.subjects || []).find((x) => x.id === s?.subject_id)
+  demoNotify([
+    {
+      id: uid(),
+      user_id: userId,
+      kind: 'attendance',
+      title: 'Present!',
+      body: `${sub?.name || 'Class'} — attendance recorded.`,
+      link: '/app/id',
+      read_at: null,
+      created_at: new Date().toISOString(),
+    },
+  ])
+  saveDb(db)
+}
+
+async function demoRemoveClassAttendance(sessionId, userId) {
+  delete (db.classAttendance[sessionId] || {})[userId]
+  saveDb(db)
+}
+
+async function demoGetMyClassAttendance() {
+  const me = demoCurrentUserId() || DEMO_USER_ID
+  const rows = []
+  for (const [sessionId, m] of Object.entries(db.classAttendance || {})) {
+    for (const [userId, scanned_at] of Object.entries(m || {})) {
+      if (userId === me) {
+        const s = (db.classSessions || []).find((x) => x.id === sessionId)
+        const sub = (db.subjects || []).find((x) => x.id === s?.subject_id)
+        rows.push({
+          session_id: sessionId,
+          subject_id: s?.subject_id,
+          subject_name: sub?.name || 'Class',
+          started_at: s?.started_at,
+          scanned_at,
+        })
+      }
+    }
+  }
+  return rows.sort((a, b) => new Date(b.scanned_at) - new Date(a.scanned_at))
 }
 
 /* ---------------- rotational clearance (demo twins) ---------------- */
@@ -1316,7 +1420,10 @@ export const api = {
         }
         setDbStatus('ok')
         return data || []
-      }, async () => Object.values(db.profiles).filter((p) => p.role === 'faculty'), mirrorProfiles),
+      }, async () =>
+        Object.values(db.profiles).filter(
+          (p) => p.role === 'faculty' || (p.role === 'superadmin' && p.program === 'Faculty')
+        ), mirrorProfiles),
 
   createUser: offlineWrite('createUser', async (p) => {
         // Member creation goes through the security-definer create_member()
@@ -1643,6 +1750,111 @@ export const api = {
         const { error } = await supabase.from('attendance').delete().eq('event_id', eventId).eq('user_id', userId)
         if (error) throw error
       }, demoRemoveAttendance),
+
+  /* ---------------- class attendance (faculty subjects & sessions) ---------------- */
+  getMySubjects: offlineRead('getMySubjects', async () => {
+        const { data, error } = await supabase.from('faculty_subjects').select('*').order('created_at', { ascending: false })
+        if (error) throw error
+        return data || []
+      }, demoGetMySubjects, (rows) => {
+        for (const s of rows || []) {
+          if (!db.subjects.some((x) => x.id === s.id)) db.subjects.push(s)
+        }
+        saveDb(db)
+      }),
+
+  addSubject: offlineWrite('addSubject', async (name) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not signed in')
+        const { data, error } = await supabase.from('faculty_subjects').insert({ faculty_id: user.id, name }).select().single()
+        if (error) throw error
+        return data
+      }, async (name) => demoAddSubject(name), { localId: (r) => r?.id }),
+
+  removeSubject: offlineWrite('removeSubject', async (id) => {
+        const { error } = await supabase.from('faculty_subjects').delete().eq('id', id)
+        if (error) throw error
+      }, async (id) => demoRemoveSubject(id)),
+
+  startSession: offlineWrite('startSession', async (subjectId) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not signed in')
+        const { data, error } = await supabase.from('class_sessions').insert({ subject_id: subjectId, faculty_id: user.id }).select().single()
+        if (error) throw error
+        return data
+      }, async (subjectId) => demoStartSession(subjectId), { localId: (r) => r?.id }),
+
+  endSession: offlineWrite('endSession', async (sessionId) => {
+        const { error } = await supabase.from('class_sessions').update({ ended_at: new Date().toISOString() }).eq('id', sessionId)
+        if (error) throw error
+      }, async (sessionId) => demoEndSession(sessionId)),
+
+  getSessions: offlineRead('getSessions', async () => {
+        const { data, error } = await supabase
+          .from('class_sessions')
+          .select('*, subject:subject_id(name), attendance_count:class_attendance(count)')
+          .order('started_at', { ascending: false })
+          .limit(60)
+        if (error) throw error
+        return (data || []).map((s) => ({ ...s, attendance_count: Number(s.attendance_count?.[0]?.count) || 0 }))
+      }, demoGetSessions, (rows) => {
+        for (const s of rows || []) {
+          if (!db.classSessions.some((x) => x.id === s.id)) {
+            db.classSessions.push({ id: s.id, subject_id: s.subject_id, faculty_id: s.faculty_id, started_at: s.started_at, ended_at: s.ended_at })
+          }
+        }
+        saveDb(db)
+      }),
+
+  getSessionAttendance: offlineRead('getSessionAttendance', async (sessionId) => {
+        const { data, error } = await supabase
+          .from('class_attendance')
+          .select('*, profiles(full_name, program, year_level, section, email, id_no)')
+          .eq('session_id', sessionId)
+          .order('scanned_at', { ascending: true })
+        if (error) throw error
+        return data || []
+      }, async (sessionId) => demoGetSessionAttendance(sessionId), (rows) => {
+        for (const r of rows || []) {
+          const m = db.classAttendance[r.session_id] || (db.classAttendance[r.session_id] = {})
+          m[r.user_id] = r.scanned_at
+          if (r.profiles) mirrorProfileInto(r.profiles)
+        }
+        saveDb(db)
+      }),
+
+  markClassAttendance: offlineWrite('markClassAttendance', async (sessionId, userId) => {
+        const { error } = await supabase
+          .from('class_attendance')
+          .upsert({ session_id: sessionId, user_id: userId, scanned_at: new Date().toISOString() })
+        if (error) throw error
+      }, async (sessionId, userId) => demoMarkClassAttendance(sessionId, userId)),
+
+  removeClassAttendance: offlineWrite('removeClassAttendance', async (sessionId, userId) => {
+        const { error } = await supabase
+          .from('class_attendance')
+          .delete()
+          .eq('session_id', sessionId)
+          .eq('user_id', userId)
+        if (error) throw error
+      }, async (sessionId, userId) => demoRemoveClassAttendance(sessionId, userId)),
+
+  /* students can always read their own class attendance rows */
+  getMyClassAttendance: offlineRead('getMyClassAttendance', async () => {
+        const { data, error } = await supabase.rpc('get_my_class_attendance')
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
+        return data || []
+      }, demoGetMyClassAttendance, (rows) => {
+        for (const r of rows || []) {
+          const m = db.classAttendance[r.session_id] || (db.classAttendance[r.session_id] = {})
+          m[r.user_id] = r.scanned_at
+        }
+        saveDb(db)
+      }),
 
   /* ---------------- rotational clearance (officers + the student themself) ---------------- */
   getClearanceForms: offlineRead('getClearanceForms', async (studentId) => {

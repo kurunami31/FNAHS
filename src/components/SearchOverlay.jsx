@@ -9,6 +9,7 @@ import { can } from '../rbac'
 export default function SearchOverlay({ onClose }) {
   const { user } = useApp()
   const canDirectory = can(user, 'directory.view')
+  const isSuperAdmin = user?.role === 'superadmin'
   const [q, setQ] = useState('')
   const [results, setResults] = useState({ posts: [], members: [] })
   const inputRef = useRef(null)
@@ -29,13 +30,20 @@ export default function SearchOverlay({ onClose }) {
       Promise.all([
         api.getPosts().catch(() => []),
         canDirectory ? api.getMembers().catch(() => []) : Promise.resolve([]),
-      ]).then(([posts, members]) => {
+        // Superadmins may also find faculty-flagged superadmin accounts
+        // (e.g. Lendell Kelly B. Ytac) that are hidden from the public directory.
+        canDirectory && isSuperAdmin ? api.getFaculty().catch(() => []) : Promise.resolve([]),
+      ]).then(([posts, members, faculty]) => {
         if (!alive) return
+        const allMembers = [...members]
+        for (const f of faculty || []) {
+          if (!allMembers.some((m) => m.id === f.id)) allMembers.push(f)
+        }
         setResults({
           posts: posts
             .filter((p) => p.content?.toLowerCase().includes(needle) || p.author?.full_name?.toLowerCase().includes(needle))
             .slice(0, 4),
-          members: members
+          members: allMembers
             .filter((m) => m.full_name?.toLowerCase().includes(needle) || m.program?.toLowerCase().includes(needle))
             .slice(0, 4),
         })
@@ -45,7 +53,7 @@ export default function SearchOverlay({ onClose }) {
       alive = false
       clearTimeout(timer)
     }
-  }, [q, canDirectory])
+  }, [q, canDirectory, isSuperAdmin])
 
   const go = (to) => {
     onClose()
@@ -80,7 +88,9 @@ export default function SearchOverlay({ onClose }) {
               <div className="member-name">{m.full_name}</div>
               <div className="member-meta">{m.program || 'Student'}{m.role !== 'faculty' ? ` · YR ${m.year_level || '—'}` : ''}</div>
             </div>
-            <span className="chip" style={{ marginLeft: 'auto' }}>directory</span>
+            <span className="chip" style={{ marginLeft: 'auto' }}>
+              {m.role === 'faculty' || (m.role === 'superadmin' && m.program === 'Faculty') ? 'FACULTY' : 'directory'}
+            </span>
           </button>
         ))}
         {results.posts.map((p) => (

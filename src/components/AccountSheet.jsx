@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera, Archive, HeartPulse, Users, Settings2, KeyRound, Smartphone, ClipboardCheck } from 'lucide-react'
+import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera, Archive, HeartPulse, Users, Settings2, KeyRound, Smartphone, ClipboardCheck, BookOpen } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { roleLabel, positionLabel, can } from '../rbac'
 import { api } from '../lib/api'
@@ -333,6 +333,11 @@ export default function AccountSheet({ onClose, onLogout }) {
           {can(user, 'clearance.scan') && (
             <button className="sheet-link" onClick={() => go('/app/clearance')}>
               <ClipboardCheck size={16} /> Rotational clearance
+            </button>
+          )}
+          {can(user, 'class.manage') && (
+            <button className="sheet-link" onClick={() => go('/app/class')}>
+              <BookOpen size={16} /> Class attendance
             </button>
           )}
           {can(user, 'console.access') && (
