@@ -700,7 +700,7 @@ img { max-width: 100%; }
 .hero-actions { margin-top: 28px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .vitals {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   margin-top: 44px;
   border-top: 1px solid var(--line);
 }
@@ -752,7 +752,6 @@ img { max-width: 100%; }
   .home-cols { grid-template-columns: 1fr; gap: 0; }
   .vitals { grid-template-columns: repeat(2, 1fr); }
   .vital:nth-child(3)::before { display: none; }
-  .vital:nth-child(3) { grid-column: 1 / -1; }
   .vital:nth-child(n+3) { border-top: 1px solid var(--line); }
 }
 @media (max-width: 560px) {
