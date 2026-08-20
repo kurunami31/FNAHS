@@ -19,6 +19,7 @@ export default function ClassAttendance() {
   const sessionIdRef = useRef('')
   const [qr, setQr] = useState(null)
   const [qrOpen, setQrOpen] = useState(false)
+  const [subjectSel, setSubjectSel] = useState('')
 
   const canClass = can(user, 'class.manage')
 
@@ -51,7 +52,7 @@ export default function ClassAttendance() {
   }, [sessionId])
 
   const activeSession = sessions.find((s) => s.id === sessionId)
-  const activeSubject = subjects.find((s) => s.id === activeSession?.subject_id) || activeSession?.subject || null
+  const activeSubject = subjects.find((s) => s.id === subjectSel) || null
   const openSession = sessions.find((s) => !s.ended_at)
 
   useEffect(() => {
@@ -111,6 +112,7 @@ export default function ClassAttendance() {
       await api.removeSubject(id)
       setSubjects((s) => s.filter((x) => x.id !== id))
       setSessions((s) => s.filter((x) => x.subject_id !== id))
+      if (subjectSel === id) setSubjectSel('')
       if (activeSession?.subject_id === id) setSessionId('')
       toast('Subject removed')
     } catch (e) {
@@ -124,8 +126,8 @@ export default function ClassAttendance() {
       toast('Add a subject first', 'info')
       return
     }
-    const subjectId = activeSubject?.id || subjects[0].id
-    if (sessionId && !activeSession?.ended_at) {
+    const subjectId = subjectSel || subjects[0].id
+    if (openSession) {
       toast('End the open session before starting a new one', 'info')
       return
     }
@@ -133,6 +135,7 @@ export default function ClassAttendance() {
       const row = await api.startSession(subjectId)
       setSessions((s) => [row, ...s])
       setSessionId(row.id)
+      setSubjectSel(row.subject_id)
       setAttendance([])
       toast('Session started — show the QR to your students')
     } catch (e) {
@@ -170,7 +173,7 @@ export default function ClassAttendance() {
   const exportXlsx = async () => {
     try {
       const fresh = await api.getSessionAttendance(sessionIdRef.current)
-      const { workbook, filename } = await classWorkbook(activeSession, activeSubject, fresh)
+      const { workbook, filename } = await classWorkbook(activeSession, activeSubject || activeSession?.subject || null, fresh)
       await downloadWorkbook(workbook, filename)
       toast(`Exported ${fresh.length} record${fresh.length === 1 ? '' : 's'}`)
     } catch (e) {
@@ -258,10 +261,11 @@ export default function ClassAttendance() {
             <div className="field" style={{ marginBottom: 0 }}>
               <label>Pick a subject</label>
               <Select
-                value={activeSubject?.id || ''}
+                value={subjectSel || activeSession?.subject_id || ''}
                 onChange={(v) => {
+                  setSubjectSel(v)
                   const existing = sessions.find((s) => !s.ended_at && s.subject_id === v)
-                  setSessionId(existing ? existing.id : '')
+                  if (existing) setSessionId(existing.id)
                 }}
                 options={subjects.map((s) => ({ value: s.id, label: s.name }))}
                 placeholder="Select a subject…"
@@ -287,7 +291,10 @@ export default function ClassAttendance() {
                       key={s.id}
                       className="ledger-row"
                       style={{ textAlign: 'left', cursor: 'pointer', width: '100%', background: s.id === sessionId ? 'var(--bg-soft, rgba(192,144,0,0.08))' : undefined }}
-                      onClick={() => setSessionId(s.id)}
+                      onClick={() => {
+                        setSessionId(s.id)
+                        setSubjectSel(s.subject_id)
+                      }}
                     >
                       <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
                         <BookOpen size={15} />
