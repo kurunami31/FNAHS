@@ -408,11 +408,13 @@ async function demoGetClearanceForms(studentId) {
 }
 
 /* Mirrors the SQL is_clearance_officer() gate for offline mutations —
-   students must not be able to edit/delete clearance even locally. */
+   students (and clearance-locked accounts) must not be able to
+   edit/delete clearance even locally. */
 function demoIsClearanceOfficer() {
   const me = demoCurrentUserId()
-  const role = me ? db.profiles[me]?.role : null
-  return role === 'faculty' || role === 'superadmin'
+  const p = me ? db.profiles[me] : null
+  if (!p || p.clearance_locked) return false
+  return p.role === 'faculty' || p.role === 'superadmin'
 }
 
 function demoRequireClearanceOfficer() {

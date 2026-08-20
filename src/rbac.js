@@ -145,6 +145,7 @@ export function scopesFor(user) {
 
 export function can(user, scope) {
   if (!user) return false
+  if (scope === 'clearance.scan' && user.clearance_locked) return false
   const scopes = scopesFor(user)
   if (scopes.includes('*')) return scope === 'settings.superadmin' ? user.role === 'superadmin' : true
   if (SUPERADMIN_ONLY.includes(scope)) return user.role === 'superadmin'
