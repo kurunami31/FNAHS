@@ -1307,6 +1307,17 @@ export const api = {
         return data || []
       }, async () => Object.values(db.profiles), mirrorProfiles),
 
+  /* public faculty directory for the home page — emails stay private */
+  getFaculty: offlineRead('getFaculty', async () => {
+        const { data, error } = await supabase.rpc('get_faculty')
+        if (error) {
+          markDbError(error)
+          throw error
+        }
+        setDbStatus('ok')
+        return data || []
+      }, async () => Object.values(db.profiles).filter((p) => p.role === 'faculty'), mirrorProfiles),
+
   createUser: offlineWrite('createUser', async (p) => {
         // Member creation goes through the security-definer create_member()
         // RPC: it creates the auth user (so the new member can actually log

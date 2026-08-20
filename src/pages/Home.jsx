@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Stethoscope, CalendarDays, Shield, Megaphone, Vote, ScanLine, FileDown, Users, HandCoins, Wrench, BookOpen, KeyRound, Newspaper, ClipboardCheck } from 'lucide-react'
+import { ArrowRight, Stethoscope, CalendarDays, Shield, Megaphone, Vote, ScanLine, FileDown, Users, HandCoins, Wrench, BookOpen, KeyRound, Newspaper, ClipboardCheck, GraduationCap } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
 import { toolsFor } from '../rbac'
 import { api } from '../lib/api'
 import { seedFeeds, ORG_TAGLINE, PROGRAMS } from '../lib/mock'
-import { timeAgo } from '../lib/format'
+import { timeAgo, initials } from '../lib/format'
 import EventModal from '../components/EventModal'
 import Announcements from '../components/Announcements'
 import PopulationBreakdown from '../components/PopulationBreakdown'
@@ -34,6 +34,7 @@ export default function Home() {
   const [events, setEvents] = useState([])
   const [selected, setSelected] = useState(null)
   const [memberCount, setMemberCount] = useState(0)
+  const [faculty, setFaculty] = useState([])
   const tools = toolsFor(user)
 
   const reloadRounds = async () => {
@@ -54,12 +55,17 @@ export default function Home() {
       .getMemberCount()
       .then(setMemberCount)
       .catch(() => {})
+    api
+      .getFaculty()
+      .then(setFaculty)
+      .catch(() => {})
   }, [])
 
   const stats = [
     { value: memberCount ? memberCount.toLocaleString() : '1K+', label: memberCount ? 'members' : 'students' },
     { value: `${Math.max(PROGRAMS.length, 1)}`, label: PROGRAMS.length > 1 ? 'programs' : 'program' },
     { value: '24/7', label: 'ai assistant' },
+    ...(user ? [{ value: String(faculty.length || 0), label: 'faculty' }] : []),
   ]
 
   return (
@@ -109,6 +115,39 @@ export default function Home() {
       {user && <Announcements />}
 
       <PopulationBreakdown title="Enrollment by Year Level" />
+
+      {user && (
+        <section className="sec" aria-labelledby="h-faculty">
+          <div className="sec-head">
+            <h2 id="h-faculty">Faculty</h2>
+            <span className="sec-kicker">
+              {faculty.length ? `${faculty.length} mentor${faculty.length === 1 ? '' : 's'}` : 'our mentors'}
+            </span>
+          </div>
+          {faculty.length === 0 ? (
+            <div className="empty-state">
+              <GraduationCap size={36} />
+              <h3>No faculty profiles yet</h3>
+              <p>Faculty accounts appear here once approved.</p>
+            </div>
+          ) : (
+            <div className="ledger">
+              {faculty.map((f) => (
+                <div className="ledger-row mem-row" key={f.id}>
+                  <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>
+                    {f.avatar_url ? <img src={f.avatar_url} alt="" /> : initials(f.full_name)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{f.full_name}</div>
+                    <div className="ledger-meta">{f.program || '—'} · YR {f.year_level || '—'}</div>
+                  </div>
+                  <span className="badge" style={{ background: 'var(--gold)', color: '#000' }}>Faculty</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {user && tools.length > 0 && (
         <section className="sec" aria-labelledby="h-tools">
