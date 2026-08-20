@@ -1779,6 +1779,13 @@ export const api = {
         if (error) throw error
         return data || []
       }, demoGetMySubjects, (rows) => {
+        // Reconcile this faculty's subjects with the server list so locally
+        // created rows that later gained a server id never linger as a
+        // duplicate that the UI "deletes" without reaching the backend.
+        const me = demoCurrentUserId() || DEMO_USER_ID
+        const mine = new Set((rows || []).map((s) => s.id))
+        const others = (db.subjects || []).filter((x) => x.faculty_id !== me)
+        db.subjects = [...others, ...(db.subjects || []).filter((x) => x.faculty_id === me && mine.has(x.id))]
         for (const s of rows || []) {
           if (!db.subjects.some((x) => x.id === s.id)) db.subjects.push(s)
         }
@@ -1796,7 +1803,7 @@ export const api = {
   removeSubject: offlineWrite('removeSubject', async (id) => {
         const { error } = await supabase.from('faculty_subjects').delete().eq('id', id)
         if (error) throw error
-      }, async (id) => demoRemoveSubject(id)),
+      }, async (id) => demoRemoveSubject(id), { localId: (_local, id) => id }),
 
   startSession: offlineWrite('startSession', async (subjectId) => {
         const { data: { user } } = await supabase.auth.getUser()
@@ -1820,6 +1827,10 @@ export const api = {
         if (error) throw error
         return (data || []).map((s) => ({ ...s, attendance_count: Number(s.attendance_count?.[0]?.count) || 0 }))
       }, demoGetSessions, (rows) => {
+        const me = demoCurrentUserId() || DEMO_USER_ID
+        const mine = new Set((rows || []).map((s) => s.id))
+        const others = (db.classSessions || []).filter((x) => x.faculty_id !== me)
+        db.classSessions = [...others, ...(db.classSessions || []).filter((x) => x.faculty_id === me && mine.has(x.id))]
         for (const s of rows || []) {
           if (!db.classSessions.some((x) => x.id === s.id)) {
             db.classSessions.push({ id: s.id, subject_id: s.subject_id, faculty_id: s.faculty_id, started_at: s.started_at, ended_at: s.ended_at })

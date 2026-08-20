@@ -60,15 +60,11 @@ export async function enumerateCameras() {
   }
 }
 
-// Build the getUserMedia video constraints.
-// - Multiple cameras: force the chosen device by exact id (this is what
-//   actually selects the rear camera on phones that ignore facingMode).
-// - Single camera or none: use the facingMode hint so the browser still
-//   picks the rear lens when only one videoinput device is reported.
+// Build the getUserMedia video constraints. We rely on facingMode alone:
+// pinning an exact deviceId is what causes iOS Safari to open the FRONT
+// camera (deviceId from enumerateDevices is unreliable there and an exact
+// constraint overrides the rear-camera hint). iOS and modern Android both
+// honour `facingMode: { ideal }`.
 export function cameraConstraints(list, index, useEnv) {
-  if (!list || list.length <= 1) {
-    return { facingMode: { ideal: useEnv ? 'environment' : 'user' } }
-  }
-  const cam = list[index % list.length]
-  return { deviceId: { exact: cam.id }, facingMode: { ideal: useEnv ? 'environment' : 'user' } }
+  return { facingMode: { ideal: useEnv ? 'environment' : 'user' } }
 }

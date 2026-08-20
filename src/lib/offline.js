@@ -96,7 +96,7 @@ export async function queueOp(method, args, localId) {
   // An unsynced create followed by its own delete is a net zero — drop the
   // create so neither is replayed (delete/remove ops for OTHER local ids,
   // e.g. attendance against a locally-created event, stay queued).
-  const counterpart = { deletePost: 'createPost', deleteEvent: 'createEvent', deleteComment: 'addComment' }[method]
+  const counterpart = { deletePost: 'createPost', deleteEvent: 'createEvent', deleteComment: 'addComment', removeSubject: 'addSubject' }[method]
   if (counterpart && typeof args[0] === 'string') {
     const created = q.find((op) => op.method === counterpart && op.localId === args[0])
     if (created) {
