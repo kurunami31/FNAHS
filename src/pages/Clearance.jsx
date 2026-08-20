@@ -68,8 +68,13 @@ export default function Clearance() {
   const [searching, setSearching] = useState(false)
   const [lastScanned, setLastScanned] = useState(() => {
     try {
-      const arr = JSON.parse(localStorage.getItem('fnahs-clearance-last-scans') || '[]')
-      return Array.isArray(arr) ? arr.slice(0, 5) : []
+      const raw =
+        localStorage.getItem('fnahs-clearance-last-scans') || localStorage.getItem('fnahs-clearance-last-scan')
+      const val = JSON.parse(raw || '[]')
+      // migrate the old single-scan object format into the list
+      if (Array.isArray(val)) return val.slice(0, 5)
+      if (val && val.id) return [val]
+      return []
     } catch {
       return []
     }
@@ -487,18 +492,22 @@ export default function Clearance() {
             Offline mode — changes are saved to this device and sync when the connection returns.
           </div>
         )}
-        {lastScanned.length > 0 && (
-          <div className="clearance-scan-history">
-            <div className="clearance-scan-history-title">Previously scanned</div>
-            {lastScanned.map((s) => (
+        <div className="clearance-scan-history">
+          <div className="clearance-scan-history-title">Previously scanned</div>
+          {lastScanned.length === 0 ? (
+            <p className="panel-muted" style={{ margin: 0, fontSize: '0.82rem' }}>
+              Scan a student's ID QR to keep a quick list of who you've checked — it stays here for this device.
+            </p>
+          ) : (
+            lastScanned.map((s) => (
               <button key={s.id} type="button" title="Reopen this student's clearance" onClick={() => reopenScanned(s)}>
                 <b>ID {s.id_no || s.id?.slice(0, 8)}</b>
                 {s.name ? ` — ${s.name}` : ''}
                 {s.at ? ` · ${timeAgo(s.at)}` : ''}
               </button>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </section>
 
       <section className="panel">

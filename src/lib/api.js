@@ -86,7 +86,7 @@ const LS_KEY = 'fnahs-db-v2'
    Supabase's own auth-token write (sb-<ref>-auth-token) always has room.
    The mirror is just an offline cache — overflow is trimmed to the most
    recent/important rows instead of being allowed to fill the whole quota. */
-const DB_MAX_BYTES = 2_400_000
+const DB_MAX_BYTES = 1_500_000
 
 function pruneDb(db) {
   for (const p of Object.values(db.profiles || {})) {
@@ -157,7 +157,21 @@ function safeSet(key, value) {
     localStorage.setItem(key, value)
     return true
   } catch {
-    return false
+    // quota full — drop the app's replaceable demo caches, then retry once
+    for (const k of ['fnahs-demo-chat', 'fnahs-demo-polls', 'fnahs-demo-notifs', 'fnahs-demo-announcements']) {
+      if (k === key) continue
+      try {
+        localStorage.removeItem(k)
+      } catch {
+        /* ignore */
+      }
+    }
+    try {
+      localStorage.setItem(key, value)
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
