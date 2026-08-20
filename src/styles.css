@@ -2730,11 +2730,31 @@ html[data-theme='dark'] .id-card { background: linear-gradient(170deg, #141210 0
   letter-spacing: 0.04em;
 }
 .clearance-form-center { font-family: var(--f-ocr); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
-.clearance-form-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 12px; font-size: 0.85rem; }
-.clearance-form-meta b { font-family: var(--f-ocr); font-size: 0.62rem; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
-.clearance-meta-actions { display: flex; gap: 6px; margin-left: auto; }
-.clearance-meta-placement { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-.clearance-meta-placement .clearance-placement-edit input { min-width: 160px; max-width: 300px; }
+.clearance-form-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 18px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  align-items: end;
+}
+.clearance-form-meta b {
+  display: block;
+  font-family: var(--f-ocr);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.clearance-meta-item { min-width: 0; }
+.clearance-meta-item > span { word-break: break-word; }
+.clearance-meta-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.clearance-meta-item .clearance-placement-edit { width: 100%; }
+.clearance-meta-item .clearance-placement-edit input { width: 100%; min-width: 0; max-width: none; }
+@media (max-width: 560px) {
+  .clearance-form-meta { grid-template-columns: 1fr; align-items: start; }
+  .clearance-meta-actions { justify-content: flex-start; }
+}
 .clearance-form-tally { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 
 /* print-only document */

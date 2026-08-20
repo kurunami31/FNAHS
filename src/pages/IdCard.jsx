@@ -351,9 +351,9 @@ function StudentClearanceForm({ form, student, print, refresh }) {
       </div>
       <h3 className="clearance-form-title">INDIVIDUAL CLINICAL ROTATION CLEARANCE</h3>
       <div className="clearance-form-meta">
-        <span><b>NAME:</b> {student?.full_name || form.member_id?.slice(0, 8)}</span>
-        <span className="clearance-meta-placement">
-          <b>PLACEMENT:</b>{' '}
+        <div className="clearance-meta-item"><b>NAME</b><span>{student?.full_name || form.member_id?.slice(0, 8)}</span></div>
+        <div className="clearance-meta-item">
+          <b>PLACEMENT</b>
           {canManage && editPlacement ? (
             <form className="clearance-placement-edit" onSubmit={savePlacement}>
               <input autoFocus value={placementDraft} onChange={(e) => setPlacementDraft(e.target.value)} placeholder="Placement / center" maxLength={200} />
@@ -365,19 +365,22 @@ function StudentClearanceForm({ form, student, print, refresh }) {
               </button>
             </form>
           ) : (
-            form.placement
+            <span>{form.placement}</span>
           )}
-        </span>
-        <span><b>SCHOOL YEAR / SEMESTER:</b> {form.school_year} · {semesterLabel(form.semester)}</span>
+        </div>
+        <div className="clearance-meta-item">
+          <b>SCHOOL YEAR / SEMESTER</b>
+          <span>{form.school_year} · {semesterLabel(form.semester)}</span>
+        </div>
         {canManage && !editPlacement && (
-          <span className="clearance-meta-actions">
+          <div className="clearance-meta-actions">
             <button className="btn btn--tiny" title="Edit placement" disabled={busy} onClick={() => { setPlacementDraft(form.placement); setEditPlacement(true) }}>
               <Pencil size={12} />
             </button>
             <button className="btn btn--tiny btn--danger" title="Delete this clearance form" disabled={busy} onClick={removeForm}>
               {busy ? <Loader2 size={12} className="spin" /> : <Trash2 size={12} />}
             </button>
-          </span>
+          </div>
         )}
       </div>
       <div className="clearance-scroll">
