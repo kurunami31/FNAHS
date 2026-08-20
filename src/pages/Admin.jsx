@@ -421,7 +421,7 @@ const [feeFilter, setFeeFilter] = useState('all')
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{m.full_name}</div>
-                  <div className="ledger-meta">{m.email} · {m.program || '—'} · YR {m.year_level || '—'}</div>
+                  <div className="ledger-meta">{m.email} · {m.program || '—'}{m.role !== 'faculty' ? ` · YR ${m.year_level || '—'}` : ''}</div>
                   {!!m.positions?.length && (
                     <div className="dir-positions">
                       {m.positions.map((p) => (
@@ -709,7 +709,7 @@ const [feeFilter, setFeeFilter] = useState('all')
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{m.full_name}</div>
                           <div className="ledger-meta">
-                            {m.email} · {m.program || '—'} · YR {m.year_level || '—'}
+                            {m.email} · {m.program || '—'}{m.role !== 'faculty' ? ` · YR ${m.year_level || '—'}` : ''}
                             {m.section ? ` · Sec ${m.section}` : ''}
                           </div>
                         </div>
@@ -882,7 +882,7 @@ const [feeFilter, setFeeFilter] = useState('all')
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{m.full_name}</div>
-                      <div className="ledger-meta">{m.email} · {m.program || '—'} · YR {m.year_level || '—'}</div>
+                      <div className="ledger-meta">{m.email} · {m.program || '—'}{m.role !== 'faculty' ? ` · YR ${m.year_level || '—'}` : ''}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       {payments.length > 0 &&
@@ -1133,7 +1133,7 @@ function MemberIdCard({ member }) {
       )}
       <div className="id-card-name">{member.full_name || '—'}</div>
       <div className="id-card-meta">
-        {member.email} · {member.program || '—'} · YR {member.year_level || '—'}
+        {member.email} · {member.program || '—'}{member.role !== 'faculty' ? ` · YR ${member.year_level || '—'}` : ''}
       </div>
       <button className="btn btn--ghost btn--sm" disabled={!preview} onClick={download}>
         <Download size={14} /> Save PNG
@@ -1150,7 +1150,7 @@ function MemberIdModal({ member, onClose }) {
           DIGITAL ID <span className="page-kicker">{member.full_name || 'Member'}</span>
         </h2>
         <p className="modal-sub" style={{ margin: '-10px 0 16px', color: 'var(--muted)', fontSize: '0.82rem' }}>
-          {member.email} · {member.program || '—'} · YR {member.year_level || '—'}
+          {member.email} · {member.program || '—'}{member.role !== 'faculty' ? ` · YR ${member.year_level || '—'}` : ''}
         </p>
         <MemberIdCard member={member} />
         <div className="modal-actions">
@@ -1241,14 +1241,16 @@ function MemberFormModal({ mode, member, onClose, onSaved }) {
             options={PROGRAMS.map((p) => ({ value: p, label: p }))}
           />
         </div>
-        <div className="field">
-          <label>Year level</label>
-          <Select
-            value={form.year_level}
-            onChange={(v) => setForm({ ...form, year_level: v })}
-            options={['1', '2', '3', '4', '—'].map((y) => ({ value: y, label: y === '—' ? 'Faculty' : `Year ${y}` }))}
-          />
-        </div>
+        {form.role !== 'faculty' && (
+          <div className="field">
+            <label>Year level</label>
+            <Select
+              value={form.year_level}
+              onChange={(v) => setForm({ ...form, year_level: v })}
+              options={['1', '2', '3', '4', '—'].map((y) => ({ value: y, label: y === '—' ? 'Faculty' : `Year ${y}` }))}
+            />
+          </div>
+        )}
         {isSuperadmin && (
           <>
             <div className="field">
@@ -1383,7 +1385,7 @@ function FeeModal({ member, payments, annualFee, schoolYear, onClose, onRecord, 
           FEES <span className="page-kicker">{member.full_name}</span>
         </h2>
         <p className="modal-sub" style={{ margin: '-10px 0 16px', color: 'var(--muted)', fontSize: '0.82rem' }}>
-          {schoolYear} · {member.program || '—'} · YR {member.year_level || '—'}
+          {schoolYear} · {member.program || '—'}{member.role !== 'faculty' ? ` · YR ${member.year_level || '—'}` : ''}
         </p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
           <span

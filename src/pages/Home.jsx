@@ -114,7 +114,9 @@ export default function Home() {
 
       {user && <Announcements />}
 
-      <PopulationBreakdown title="Enrollment by Year Level" />
+      <div className="sec" aria-labelledby="h-enrollment">
+        <PopulationBreakdown title="Enrollment by Year Level" />
+      </div>
 
       {user && (
         <section className="sec" aria-labelledby="h-faculty">
@@ -139,7 +141,7 @@ export default function Home() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{f.full_name}</div>
-                    <div className="ledger-meta">{f.program || '—'} · YR {f.year_level || '—'}</div>
+                    <div className="ledger-meta">{f.program || '—'}</div>
                   </div>
                   <span className="badge" style={{ background: 'var(--gold)', color: '#000' }}>Faculty</span>
                 </div>

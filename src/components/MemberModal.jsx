@@ -49,7 +49,7 @@ export default function MemberModal({ member, onClose }) {
             <h3 className="mm-name">{member.full_name}</h3>
             <div className="mm-role">
               <span className="badge badge--done">{roleLabel(member.role)}</span>
-              <span className="chip">{member.program || '—'} · YR {member.year_level || '—'}</span>
+              <span className="chip">{member.program || '—'}{member.role !== 'faculty' ? ` · YR ${member.year_level || '—'}` : ''}</span>
             </div>
             {!!member.positions?.length && (
               <div className="mm-positions">

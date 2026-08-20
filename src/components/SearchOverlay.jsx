@@ -78,7 +78,7 @@ export default function SearchOverlay({ onClose }) {
             <div className="member-av">{m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}</div>
             <div style={{ minWidth: 0 }}>
               <div className="member-name">{m.full_name}</div>
-              <div className="member-meta">{m.program || 'Student'} · YR {m.year_level || '—'}</div>
+              <div className="member-meta">{m.program || 'Student'}{m.role !== 'faculty' ? ` · YR ${m.year_level || '—'}` : ''}</div>
             </div>
             <span className="chip" style={{ marginLeft: 'auto' }}>directory</span>
           </button>
