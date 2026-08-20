@@ -49,6 +49,7 @@ export const SCOPE_LABELS = {
   'fees.view': 'See membership fee status',
   'fees.manage': 'Record membership fee payments',
   'clearance.scan': 'Rotational clearance',
+  'clearance.edit': 'Edit & sign clearance',
   'console.access': 'Open the admin console',
   'directory.view': 'Browse the member directory',
   'settings.superadmin': 'Registrar: roles, positions, structure',
@@ -57,7 +58,7 @@ export const SCOPE_LABELS = {
 export const ROLE_SCOPES = {
   superadmin: ['*'],
   moderator: ['feed.moderate', 'directory.view', 'attendance.scan', 'fees.view'],
-  faculty: ['clearance.scan'],
+  faculty: ['clearance.scan', 'clearance.edit'],
   student: [],
 }
 
@@ -145,7 +146,9 @@ export function scopesFor(user) {
 
 export function can(user, scope) {
   if (!user) return false
-  if (scope === 'clearance.scan' && user.clearance_locked) return false
+  // clearance.scan (view/scan/search) stays available; clearance_locked
+  // only strips the write half (clearance.edit).
+  if (scope === 'clearance.edit' && user.clearance_locked) return false
   const scopes = scopesFor(user)
   if (scopes.includes('*')) return scope === 'settings.superadmin' ? user.role === 'superadmin' : true
   if (SUPERADMIN_ONLY.includes(scope)) return user.role === 'superadmin'

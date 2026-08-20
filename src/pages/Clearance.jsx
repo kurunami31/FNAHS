@@ -64,6 +64,7 @@ export default function Clearance() {
   const [searching, setSearching] = useState(false)
 
   const isOfficer = can(user, 'clearance.scan')
+  const canEdit = can(user, 'clearance.edit')
   const yearOptions = useMemo(() => {
     const parts = (currentSchoolYear() || '2026-2027').split('-').map(Number)
     const a = Number(parts[0]) || 2026
@@ -211,10 +212,15 @@ export default function Clearance() {
   const activeForm = forms.find((f) => f.school_year === selYear && f.semester === selSem) || null
   const summary = clearanceSummary(activeForm?.rows)
 
-  const canEditRow = (row) => !row.cleared_at || row.recorded_by === user?.id || user?.role === 'superadmin'
+  const canEditRow = (row) =>
+    canEdit && (!row.cleared_at || row.recorded_by === user?.id || user?.role === 'superadmin')
 
   const createForm = async (e) => {
     e.preventDefault()
+    if (!canEdit) {
+      toast('You have read-only access to clearance', 'info')
+      return
+    }
     if (!placement.trim()) {
       toast('Enter the placement / center first', 'info')
       return
@@ -235,6 +241,10 @@ export default function Clearance() {
 
   const addRow = async (e) => {
     e.preventDefault()
+    if (!canEdit) {
+      toast('You have read-only access to clearance', 'info')
+      return
+    }
     if (!rowForm.dates.trim() || !rowForm.concept.trim()) {
       toast('Dates and concept are required', 'info')
       return
@@ -261,6 +271,10 @@ export default function Clearance() {
   }
 
   const clearRow = async (row) => {
+    if (!canEdit) {
+      toast('You have read-only access to clearance', 'info')
+      return
+    }
     if (!window.confirm(`Sign and clear "${row.concept}" for this student? This records you as the Clinical Instructor.`)) return
     setBusyRow(row.id)
     try {
@@ -275,6 +289,10 @@ export default function Clearance() {
   }
 
   const updateRow = async (row, patch) => {
+    if (!canEdit) {
+      toast('You have read-only access to clearance', 'info')
+      return
+    }
     setBusyRow(row.id)
     try {
       await api.updateClearanceRow(row.id, patch)
@@ -288,6 +306,10 @@ export default function Clearance() {
 
   const savePlacement = async (e) => {
     e.preventDefault()
+    if (!canEdit) {
+      toast('You have read-only access to clearance', 'info')
+      return
+    }
     if (!activeForm) return
     const value = placementDraft.trim()
     if (!value) {
@@ -308,6 +330,10 @@ export default function Clearance() {
   }
 
   const removeForm = async () => {
+    if (!canEdit) {
+      toast('You have read-only access to clearance', 'info')
+      return
+    }
     if (!activeForm) return
     if (!window.confirm(`Delete this clearance form (${activeForm.school_year} · ${semesterLabel(activeForm.semester)}) and ALL of its rows? This cannot be undone.`)) return
     setBusyRow('__form')
@@ -328,6 +354,10 @@ export default function Clearance() {
   }
 
   const saveEditRow = async (row) => {
+    if (!canEdit) {
+      toast('You have read-only access to clearance', 'info')
+      return
+    }
     const patch = {
       dates: editDraft.dates.trim(),
       concept: editDraft.concept.trim(),
@@ -357,6 +387,10 @@ export default function Clearance() {
   const addMerit = (row, amount) => updateRow(row, { merit: (Number(row.merit) || 0) + amount })
 
   const deleteRow = async (row) => {
+    if (!canEdit) {
+      toast('You have read-only access to clearance', 'info')
+      return
+    }
     if (!window.confirm(`Delete the row "${row.concept}"? This cannot be undone.`)) return
     setBusyRow(row.id)
     try {
@@ -507,21 +541,27 @@ export default function Clearance() {
             <div className="empty-state">
               <ClipboardCheck size={36} />
               <h3>No clearance form for {selYear} · {semesterLabel(selSem)}</h3>
-              <p>Start one for this student — the placement / center is set once here.</p>
-              <form onSubmit={createForm} style={{ width: '100%', maxWidth: 360, marginTop: 10 }}>
-                <div className="field">
-                  <label>Placement / Center</label>
-                  <input
-                    value={placement}
-                    onChange={(e) => setPlacement(e.target.value)}
-                    placeholder="e.g. DOrSU University Hospital — Ward B"
-                    maxLength={200}
-                  />
-                </div>
-                <button className="btn btn--primary btn--block" disabled={creating}>
-                  {creating ? <Loader2 size={15} className="spin" /> : <Plus size={15} />} Create clearance form
-                </button>
-              </form>
+              {canEdit ? (
+                <>
+                  <p>Start one for this student — the placement / center is set once here.</p>
+                  <form onSubmit={createForm} style={{ width: '100%', maxWidth: 360, marginTop: 10 }}>
+                    <div className="field">
+                      <label>Placement / Center</label>
+                      <input
+                        value={placement}
+                        onChange={(e) => setPlacement(e.target.value)}
+                        placeholder="e.g. DOrSU University Hospital — Ward B"
+                        maxLength={200}
+                      />
+                    </div>
+                    <button className="btn btn--primary btn--block" disabled={creating}>
+                      {creating ? <Loader2 size={15} className="spin" /> : <Plus size={15} />} Create clearance form
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <p>Nothing on file for this period. A Clinical Instructor can start it.</p>
+              )}
             </div>
           ) : (
             <>
@@ -551,29 +591,33 @@ export default function Clearance() {
                   {summary.daysExtension > 0 && <span className="chip chip--hn">Extension {summary.daysExtension}</span>}
                 </div>
                 <div className="clearance-summary-actions">
-                  <button
-                    className="btn btn--tiny"
-                    title="Edit placement"
-                    disabled={busyRow === '__form'}
-                    onClick={() => {
-                      setPlacementDraft(activeForm.placement)
-                      setEditPlacement(true)
-                    }}
-                  >
-                    <Pencil size={12} />
-                  </button>
-                  <button
-                    className="btn btn--tiny btn--danger"
-                    title="Delete this clearance form"
-                    disabled={busyRow === '__form'}
-                    onClick={removeForm}
-                  >
-                    {busyRow === '__form' ? <Loader2 size={12} className="spin" /> : <Trash2 size={12} />}
-                  </button>
+                  {canEdit && (
+                    <>
+                      <button
+                        className="btn btn--tiny"
+                        title="Edit placement"
+                        disabled={busyRow === '__form'}
+                        onClick={() => {
+                          setPlacementDraft(activeForm.placement)
+                          setEditPlacement(true)
+                        }}
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        className="btn btn--tiny btn--danger"
+                        title="Delete this clearance form"
+                        disabled={busyRow === '__form'}
+                        onClick={removeForm}
+                      >
+                        {busyRow === '__form' ? <Loader2 size={12} className="spin" /> : <Trash2 size={12} />}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
-              {adding && (
+              {canEdit && adding && (
                 <form onSubmit={addRow} className="clearance-add-row">
                   <div className="field">
                     <label>Inclusive dates</label>
@@ -621,7 +665,7 @@ export default function Clearance() {
                   </div>
                 </form>
               )}
-              {!adding && (
+              {canEdit && !adding && (
                 <button className="btn btn--ghost btn--sm" style={{ marginBottom: 14 }} onClick={() => setAdding(true)}>
                   <Plus size={14} /> Add duty row
                 </button>
@@ -789,7 +833,7 @@ export default function Clearance() {
                                       <Pencil size={12} />
                                     </button>
                                   )}
-                                  {!row.cleared_at && (
+                                  {canEdit && !row.cleared_at && (
                                     <button
                                       className="btn btn--tiny btn--primary"
                                       onClick={() => clearRow(row)}

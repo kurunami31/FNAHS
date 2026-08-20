@@ -304,7 +304,7 @@ export default function IdCard() {
 function StudentClearanceForm({ form, student, print, refresh }) {
   const { toast } = useApp()
   const summary = clearanceSummary(form.rows)
-  const canManage = !print && can(student, 'clearance.scan')
+  const canManage = !print && can(student, 'clearance.edit')
   const [editPlacement, setEditPlacement] = useState(false)
   const [placementDraft, setPlacementDraft] = useState(form.placement)
   const [busy, setBusy] = useState(false)

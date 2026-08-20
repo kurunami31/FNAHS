@@ -82,6 +82,22 @@ function markDbError(error) {
 /* ---------------- demo store (localStorage) ---------------- */
 
 const LS_KEY = 'fnahs-db-v2'
+/* Keep the offline mirror comfortably inside localStorage's ~5MB quota so
+   Supabase's own auth-token write (sb-<ref>-auth-token) always has room.
+   The mirror is just an offline cache — overflow is trimmed to the most
+   recent/important rows instead of being allowed to fill the whole quota. */
+const DB_MAX_BYTES = 2_400_000
+
+function pruneDb(db) {
+  for (const p of Object.values(db.profiles || {})) {
+    if (p.avatar_url) p.avatar_url = null
+  }
+  if (Array.isArray(db.posts) && db.posts.length > 120) db.posts = db.posts.slice(0, 120)
+  if (Array.isArray(db.events) && db.events.length > 120) db.events = db.events.slice(0, 120)
+  if (Array.isArray(db.eventPayments) && db.eventPayments.length > 900) db.eventPayments = db.eventPayments.slice(-900)
+  if (Array.isArray(db.feePayments) && db.feePayments.length > 900) db.feePayments = db.feePayments.slice(-900)
+  if (Array.isArray(db.clearanceForms) && db.clearanceForms.length > 400) db.clearanceForms = db.clearanceForms.slice(-400)
+}
 
 function loadDb() {
   try {
@@ -90,7 +106,7 @@ function loadDb() {
       const db = JSON.parse(raw)
       // lazily merge missing seeds on schema bumps
       const fresh = demoDb()
-      return {
+      const merged = {
         profiles: { ...fresh.profiles, ...(db.profiles || {}) },
         posts: db.posts?.length ? db.posts : fresh.posts,
         events: db.events?.length ? db.events : fresh.events,
@@ -101,6 +117,16 @@ function loadDb() {
         eventPayments: db.eventPayments || [],
         clearanceForms: db.clearanceForms || [],
       }
+      // trim a mirror that already blew past the cap (e.g. pre-fix devices)
+      if (JSON.stringify(merged).length > DB_MAX_BYTES) {
+        pruneDb(merged)
+        try {
+          localStorage.setItem(LS_KEY, JSON.stringify(merged))
+        } catch {
+          /* ignore */
+        }
+      }
+      return merged
     }
   } catch {
     /* ignore corrupt storage */
@@ -109,10 +135,29 @@ function loadDb() {
 }
 
 function saveDb(db) {
+  let json = JSON.stringify(db)
+  if (json.length > DB_MAX_BYTES) {
+    pruneDb(db)
+    json = JSON.stringify(db)
+  }
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(db))
+    localStorage.setItem(LS_KEY, json)
   } catch {
-    /* storage full / private mode — ignore */
+    try {
+      pruneDb(db)
+      localStorage.setItem(LS_KEY, JSON.stringify(db))
+    } catch {
+      /* storage still full / private mode — mirror lives in memory only */
+    }
+  }
+}
+
+function safeSet(key, value) {
+  try {
+    localStorage.setItem(key, value)
+    return true
+  } catch {
+    return false
   }
 }
 
@@ -123,7 +168,7 @@ const db = loadDb()
 const ADMIN_PASSWORD = 'dorsufnahs2026'
 
 function demoLogin(id) {
-  localStorage.setItem('fnahs-user', id)
+  safeSet('fnahs-user', id)
 }
 
 function demoLogout() {
@@ -152,7 +197,7 @@ async function demoGetProfile(id) {
 function demoNotify(rows) {
   const all = JSON.parse(localStorage.getItem('fnahs-demo-notifs') || '[]')
   all.push(...rows)
-  localStorage.setItem('fnahs-demo-notifs', JSON.stringify(all))
+  safeSet('fnahs-demo-notifs', JSON.stringify(all))
 }
 
 /* Mirrors the is_directory_viewer() SQL helper — demo mode only. */
@@ -410,7 +455,7 @@ async function demoGetClearanceForms(studentId) {
 }
 
 async function demoSearchStudents(q) {
-  if (!demoIsClearanceOfficer()) throw new Error('Only Clinical Instructors or the administrator may search students.')
+  if (!demoIsClearanceViewer()) throw new Error('Only Clinical Instructors or the administrator may search students.')
   const needle = (q || '').trim().toLowerCase()
   if (!needle) return []
   return Object.values(db.profiles)
@@ -440,6 +485,15 @@ function demoIsClearanceOfficer() {
   const me = demoCurrentUserId()
   const p = me ? db.profiles[me] : null
   if (!p || p.clearance_locked) return false
+  return p.role === 'faculty' || p.role === 'superadmin'
+}
+
+/* Mirrors is_clearance_viewer() — faculty/superadmin may view, search and
+   scan clearance even when clearance_locked (read-only access). */
+function demoIsClearanceViewer() {
+  const me = demoCurrentUserId()
+  const p = me ? db.profiles[me] : null
+  if (!p) return false
   return p.role === 'faculty' || p.role === 'superadmin'
 }
 
