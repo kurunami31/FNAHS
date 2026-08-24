@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, LogIn, Info, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Info, ArrowRight, ShieldCheck, KeyRound } from 'lucide-react'
 import Ecg from '../components/Ecg'
 import { useApp } from '../context/AppContext'
 import { DEVELOPER } from '../lib/build'
+import { api } from '../lib/api'
 
 export default function Login() {
   const { login, finishMfa, toast, isDemo } = useApp()
@@ -17,6 +18,10 @@ export default function Login() {
   const [mfa, setMfa] = useState(null)
   const [mfaCode, setMfaCode] = useState('')
   const [mfaBusy, setMfaBusy] = useState(false)
+  const [forgot, setForgot] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetBusy, setResetBusy] = useState(false)
+  const [sent, setSent] = useState(false)
 
   const submit = async (e) => {
     e.preventDefault()
@@ -51,6 +56,32 @@ export default function Login() {
     } finally {
       setMfaBusy(false)
     }
+  }
+
+  const submitReset = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (isDemo) {
+      toast('Demo mode — any password works, no reset needed.')
+      return
+    }
+    setResetBusy(true)
+    try {
+      await api.resetPassword(resetEmail)
+      setSent(true)
+    } catch (err) {
+      setError(err.message || 'Could not send the reset link — try again.')
+    } finally {
+      setResetBusy(false)
+    }
+  }
+
+  const openForgot = () => {
+    setResetEmail(email)
+    setSent(false)
+    setError('')
+    setMfa(null)
+    setForgot(true)
   }
 
   if (gate) {
@@ -114,7 +145,48 @@ export default function Login() {
 
         {error && <div className="form-error">{error}</div>}
 
-        {mfa ? (
+        {forgot ? (
+          <form onSubmit={submitReset}>
+            {sent ? (
+              <div className="form-ok" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <KeyRound size={15} /> Reset link sent to <b>{resetEmail}</b>. Check your inbox — it may take a minute to arrive.
+              </div>
+            ) : (
+              <>
+                <div className="form-ok" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <ShieldCheck size={15} /> Enter your email and we'll send you a link to set a new password.
+                </div>
+                <div className="field" style={{ marginTop: 14 }}>
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="student@fnahs.edu.ph"
+                    autoComplete="email"
+                    autoFocus
+                  />
+                </div>
+                <button className="btn btn--primary btn--block btn--lg" disabled={resetBusy}>
+                  <KeyRound size={17} /> {resetBusy ? 'Sending…' : 'Send reset link'}
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              className="btn btn--ghost btn--block"
+              style={{ marginTop: 8 }}
+              onClick={() => {
+                setForgot(false)
+                setSent(false)
+                setError('')
+              }}
+            >
+              Back to log in
+            </button>
+          </form>
+        ) : mfa ? (
           <form onSubmit={finishMfaStep}>
             <div className="form-ok" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <ShieldCheck size={15} /> Two-factor authentication is on for this account.
@@ -157,6 +229,24 @@ export default function Login() {
           </div>
           <button className="btn btn--primary btn--block btn--lg" disabled={busy}>
             <LogIn size={17} /> {busy ? 'Logging in…' : 'Log in'}
+          </button>
+          <button
+            type="button"
+            onClick={openForgot}
+            style={{
+              display: 'block',
+              margin: '14px auto 0',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              color: 'var(--accent)',
+              font: 'inherit',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+            }}
+          >
+            Forgot password?
           </button>
         </form>
         )}

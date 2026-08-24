@@ -1174,6 +1174,28 @@ export const api = {
     })
   },
 
+  /** email a password-reset link; Supabase redirects back to /reset-password */
+  async resetPassword(email) {
+    if (!SUPABASE_ENABLED || !supabase) throw new Error('Password reset is only available in the live deployment.')
+    const { error } = await supabase.auth.resetPasswordForEmail(String(email || '').trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (error) throw error
+  },
+
+  /** set a new password for the session restored from the reset email */
+  async updatePassword(password) {
+    if (!SUPABASE_ENABLED || !supabase) throw new Error('Password reset is only available in the live deployment.')
+    const { error } = await supabase.auth.updateUser({ password: String(password || '') })
+    if (error) throw error
+    try {
+      // this device becomes the account's active session
+      await api.claimSession()
+    } catch {
+      /* best effort */
+    }
+  },
+
   async signUp(full_name, email, password, role) {
     if (!SUPABASE_ENABLED) {
       const id = uid()
