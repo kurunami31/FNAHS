@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background:#f3efe4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3efe4;">
+      <tr>
+        <td align="center" style="padding:36px 12px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#faf7ef;border:1px solid #e3d9bd;border-radius:14px;overflow:hidden;">
+            <tr><td style="height:5px;line-height:0;font-size:0;background:#a3821f;">&nbsp;</td></tr>
+            <tr><td style="padding:30px 34px 6px;">
+              <p style="margin:0;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#9b8434;">Davao Oriental State University</p>
+              <p style="margin:8px 0 2px;font-family:Georgia,'Times New Roman',serif;font-size:26px;color:#241d0e;">FNAHS <em style="color:#a3821f;">PULSO</em></p>
+              <p style="margin:0;font-size:12px;color:#7a715a;">Proactive &amp; United Legion of Student Nurses</p>
+            </td></tr>
+            <tr><td style="padding:26px 34px 10px;">
+              <h2 style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#241d0e;">Confirm your email</h2>
+              <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#4c4534;">Hi {{ if .Data.full_name }}{{ .Data.full_name }}{{ else }}there{{ end }}, welcome to FNAHS PULSO! Confirm your email address to activate your account.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+                <td style="background:#a3821f;border-radius:10px;">
+                  <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 28px;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;">Confirm my email</a>
+                </td>
+              </tr></table>
+              <p style="margin:22px 0 0;font-size:12px;line-height:1.6;color:#7a715a;">Or paste this link into your browser:<br /><a href="{{ .ConfirmationURL }}" style="color:#a3821f;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+            </td></tr>
+            <tr><td style="padding:18px 34px 30px;border-top:1px solid #eee4cb;">
+              <p style="margin:0;font-size:11px;line-height:1.6;color:#9a9078;">Didn't create an account? You can safely ignore this email.</p>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
