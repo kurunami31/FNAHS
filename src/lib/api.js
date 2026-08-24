@@ -198,6 +198,18 @@ function demoCurrentUserId() {
   return localStorage.getItem('fnahs-user') || localStorage.getItem('fnahs-codex-user') || null
 }
 
+/* ---- egress control ----
+   get_directory ships every member's base64 avatar (~9 MB and growing),
+   so cache the result briefly instead of re-downloading it on each
+   directory/search mount. Invalidated whenever a profile changes. */
+const MEMBERS_CACHE_TTL = 5 * 60 * 1000
+let membersCache = null
+let membersCacheAt = 0
+function invalidateMembersCache() {
+  membersCache = null
+  membersCacheAt = 0
+}
+
 /* ---------------- profile helpers ---------------- */
 
 async function demoUpsertProfile(p) {
@@ -1270,6 +1282,7 @@ export const api = {
         const clean = { ...p, full_name: composeFullName(p) || sanitizeText(p.full_name, 120), avatar_url: sanitizeUrl(p.avatar_url) }
         db.profiles[p.id] = { ...db.profiles[p.id], ...clean }
         saveDb(db)
+        invalidateMembersCache()
         return db.profiles[p.id]
       }),
 
@@ -1344,18 +1357,27 @@ export const api = {
 
   /* directory — served by the security-definer get_directory() RPC (no email,
      no RLS gaps); viewers only: superadmin/moderator + console officers */
-  getMembers: offlineRead('getMembers', async () => {
-        const { data, error } = await supabase.rpc('get_directory').order('full_name')
-        if (error) {
-          markDbError(error)
-          throw error
+  getMembers: (() => {
+        const load = offlineRead('getMembers', async () => {
+          const { data, error } = await supabase.rpc('get_directory').order('full_name')
+          if (error) {
+            markDbError(error)
+            throw error
+          }
+          setDbStatus('ok')
+          return (data || []).filter((m) => m.role !== 'superadmin')
+        }, async () => {
+          if (!demoCanViewDirectory()) throw new Error('insufficient privileges')
+          return Object.values(db.profiles).filter((m) => m.role !== 'superadmin')
+        }, mirrorProfiles)
+        return async () => {
+          if (membersCache && Date.now() - membersCacheAt < MEMBERS_CACHE_TTL) return [...membersCache]
+          const data = await load()
+          membersCache = data || []
+          membersCacheAt = Date.now()
+          return [...membersCache]
         }
-        setDbStatus('ok')
-        return (data || []).filter((m) => m.role !== 'superadmin')
-      }, async () => {
-        if (!demoCanViewDirectory()) throw new Error('insufficient privileges')
-        return Object.values(db.profiles).filter((m) => m.role !== 'superadmin')
-      }, mirrorProfiles),
+      })(),
 
   /* member count — lightweight count only, visible to everyone */
   getMemberCount: offlineRead('getMemberCount', async () => {
