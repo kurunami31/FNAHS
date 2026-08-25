@@ -1624,12 +1624,15 @@ export const api = {
       }),
 
   /* events */
-  getEvents: offlineRead('getEvents', async () => {
-        const { data, error } = await supabase
+  getEvents: offlineRead('getEvents', async (opts = {}) => {
+        let q = supabase
           .from('events')
           .select('*, rsvps(*, profiles(full_name, avatar_url, program))')
-          .gte('ends_at', new Date(Date.now() - 24 * 3600e3).toISOString())
           .order('starts_at', { ascending: true })
+        // member pages focus on live/recent events; staff tools pass
+        // includePast to reach older events for attendance review
+        if (!opts.includePast) q = q.gte('ends_at', new Date(Date.now() - 24 * 3600e3).toISOString())
+        const { data, error } = await q
         if (error) {
           markDbError(error)
           throw error

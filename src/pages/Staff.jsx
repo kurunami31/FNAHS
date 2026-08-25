@@ -45,7 +45,7 @@ export default function Staff() {
 
   const loadEvents = useCallback(async () => {
     try {
-      const evs = await api.getEvents()
+      const evs = await api.getEvents({ includePast: true })
       setEvents(evs)
       if (!eventId && evs.length) setEventId(evs[0].id)
     } catch {
