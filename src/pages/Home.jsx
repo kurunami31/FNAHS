@@ -292,7 +292,7 @@ function PhtClock() {
   return (
     <div className="hero-clock" role="timer" aria-label="Live Philippine time">
       <span className="hero-clock-dot" aria-hidden="true" />
-      philippine time · {PHT_FORMAT.format(now)} · gmt+8
+      pht · {PHT_FORMAT.format(now)}
     </div>
   )
 }
