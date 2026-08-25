@@ -136,6 +136,9 @@ export function AppProvider({ children }) {
     if (!user) return
     let alive = true
     const check = async () => {
+      // never run the guard on the password-reset page — a recovery session
+      // hasn't been claimed yet, so the check would sign the user out mid-reset
+      if (window.location.pathname === '/reset-password') return
       try {
         const latest = await api.isLatestSession()
         if (!alive || latest) return

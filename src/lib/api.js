@@ -1198,14 +1198,16 @@ export const api = {
   /** set a new password for the session restored from the reset email */
   async updatePassword(password) {
     if (!SUPABASE_ENABLED || !supabase) throw new Error('Password reset is only available in the live deployment.')
-    const { error } = await supabase.auth.updateUser({ password: String(password || '') })
-    if (error) throw error
     try {
-      // this device becomes the account's active session
+      // Recovery sessions never pass through sign-in, so without claiming,
+      // the single-session guard treats this device as superseded and kills
+      // the session before the password can be changed.
       await api.claimSession()
     } catch {
       /* best effort */
     }
+    const { error } = await supabase.auth.updateUser({ password: String(password || '') })
+    if (error) throw error
   },
 
   async signUp(full_name, email, password, role) {
