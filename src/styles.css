@@ -2330,6 +2330,31 @@ html[data-theme='dark'] .id-card {
 }
 
 .hero-ecg { max-width: 320px; margin: 18px auto 2px; }
+
+.hero-clock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 10px auto 0;
+  font-family: var(--f-ocr);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hero-clock-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2e7d32;
+  animation: clock-pulse 2s ease-out infinite;
+}
+@keyframes clock-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(46, 125, 50, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
+}
 .auth-ecg { max-width: 200px; margin: 0 auto 14px; }
 .hc-ecg { max-width: 260px; margin: -14px auto 6px; }
 

@@ -81,6 +81,7 @@ export default function Home() {
         <div className="hero-fac d3">pulso · proactive &amp; united legion of student nurses organization</div>
         <p className="hero-tagline d4">{ORG_TAGLINE}</p>
         <Ecg className="hero-ecg d5" />
+        <PhtClock />
         <div className="hero-actions d6">
           {user ? (
             <>
@@ -267,6 +268,31 @@ export default function Home() {
       </section>
 
       {selected && <EventModal event={selected} onClose={() => setSelected(null)} onChanged={reloadRounds} />}
+    </div>
+  )
+}
+
+const PHT_FORMAT = new Intl.DateTimeFormat('en-PH', {
+  timeZone: 'Asia/Manila',
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: true,
+})
+
+function PhtClock() {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <div className="hero-clock" role="timer" aria-label="Live Philippine time">
+      <span className="hero-clock-dot" aria-hidden="true" />
+      philippine time · {PHT_FORMAT.format(now)} · gmt+8
     </div>
   )
 }
