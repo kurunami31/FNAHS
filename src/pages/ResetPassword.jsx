@@ -33,6 +33,12 @@ export default function ResetPassword() {
         const { data } = await supabase.auth.getSession()
         if (!alive) return
         if (data?.session) {
+          // Recovery tokens from the email link aren't fully materialized
+          // server-side until the refresh token is used — without this,
+          // updateUser dies with "session not found". Force the exchange.
+          await supabase.auth
+            .refreshSession({ refresh_token: data.session.refresh_token })
+            .catch((e) => console.warn('recovery session refresh:', e?.message))
           setSessionReady(true)
           setChecked(true)
           return
