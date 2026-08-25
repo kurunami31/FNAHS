@@ -1199,10 +1199,10 @@ export const api = {
   async updatePassword(password) {
     if (!SUPABASE_ENABLED || !supabase) throw new Error('Password reset is only available in the live deployment.')
     try {
-      // Recovery sessions never pass through sign-in, so without claiming,
-      // the single-session guard treats this device as superseded and kills
-      // the session before the password can be changed.
-      await api.claimSession()
+      // Only meaningful once the recovery exchange produced a session; with
+      // none, the RPC would run as anon and needlessly throw a 400.
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) await api.claimSession()
     } catch {
       /* best effort */
     }
