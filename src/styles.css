@@ -755,8 +755,43 @@ img { max-width: 100%; }
   .vital:nth-child(n+3) { border-top: 1px solid var(--line); }
 }
 @media (max-width: 560px) {
-  .seal-hero { padding: 44px 18px 0; }
-  .hero-seal { width: 88px; height: 88px; }
+  /* hero — tighter, everything stacks cleanly */
+  .seal-hero { padding: 34px 16px 0; border-radius: var(--r-lg); }
+  .hero-seal { width: 80px; height: 80px; margin-bottom: 16px; }
+  .hero-eyebrow { font-size: 0.54rem; letter-spacing: 0.22em; }
+  .hero-title { font-size: clamp(2.5rem, 14vw, 3.4rem); margin: 10px 0 6px; }
+  .hero-fac { font-size: 0.55rem; letter-spacing: 0.18em; line-height: 1.8; }
+  .hero-tagline { font-size: 0.9rem; margin-top: 12px; }
+  .hero-clock { flex-wrap: wrap; gap: 6px; padding: 0 6px; font-size: 0.55rem; letter-spacing: 0.12em; text-align: center; }
+  .hero-actions { flex-direction: column; align-items: stretch; margin-top: 20px; }
+  .hero-actions .btn { width: 100%; justify-content: center; }
+
+  /* vitals 2x2 — compact */
+  .vitals { margin-top: 28px; }
+  .vital { padding: 13px 8px; }
+  .vital b { font-size: 1.25rem; }
+
+  /* sections */
+  .sec { margin-top: 32px; }
+  .sec-head { flex-wrap: wrap; row-gap: 4px; margin-bottom: 14px; }
+  .sec-head h2 { font-size: 1.28rem; }
+  .sec-head .sec-kicker { letter-spacing: 0.18em; }
+
+  /* briefs timeline — slimmer gutter on phones */
+  .brief-list { margin-left: 2px; padding-left: 20px; }
+  .brief::before { left: -25px; top: 19px; width: 8px; height: 8px; box-shadow: 0 0 0 2px var(--paper); border-width: 2px; }
+  .brief { padding: 13px 0; }
+  .brief-title { font-size: 0.92rem; }
+
+  /* rounds rows — tighter */
+  .round-row { gap: 12px; padding: 13px 14px; }
+  .round-date { width: 48px; margin-right: 0; }
+  .round-date b { font-size: 1.2rem; }
+  .round-main h4 { font-size: 0.95rem; }
+  .round-main .round-meta { gap: 8px; }
+
+  /* tools single column */
+  .tools-grid { grid-template-columns: 1fr; gap: 8px; }
 }
 
 /* ============================================================
