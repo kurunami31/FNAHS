@@ -14,16 +14,64 @@ export default function ResetPassword() {
   //   1. implicit link already exchanged -> session exists
   //   2. ?token=...&email=... (OTP link) -> verifyOtp
   //   3. neither -> manual 6-digit code entry
-  const [phase, setPhase] = useState('boot') // boot | ready | code
+  const [phase, setPhase] = useState('boot') // boot | ready | code | mfa
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [verifying, setVerifying] = useState(false)
+
+  // MFA (AAL2) step — required before password changes on MFA-enrolled accounts
+  const [mfaFactorId, setMfaFactorId] = useState('')
+  const [mfaCode, setMfaCode] = useState('')
+  const [mfaBusy, setMfaBusy] = useState(false)
+  const [mfaError, setMfaError] = useState('')
 
   const [pw, setPw] = useState('')
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
+
+  // Returns true when the session may update the password; switches to the
+  // authenticator-code phase when the account requires AAL2.
+  const finalizeSession = async () => {
+    try {
+      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+      if (data && data.nextLevel === 'aal2' && data.currentLevel !== 'aal2') {
+        const { data: fl } = await supabase.auth.mfa.listFactors()
+        const totp = (fl?.all || []).find((f) => f.factor_type === 'totp' && f.status === 'verified')
+        if (totp) {
+          setMfaFactorId(totp.id)
+          setMfaCode('')
+          setMfaError('')
+          setPhase('mfa')
+          return false
+        }
+      }
+    } catch { /* assurance check unavailable — proceed */ }
+    return true
+  }
+
+  const submitMfa = async (e) => {
+    e.preventDefault()
+    setMfaError('')
+    if (!mfaCode.trim()) { setMfaError('Enter your authenticator code.'); return }
+    setMfaBusy(true)
+    try {
+      const ch = await supabase.auth.mfa.challenge({ factorId: mfaFactorId })
+      const { error } = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId: ch.data.id,
+        code: mfaCode.trim().replace(/\s/g, ''),
+      })
+      if (error) throw error
+      toast('Two-factor verified')
+      setPhase('ready')
+    } catch (err) {
+      setMfaError(err.message || 'That code did not work.')
+    } finally {
+      setMfaBusy(false)
+    }
+  }
 
   useEffect(() => {
     let alive = true
@@ -46,8 +94,12 @@ export default function ResetPassword() {
         if (error) throw error
         await materialize(data.session?.refresh_token)
         if (!alive) return
-        setPhase('ready')
-        if (!silentBoot) toast('Code verified — choose your new password')
+        const ok = await finalizeSession()
+        if (!alive) return
+        if (ok) {
+          setPhase('ready')
+          if (!silentBoot) toast('Code verified — choose your new password')
+        }
       } catch (e) {
         if (!alive) return
         setVerifying(false)
@@ -74,7 +126,7 @@ export default function ResetPassword() {
           if (data?.session) {
             await materialize(data.session.refresh_token)
             if (!alive) return
-            setPhase('ready')
+            if (await finalizeSession()) setPhase('ready')
             return
           }
           await new Promise((r) => setTimeout(r, 400))
@@ -106,8 +158,10 @@ export default function ResetPassword() {
       const { data, error } = await supabase.auth.verifyOtp({ type: 'recovery', email: email.trim(), token: code.trim().replace(/\s/g, '') })
       if (error) throw error
       await supabase.auth.refreshSession({ refresh_token: data.session?.refresh_token }).catch(() => {})
-      setPhase('ready')
-      toast('Code verified — choose your new password')
+      if (await finalizeSession()) {
+        setPhase('ready')
+        toast('Code verified — choose your new password')
+      }
     } catch (err) {
       setError(err.message || 'That code did not work.')
     } finally {
@@ -131,6 +185,12 @@ export default function ResetPassword() {
       setTimeout(() => navigate('/app'), 900)
     } catch (err) {
       const msg = String(err?.message || '')
+      if (/aal2/i.test(msg)) {
+        // finalizeSession should have routed here — surface the authenticator step
+        setPhase('mfa')
+        setError('Your account uses two-factor authentication. Enter your authenticator code to continue.')
+        return
+      }
       setError(
         /session|expired|token|not found/i.test(msg)
           ? `${msg} — verify the code again and retry immediately.`
@@ -175,7 +235,29 @@ export default function ResetPassword() {
 
             {error && <div className="form-error">{error}</div>}
 
-            {phase === 'boot-note' && null}
+            {phase === 'mfa' && (
+              <form onSubmit={submitMfa}>
+                <div className="form-ok" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
+                  <ShieldCheck size={15} /> This account uses two-factor authentication. Enter your authenticator code to continue.
+                </div>
+                {mfaError && <div className="form-error" style={{ marginBottom: 12 }}>{mfaError}</div>}
+                <div className="field">
+                  <label>Authenticator code</label>
+                  <input
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value.replace(/[^\d]/g, ''))}
+                    placeholder="6-digit code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={8}
+                    autoFocus
+                  />
+                </div>
+                <button className="btn btn--primary btn--block btn--lg" disabled={mfaBusy}>
+                  {mfaBusy ? <Loader2 size={16} className="spin" /> : <ShieldCheck size={17} />} {mfaBusy ? 'Verifying…' : 'Verify'}
+                </button>
+              </form>
+            )}
 
             {phase === 'code' && (
               <form onSubmit={submitCode}>
