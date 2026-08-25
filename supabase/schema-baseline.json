@@ -1,0 +1,3177 @@
+{
+  "enums": [],
+  "tables": [
+    "announcements",
+    "app_settings",
+    "attendance",
+    "audit_logs",
+    "chat_messages",
+    "class_attendance",
+    "class_sessions",
+    "clearance_forms",
+    "clearance_rows",
+    "comments",
+    "event_payments",
+    "event_polls",
+    "events",
+    "faculty_subjects",
+    "fee_payments",
+    "news_cache",
+    "notifications",
+    "poll_options",
+    "poll_votes",
+    "post_likes",
+    "posts",
+    "profiles",
+    "rate_limits",
+    "report_connectors",
+    "rsvps"
+  ],
+  "cols": [
+    {
+      "table_name": "announcements",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "title",
+      "ordinal_position": 2,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "body",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "''::text"
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "author_id",
+      "ordinal_position": 4,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "pinned",
+      "ordinal_position": 5,
+      "fmt_type": "boolean",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "false"
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "archived_at",
+      "ordinal_position": 6,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "created_at",
+      "ordinal_position": 7,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "app_settings",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "integer",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "1"
+    },
+    {
+      "table_name": "app_settings",
+      "column_name": "maintenance_mode",
+      "ordinal_position": 2,
+      "fmt_type": "boolean",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "false"
+    },
+    {
+      "table_name": "app_settings",
+      "column_name": "updated_at",
+      "ordinal_position": 3,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "app_settings",
+      "column_name": "updated_by",
+      "ordinal_position": 4,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "app_settings",
+      "column_name": "membership_fee_amount",
+      "ordinal_position": 5,
+      "fmt_type": "numeric(8,2)",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "200"
+    },
+    {
+      "table_name": "attendance",
+      "column_name": "event_id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "attendance",
+      "column_name": "user_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "attendance",
+      "column_name": "scanned_at",
+      "ordinal_position": 3,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "audit_logs",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "audit_logs",
+      "column_name": "actor_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "audit_logs",
+      "column_name": "action",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "audit_logs",
+      "column_name": "entity",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "audit_logs",
+      "column_name": "entity_id",
+      "ordinal_position": 5,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "audit_logs",
+      "column_name": "meta",
+      "ordinal_position": 6,
+      "fmt_type": "jsonb",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "'{}'::jsonb"
+    },
+    {
+      "table_name": "audit_logs",
+      "column_name": "created_at",
+      "ordinal_position": 7,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "chat_messages",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "chat_messages",
+      "column_name": "user_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "chat_messages",
+      "column_name": "role",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "chat_messages",
+      "column_name": "content",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "chat_messages",
+      "column_name": "created_at",
+      "ordinal_position": 5,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "class_attendance",
+      "column_name": "session_id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "class_attendance",
+      "column_name": "user_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "class_attendance",
+      "column_name": "scanned_at",
+      "ordinal_position": 3,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "class_sessions",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "class_sessions",
+      "column_name": "subject_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "class_sessions",
+      "column_name": "faculty_id",
+      "ordinal_position": 3,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "class_sessions",
+      "column_name": "started_at",
+      "ordinal_position": 4,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "class_sessions",
+      "column_name": "ended_at",
+      "ordinal_position": 5,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_forms",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "clearance_forms",
+      "column_name": "member_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_forms",
+      "column_name": "school_year",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_forms",
+      "column_name": "semester",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_forms",
+      "column_name": "placement",
+      "ordinal_position": 5,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_forms",
+      "column_name": "created_by",
+      "ordinal_position": 6,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_forms",
+      "column_name": "created_at",
+      "ordinal_position": 7,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "form_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "dates",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "concept",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "hours",
+      "ordinal_position": 5,
+      "fmt_type": "numeric",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "cleared_at",
+      "ordinal_position": 6,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "recorded_by",
+      "ordinal_position": 7,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "remark",
+      "ordinal_position": 8,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "demerit",
+      "ordinal_position": 9,
+      "fmt_type": "integer",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "days_extension",
+      "ordinal_position": 10,
+      "fmt_type": "integer",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "merit",
+      "ordinal_position": 11,
+      "fmt_type": "integer",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "0"
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "created_by",
+      "ordinal_position": 12,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "updated_by",
+      "ordinal_position": 13,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "updated_at",
+      "ordinal_position": 14,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "created_at",
+      "ordinal_position": 15,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "clearance_rows",
+      "column_name": "agency",
+      "ordinal_position": 16,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "comments",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "comments",
+      "column_name": "post_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "comments",
+      "column_name": "user_id",
+      "ordinal_position": 3,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "auth.uid()"
+    },
+    {
+      "table_name": "comments",
+      "column_name": "content",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "comments",
+      "column_name": "created_at",
+      "ordinal_position": 5,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "comments",
+      "column_name": "image_url",
+      "ordinal_position": 6,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "comments",
+      "column_name": "parent_id",
+      "ordinal_position": 7,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "event_payments",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "event_payments",
+      "column_name": "event_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "event_payments",
+      "column_name": "member_id",
+      "ordinal_position": 3,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "event_payments",
+      "column_name": "amount",
+      "ordinal_position": 4,
+      "fmt_type": "numeric(8,2)",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "event_payments",
+      "column_name": "paid_at",
+      "ordinal_position": 5,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "event_payments",
+      "column_name": "recorded_by",
+      "ordinal_position": 6,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "event_payments",
+      "column_name": "created_at",
+      "ordinal_position": 7,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "event_polls",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "event_polls",
+      "column_name": "event_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "event_polls",
+      "column_name": "question",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "event_polls",
+      "column_name": "created_by",
+      "ordinal_position": 4,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "event_polls",
+      "column_name": "closes_at",
+      "ordinal_position": 5,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "event_polls",
+      "column_name": "created_at",
+      "ordinal_position": 6,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "events",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "events",
+      "column_name": "title",
+      "ordinal_position": 2,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "description",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "''::text"
+    },
+    {
+      "table_name": "events",
+      "column_name": "location",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "''::text"
+    },
+    {
+      "table_name": "events",
+      "column_name": "starts_at",
+      "ordinal_position": 5,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "ends_at",
+      "ordinal_position": 6,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "created_by",
+      "ordinal_position": 7,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "created_at",
+      "ordinal_position": 8,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "events",
+      "column_name": "fee_amount",
+      "ordinal_position": 9,
+      "fmt_type": "numeric(8,2)",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "0"
+    },
+    {
+      "table_name": "faculty_subjects",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "faculty_subjects",
+      "column_name": "faculty_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "faculty_subjects",
+      "column_name": "name",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "faculty_subjects",
+      "column_name": "created_at",
+      "ordinal_position": 4,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "fee_payments",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "fee_payments",
+      "column_name": "member_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "fee_payments",
+      "column_name": "school_year",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "fee_payments",
+      "column_name": "payment_type",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "fee_payments",
+      "column_name": "amount",
+      "ordinal_position": 5,
+      "fmt_type": "numeric(8,2)",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "fee_payments",
+      "column_name": "receipt",
+      "ordinal_position": 6,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "fee_payments",
+      "column_name": "paid_at",
+      "ordinal_position": 7,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "fee_payments",
+      "column_name": "recorded_by",
+      "ordinal_position": 8,
+      "fmt_type": "uuid",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "fee_payments",
+      "column_name": "created_at",
+      "ordinal_position": 9,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "news_cache",
+      "column_name": "key",
+      "ordinal_position": 1,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "news_cache",
+      "column_name": "payload",
+      "ordinal_position": 2,
+      "fmt_type": "jsonb",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "news_cache",
+      "column_name": "fetched_at",
+      "ordinal_position": 3,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "user_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "kind",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "'system'::text"
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "title",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "body",
+      "ordinal_position": 5,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "''::text"
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "link",
+      "ordinal_position": 6,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "read_at",
+      "ordinal_position": 7,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "created_at",
+      "ordinal_position": 8,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "poll_options",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "poll_options",
+      "column_name": "poll_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "poll_options",
+      "column_name": "label",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "poll_votes",
+      "column_name": "poll_id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "poll_votes",
+      "column_name": "option_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "poll_votes",
+      "column_name": "user_id",
+      "ordinal_position": 3,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "poll_votes",
+      "column_name": "created_at",
+      "ordinal_position": 4,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "post_likes",
+      "column_name": "post_id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "post_likes",
+      "column_name": "user_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "post_likes",
+      "column_name": "created_at",
+      "ordinal_position": 3,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "posts",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "posts",
+      "column_name": "user_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "auth.uid()"
+    },
+    {
+      "table_name": "posts",
+      "column_name": "content",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "posts",
+      "column_name": "image_url",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "posts",
+      "column_name": "archived_at",
+      "ordinal_position": 5,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "posts",
+      "column_name": "created_at",
+      "ordinal_position": 6,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "full_name",
+      "ordinal_position": 2,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "''::text"
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "email",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "program",
+      "ordinal_position": 4,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "year_level",
+      "ordinal_position": 5,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "role",
+      "ordinal_position": 6,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "'student'::text"
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "avatar_url",
+      "ordinal_position": 7,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "created_at",
+      "ordinal_position": 8,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "positions",
+      "ordinal_position": 9,
+      "fmt_type": "text[]",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "'{}'::text[]"
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "privacy_policy_accepted_at",
+      "ordinal_position": 10,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "section",
+      "ordinal_position": 11,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "surname",
+      "ordinal_position": 12,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "first_name",
+      "ordinal_position": 13,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "middle_initial",
+      "ordinal_position": 14,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "id_no",
+      "ordinal_position": 15,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "clearance_locked",
+      "ordinal_position": 16,
+      "fmt_type": "boolean",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "false"
+    },
+    {
+      "table_name": "profiles",
+      "column_name": "requested_role",
+      "ordinal_position": 17,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "rate_limits",
+      "column_name": "bucket",
+      "ordinal_position": 1,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "rate_limits",
+      "column_name": "window_at",
+      "ordinal_position": 2,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "rate_limits",
+      "column_name": "calls",
+      "ordinal_position": 3,
+      "fmt_type": "integer",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "0"
+    },
+    {
+      "table_name": "report_connectors",
+      "column_name": "id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "gen_random_uuid()"
+    },
+    {
+      "table_name": "report_connectors",
+      "column_name": "kind",
+      "ordinal_position": 2,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "'google'::text"
+    },
+    {
+      "table_name": "report_connectors",
+      "column_name": "label",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "'Org Google Sheet'::text"
+    },
+    {
+      "table_name": "report_connectors",
+      "column_name": "config",
+      "ordinal_position": 4,
+      "fmt_type": "jsonb",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "'{}'::jsonb"
+    },
+    {
+      "table_name": "report_connectors",
+      "column_name": "enabled",
+      "ordinal_position": 5,
+      "fmt_type": "boolean",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "true"
+    },
+    {
+      "table_name": "report_connectors",
+      "column_name": "last_synced_at",
+      "ordinal_position": 6,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "report_connectors",
+      "column_name": "last_error",
+      "ordinal_position": 7,
+      "fmt_type": "text",
+      "is_nullable": "YES",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "report_connectors",
+      "column_name": "created_at",
+      "ordinal_position": 8,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "report_connectors",
+      "column_name": "updated_at",
+      "ordinal_position": 9,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    },
+    {
+      "table_name": "rsvps",
+      "column_name": "event_id",
+      "ordinal_position": 1,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "rsvps",
+      "column_name": "user_id",
+      "ordinal_position": 2,
+      "fmt_type": "uuid",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": null
+    },
+    {
+      "table_name": "rsvps",
+      "column_name": "status",
+      "ordinal_position": 3,
+      "fmt_type": "text",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "'going'::text"
+    },
+    {
+      "table_name": "rsvps",
+      "column_name": "created_at",
+      "ordinal_position": 4,
+      "fmt_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "attidentity": "",
+      "attgenerated": "",
+      "default_expr": "now()"
+    }
+  ],
+  "createStmts": [
+    "create table \"announcements\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"title\" text NOT NULL,\n  \"body\" text DEFAULT ''::text NOT NULL,\n  \"author_id\" uuid,\n  \"pinned\" boolean DEFAULT false NOT NULL,\n  \"archived_at\" timestamp with time zone,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"app_settings\" (\n  \"id\" integer DEFAULT 1 NOT NULL,\n  \"maintenance_mode\" boolean DEFAULT false NOT NULL,\n  \"updated_at\" timestamp with time zone DEFAULT now() NOT NULL,\n  \"updated_by\" uuid,\n  \"membership_fee_amount\" numeric(8,2) DEFAULT 200 NOT NULL\n);",
+    "create table \"attendance\" (\n  \"event_id\" uuid NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"scanned_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"audit_logs\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"actor_id\" uuid,\n  \"action\" text NOT NULL,\n  \"entity\" text NOT NULL,\n  \"entity_id\" text,\n  \"meta\" jsonb DEFAULT '{}'::jsonb NOT NULL,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"chat_messages\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"role\" text NOT NULL,\n  \"content\" text NOT NULL,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"class_attendance\" (\n  \"session_id\" uuid NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"scanned_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"class_sessions\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"subject_id\" uuid NOT NULL,\n  \"faculty_id\" uuid NOT NULL,\n  \"started_at\" timestamp with time zone DEFAULT now() NOT NULL,\n  \"ended_at\" timestamp with time zone\n);",
+    "create table \"clearance_forms\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"member_id\" uuid NOT NULL,\n  \"school_year\" text NOT NULL,\n  \"semester\" text NOT NULL,\n  \"placement\" text NOT NULL,\n  \"created_by\" uuid NOT NULL,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"clearance_rows\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"form_id\" uuid NOT NULL,\n  \"dates\" text NOT NULL,\n  \"concept\" text NOT NULL,\n  \"hours\" numeric NOT NULL,\n  \"cleared_at\" timestamp with time zone,\n  \"recorded_by\" uuid,\n  \"remark\" text,\n  \"demerit\" integer,\n  \"days_extension\" integer,\n  \"merit\" integer DEFAULT 0 NOT NULL,\n  \"created_by\" uuid NOT NULL,\n  \"updated_by\" uuid,\n  \"updated_at\" timestamp with time zone,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL,\n  \"agency\" text\n);",
+    "create table \"comments\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"post_id\" uuid NOT NULL,\n  \"user_id\" uuid DEFAULT auth.uid() NOT NULL,\n  \"content\" text NOT NULL,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL,\n  \"image_url\" text,\n  \"parent_id\" uuid\n);",
+    "create table \"event_payments\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"event_id\" uuid NOT NULL,\n  \"member_id\" uuid NOT NULL,\n  \"amount\" numeric(8,2) NOT NULL,\n  \"paid_at\" timestamp with time zone DEFAULT now() NOT NULL,\n  \"recorded_by\" uuid,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"event_polls\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"event_id\" uuid NOT NULL,\n  \"question\" text NOT NULL,\n  \"created_by\" uuid,\n  \"closes_at\" timestamp with time zone,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"events\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"title\" text NOT NULL,\n  \"description\" text DEFAULT ''::text,\n  \"location\" text DEFAULT ''::text,\n  \"starts_at\" timestamp with time zone NOT NULL,\n  \"ends_at\" timestamp with time zone NOT NULL,\n  \"created_by\" uuid,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL,\n  \"fee_amount\" numeric(8,2) DEFAULT 0 NOT NULL\n);",
+    "create table \"faculty_subjects\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"faculty_id\" uuid NOT NULL,\n  \"name\" text NOT NULL,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"fee_payments\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"member_id\" uuid NOT NULL,\n  \"school_year\" text NOT NULL,\n  \"payment_type\" text NOT NULL,\n  \"amount\" numeric(8,2) NOT NULL,\n  \"receipt\" text,\n  \"paid_at\" timestamp with time zone DEFAULT now() NOT NULL,\n  \"recorded_by\" uuid,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"news_cache\" (\n  \"key\" text NOT NULL,\n  \"payload\" jsonb NOT NULL,\n  \"fetched_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"notifications\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"kind\" text DEFAULT 'system'::text NOT NULL,\n  \"title\" text NOT NULL,\n  \"body\" text DEFAULT ''::text NOT NULL,\n  \"link\" text,\n  \"read_at\" timestamp with time zone,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"poll_options\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"poll_id\" uuid NOT NULL,\n  \"label\" text NOT NULL\n);",
+    "create table \"poll_votes\" (\n  \"poll_id\" uuid NOT NULL,\n  \"option_id\" uuid NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"post_likes\" (\n  \"post_id\" uuid NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"posts\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"user_id\" uuid DEFAULT auth.uid() NOT NULL,\n  \"content\" text NOT NULL,\n  \"image_url\" text,\n  \"archived_at\" timestamp with time zone,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"profiles\" (\n  \"id\" uuid NOT NULL,\n  \"full_name\" text DEFAULT ''::text NOT NULL,\n  \"email\" text,\n  \"program\" text,\n  \"year_level\" text,\n  \"role\" text DEFAULT 'student'::text NOT NULL,\n  \"avatar_url\" text,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL,\n  \"positions\" text[] DEFAULT '{}'::text[] NOT NULL,\n  \"privacy_policy_accepted_at\" timestamp with time zone,\n  \"section\" text,\n  \"surname\" text,\n  \"first_name\" text,\n  \"middle_initial\" text,\n  \"id_no\" text,\n  \"clearance_locked\" boolean DEFAULT false NOT NULL,\n  \"requested_role\" text\n);",
+    "create table \"rate_limits\" (\n  \"bucket\" text NOT NULL,\n  \"window_at\" timestamp with time zone NOT NULL,\n  \"calls\" integer DEFAULT 0 NOT NULL\n);",
+    "create table \"report_connectors\" (\n  \"id\" uuid DEFAULT gen_random_uuid() NOT NULL,\n  \"kind\" text DEFAULT 'google'::text NOT NULL,\n  \"label\" text DEFAULT 'Org Google Sheet'::text NOT NULL,\n  \"config\" jsonb DEFAULT '{}'::jsonb NOT NULL,\n  \"enabled\" boolean DEFAULT true NOT NULL,\n  \"last_synced_at\" timestamp with time zone,\n  \"last_error\" text,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL,\n  \"updated_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+    "create table \"rsvps\" (\n  \"event_id\" uuid NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"status\" text DEFAULT 'going'::text NOT NULL,\n  \"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);"
+  ],
+  "constraints": [
+    {
+      "conname": "announcements_pkey",
+      "contype": "p",
+      "table_name": "announcements",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "app_settings_pkey",
+      "contype": "p",
+      "table_name": "app_settings",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "attendance_pkey",
+      "contype": "p",
+      "table_name": "attendance",
+      "def": "PRIMARY KEY (event_id, user_id)"
+    },
+    {
+      "conname": "audit_logs_pkey",
+      "contype": "p",
+      "table_name": "audit_logs",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "chat_messages_pkey",
+      "contype": "p",
+      "table_name": "chat_messages",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "class_attendance_pkey",
+      "contype": "p",
+      "table_name": "class_attendance",
+      "def": "PRIMARY KEY (session_id, user_id)"
+    },
+    {
+      "conname": "class_sessions_pkey",
+      "contype": "p",
+      "table_name": "class_sessions",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "clearance_forms_pkey",
+      "contype": "p",
+      "table_name": "clearance_forms",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "clearance_rows_pkey",
+      "contype": "p",
+      "table_name": "clearance_rows",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "comments_pkey",
+      "contype": "p",
+      "table_name": "comments",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "event_payments_pkey",
+      "contype": "p",
+      "table_name": "event_payments",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "event_polls_pkey",
+      "contype": "p",
+      "table_name": "event_polls",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "events_pkey",
+      "contype": "p",
+      "table_name": "events",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "faculty_subjects_pkey",
+      "contype": "p",
+      "table_name": "faculty_subjects",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "fee_payments_pkey",
+      "contype": "p",
+      "table_name": "fee_payments",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "news_cache_pkey",
+      "contype": "p",
+      "table_name": "news_cache",
+      "def": "PRIMARY KEY (key)"
+    },
+    {
+      "conname": "notifications_pkey",
+      "contype": "p",
+      "table_name": "notifications",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "poll_options_pkey",
+      "contype": "p",
+      "table_name": "poll_options",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "poll_votes_pkey",
+      "contype": "p",
+      "table_name": "poll_votes",
+      "def": "PRIMARY KEY (poll_id, user_id)"
+    },
+    {
+      "conname": "post_likes_pkey",
+      "contype": "p",
+      "table_name": "post_likes",
+      "def": "PRIMARY KEY (post_id, user_id)"
+    },
+    {
+      "conname": "posts_pkey",
+      "contype": "p",
+      "table_name": "posts",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "profiles_pkey",
+      "contype": "p",
+      "table_name": "profiles",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "rate_limits_pkey",
+      "contype": "p",
+      "table_name": "rate_limits",
+      "def": "PRIMARY KEY (bucket, window_at)"
+    },
+    {
+      "conname": "report_connectors_pkey",
+      "contype": "p",
+      "table_name": "report_connectors",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "rsvps_pkey",
+      "contype": "p",
+      "table_name": "rsvps",
+      "def": "PRIMARY KEY (event_id, user_id)"
+    },
+    {
+      "conname": "clearance_forms_member_id_school_year_semester_key",
+      "contype": "u",
+      "table_name": "clearance_forms",
+      "def": "UNIQUE (member_id, school_year, semester)"
+    },
+    {
+      "conname": "event_payments_event_id_member_id_key",
+      "contype": "u",
+      "table_name": "event_payments",
+      "def": "UNIQUE (event_id, member_id)"
+    },
+    {
+      "conname": "announcements_author_id_fkey",
+      "contype": "f",
+      "table_name": "announcements",
+      "def": "FOREIGN KEY (author_id) REFERENCES profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "conname": "attendance_event_id_fkey",
+      "contype": "f",
+      "table_name": "attendance",
+      "def": "FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "attendance_user_id_fkey",
+      "contype": "f",
+      "table_name": "attendance",
+      "def": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "audit_logs_actor_id_fkey",
+      "contype": "f",
+      "table_name": "audit_logs",
+      "def": "FOREIGN KEY (actor_id) REFERENCES profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "conname": "chat_messages_user_id_fkey",
+      "contype": "f",
+      "table_name": "chat_messages",
+      "def": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "class_attendance_session_id_fkey",
+      "contype": "f",
+      "table_name": "class_attendance",
+      "def": "FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "class_attendance_user_id_fkey",
+      "contype": "f",
+      "table_name": "class_attendance",
+      "def": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "class_sessions_faculty_id_fkey",
+      "contype": "f",
+      "table_name": "class_sessions",
+      "def": "FOREIGN KEY (faculty_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "class_sessions_subject_id_fkey",
+      "contype": "f",
+      "table_name": "class_sessions",
+      "def": "FOREIGN KEY (subject_id) REFERENCES faculty_subjects(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "clearance_forms_created_by_fkey",
+      "contype": "f",
+      "table_name": "clearance_forms",
+      "def": "FOREIGN KEY (created_by) REFERENCES profiles(id)"
+    },
+    {
+      "conname": "clearance_forms_member_id_fkey",
+      "contype": "f",
+      "table_name": "clearance_forms",
+      "def": "FOREIGN KEY (member_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "clearance_rows_created_by_fkey",
+      "contype": "f",
+      "table_name": "clearance_rows",
+      "def": "FOREIGN KEY (created_by) REFERENCES profiles(id)"
+    },
+    {
+      "conname": "clearance_rows_form_id_fkey",
+      "contype": "f",
+      "table_name": "clearance_rows",
+      "def": "FOREIGN KEY (form_id) REFERENCES clearance_forms(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "clearance_rows_recorded_by_fkey",
+      "contype": "f",
+      "table_name": "clearance_rows",
+      "def": "FOREIGN KEY (recorded_by) REFERENCES profiles(id)"
+    },
+    {
+      "conname": "clearance_rows_updated_by_fkey",
+      "contype": "f",
+      "table_name": "clearance_rows",
+      "def": "FOREIGN KEY (updated_by) REFERENCES profiles(id)"
+    },
+    {
+      "conname": "comments_parent_id_fkey",
+      "contype": "f",
+      "table_name": "comments",
+      "def": "FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "comments_post_id_fkey",
+      "contype": "f",
+      "table_name": "comments",
+      "def": "FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "comments_user_id_fkey",
+      "contype": "f",
+      "table_name": "comments",
+      "def": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "event_payments_event_id_fkey",
+      "contype": "f",
+      "table_name": "event_payments",
+      "def": "FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "event_payments_member_id_fkey",
+      "contype": "f",
+      "table_name": "event_payments",
+      "def": "FOREIGN KEY (member_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "event_payments_recorded_by_fkey",
+      "contype": "f",
+      "table_name": "event_payments",
+      "def": "FOREIGN KEY (recorded_by) REFERENCES profiles(id)"
+    },
+    {
+      "conname": "event_polls_created_by_fkey",
+      "contype": "f",
+      "table_name": "event_polls",
+      "def": "FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "conname": "event_polls_event_id_fkey",
+      "contype": "f",
+      "table_name": "event_polls",
+      "def": "FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "events_created_by_fkey",
+      "contype": "f",
+      "table_name": "events",
+      "def": "FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "conname": "faculty_subjects_faculty_id_fkey",
+      "contype": "f",
+      "table_name": "faculty_subjects",
+      "def": "FOREIGN KEY (faculty_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "fee_payments_member_id_fkey",
+      "contype": "f",
+      "table_name": "fee_payments",
+      "def": "FOREIGN KEY (member_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "fee_payments_recorded_by_fkey",
+      "contype": "f",
+      "table_name": "fee_payments",
+      "def": "FOREIGN KEY (recorded_by) REFERENCES profiles(id)"
+    },
+    {
+      "conname": "notifications_user_id_fkey",
+      "contype": "f",
+      "table_name": "notifications",
+      "def": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "poll_options_poll_id_fkey",
+      "contype": "f",
+      "table_name": "poll_options",
+      "def": "FOREIGN KEY (poll_id) REFERENCES event_polls(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "poll_votes_option_id_fkey",
+      "contype": "f",
+      "table_name": "poll_votes",
+      "def": "FOREIGN KEY (option_id) REFERENCES poll_options(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "poll_votes_poll_id_fkey",
+      "contype": "f",
+      "table_name": "poll_votes",
+      "def": "FOREIGN KEY (poll_id) REFERENCES event_polls(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "poll_votes_user_id_fkey",
+      "contype": "f",
+      "table_name": "poll_votes",
+      "def": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "post_likes_post_id_fkey",
+      "contype": "f",
+      "table_name": "post_likes",
+      "def": "FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "post_likes_user_id_fkey",
+      "contype": "f",
+      "table_name": "post_likes",
+      "def": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "posts_user_id_fkey",
+      "contype": "f",
+      "table_name": "posts",
+      "def": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "profiles_id_fkey",
+      "contype": "f",
+      "table_name": "profiles",
+      "def": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "rsvps_event_id_fkey",
+      "contype": "f",
+      "table_name": "rsvps",
+      "def": "FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "rsvps_user_id_fkey",
+      "contype": "f",
+      "table_name": "rsvps",
+      "def": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "app_settings_id_check",
+      "contype": "c",
+      "table_name": "app_settings",
+      "def": "CHECK (id = 1)"
+    },
+    {
+      "conname": "chat_messages_role_check",
+      "contype": "c",
+      "table_name": "chat_messages",
+      "def": "CHECK (role = ANY (ARRAY['user'::text, 'assistant'::text, 'system'::text]))"
+    },
+    {
+      "conname": "clearance_forms_school_year_check",
+      "contype": "c",
+      "table_name": "clearance_forms",
+      "def": "CHECK (school_year ~ '^\\d{4}-\\d{4}$'::text)"
+    },
+    {
+      "conname": "clearance_forms_semester_check",
+      "contype": "c",
+      "table_name": "clearance_forms",
+      "def": "CHECK (semester = ANY (ARRAY['1st'::text, '2nd'::text, 'Summer'::text]))"
+    },
+    {
+      "conname": "clearance_rows_days_extension_check",
+      "contype": "c",
+      "table_name": "clearance_rows",
+      "def": "CHECK (days_extension = ANY (ARRAY[1, 2, 3]))"
+    },
+    {
+      "conname": "clearance_rows_demerit_check",
+      "contype": "c",
+      "table_name": "clearance_rows",
+      "def": "CHECK (demerit IS NULL OR demerit >= 1 AND demerit <= 12)"
+    },
+    {
+      "conname": "clearance_rows_hours_check",
+      "contype": "c",
+      "table_name": "clearance_rows",
+      "def": "CHECK (hours >= 0::numeric)"
+    },
+    {
+      "conname": "clearance_rows_merit_check",
+      "contype": "c",
+      "table_name": "clearance_rows",
+      "def": "CHECK (merit >= 0 AND merit <= 12)"
+    },
+    {
+      "conname": "clearance_rows_remark_check",
+      "contype": "c",
+      "table_name": "clearance_rows",
+      "def": "CHECK (remark = ANY (ARRAY['absent'::text, 'late'::text, 'ir'::text, 'inc'::text, 'deficient'::text, 'good_standing'::text]))"
+    },
+    {
+      "conname": "event_payments_amount_check",
+      "contype": "c",
+      "table_name": "event_payments",
+      "def": "CHECK (amount >= 0::numeric)"
+    },
+    {
+      "conname": "events_fee_amount_check",
+      "contype": "c",
+      "table_name": "events",
+      "def": "CHECK (fee_amount >= 0::numeric)"
+    },
+    {
+      "conname": "fee_payments_amount_check",
+      "contype": "c",
+      "table_name": "fee_payments",
+      "def": "CHECK (amount >= 0::numeric)"
+    },
+    {
+      "conname": "fee_payments_payment_type_check",
+      "contype": "c",
+      "table_name": "fee_payments",
+      "def": "CHECK (payment_type = ANY (ARRAY['full'::text, 'half'::text]))"
+    },
+    {
+      "conname": "fee_payments_school_year_check",
+      "contype": "c",
+      "table_name": "fee_payments",
+      "def": "CHECK (school_year ~ '^\\d{4}-\\d{4}$'::text)"
+    },
+    {
+      "conname": "notifications_kind_check",
+      "contype": "c",
+      "table_name": "notifications",
+      "def": "CHECK (kind = ANY (ARRAY['announcement'::text, 'event'::text, 'poll'::text, 'attendance'::text, 'mention'::text, 'system'::text, 'clearance'::text]))"
+    },
+    {
+      "conname": "profiles_positions_check",
+      "contype": "c",
+      "table_name": "profiles",
+      "def": "CHECK (positions <@ ARRAY['governor'::text, 'v-governor'::text, 'pio'::text, 'assoc-pio'::text, 'v-gov-internal'::text, 'v-gov-external'::text, 'secretary'::text, 'assoc-secretary'::text, 'treasurer'::text, 'assoc-treasurer'::text, 'auditor'::text, 'assoc-auditor'::text, 'business-manager'::text, 'assoc-business-manager'::text, 'committees'::text])"
+    },
+    {
+      "conname": "profiles_requested_role_check",
+      "contype": "c",
+      "table_name": "profiles",
+      "def": "CHECK (requested_role IS NULL OR requested_role = 'faculty'::text)"
+    },
+    {
+      "conname": "profiles_role_check",
+      "contype": "c",
+      "table_name": "profiles",
+      "def": "CHECK (role = ANY (ARRAY['student'::text, 'faculty'::text, 'moderator'::text, 'superadmin'::text]))"
+    },
+    {
+      "conname": "report_connectors_kind_check",
+      "contype": "c",
+      "table_name": "report_connectors",
+      "def": "CHECK (kind = 'google'::text)"
+    },
+    {
+      "conname": "rsvps_status_check",
+      "contype": "c",
+      "table_name": "rsvps",
+      "def": "CHECK (status = ANY (ARRAY['going'::text, 'maybe'::text]))"
+    }
+  ],
+  "idxRows": [
+    {
+      "tablename": "profiles",
+      "indexdef": "CREATE UNIQUE INDEX profiles_id_no_unique ON public.profiles USING btree (lower(TRIM(BOTH FROM id_no))) WHERE ((id_no IS NOT NULL) AND (id_no <> ''::text))"
+    },
+    {
+      "tablename": "comments",
+      "indexdef": "CREATE INDEX comments_parent_id_idx ON public.comments USING btree (parent_id)"
+    },
+    {
+      "tablename": "fee_payments",
+      "indexdef": "CREATE INDEX fee_payments_member_idx ON public.fee_payments USING btree (member_id, school_year)"
+    },
+    {
+      "tablename": "audit_logs",
+      "indexdef": "CREATE INDEX audit_logs_created_at_idx ON public.audit_logs USING btree (created_at DESC)"
+    },
+    {
+      "tablename": "audit_logs",
+      "indexdef": "CREATE INDEX audit_logs_actor_idx ON public.audit_logs USING btree (actor_id)"
+    },
+    {
+      "tablename": "event_payments",
+      "indexdef": "CREATE INDEX event_payments_event_idx ON public.event_payments USING btree (event_id)"
+    },
+    {
+      "tablename": "event_payments",
+      "indexdef": "CREATE INDEX event_payments_member_idx ON public.event_payments USING btree (member_id)"
+    },
+    {
+      "tablename": "clearance_rows",
+      "indexdef": "CREATE INDEX clearance_rows_form_idx ON public.clearance_rows USING btree (form_id)"
+    },
+    {
+      "tablename": "clearance_forms",
+      "indexdef": "CREATE INDEX clearance_forms_member_idx ON public.clearance_forms USING btree (member_id, school_year, semester)"
+    }
+  ],
+  "funcs": [
+    "CREATE OR REPLACE FUNCTION public.admin_get_users()\n RETURNS SETOF profiles\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if not exists (\n    select 1 from public.profiles\n    where id = auth.uid() and role in ('staff', 'moderator', 'superadmin')\n  ) then\n    raise exception 'insufficient privileges';\n  end if;\n  return query select * from public.profiles order by full_name;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.announce_event()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_parts text[];\nbegin\n  perform set_config('app.event_announce', 'true', true);\n\n  v_parts := array[]::text[];\n  if new.starts_at is not null then\n    v_parts := array_append(v_parts,\n      'When: ' || to_char(new.starts_at at time zone 'Asia/Manila', 'Mon DD, YYYY · HH12:MI AM'));\n  end if;\n  if coalesce(new.location, '') <> '' then\n    v_parts := array_append(v_parts, 'Where: ' || new.location);\n  end if;\n  if coalesce(new.description, '') <> '' then\n    v_parts := array_append(v_parts, new.description);\n  end if;\n\n  insert into public.announcements (title, body, author_id)\n  values (new.title, array_to_string(v_parts, E'\\n'), new.created_by);\n  return new;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.block_freshman_clearance()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_level text;\nbegin\n  select year_level into v_level from public.profiles where id = new.member_id;\n  if coalesce(v_level, '') = '1' then\n    raise exception 'First-year students are not eligible for rotational clearance';\n  end if;\n  return new;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.bump_rate(p_bucket text, p_max integer DEFAULT 20, p_window_minutes integer DEFAULT 1)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_window timestamptz := to_timestamp(floor(extract(epoch from now()) / (p_window_minutes * 60)) * p_window_minutes * 60);\n  v_calls int;\nbegin\n  insert into public.rate_limits (bucket, window_at, calls)\n  values (p_bucket, v_window, 1)\n  on conflict (bucket, window_at) do update set calls = public.rate_limits.calls + 1\n  returning calls into v_calls;\n  delete from public.rate_limits where window_at < now() - interval '2 hours';\n  return v_calls <= p_max;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.change_role(p_target uuid, p_new_role text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_actor text;\n  v_current text;\nbegin\n  select role into v_actor from public.profiles where id = auth.uid();\n  if v_actor is distinct from 'superadmin' then\n    raise exception 'insufficient privileges';\n  end if;\n\n  select role into v_current from public.profiles where id = p_target;\n  if not found then\n    raise exception 'member not found';\n  end if;\n\n  if p_new_role not in ('student', 'faculty', 'moderator', 'superadmin') then\n    raise exception 'invalid role';\n  end if;\n\n  if v_current = 'superadmin' and p_new_role <> 'superadmin'\n     and (select count(*) from public.profiles where role = 'superadmin') <= 1 then\n    raise exception 'cannot demote the last superadmin';\n  end if;\n\n  update public.profiles set role = p_new_role where id = p_target;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.claim_session()\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_sid uuid := coalesce(\n    (current_setting('request.jwt.claims', true)::jsonb ->> 'session_id')::uuid,\n    '00000000-0000-0000-0000-000000000000'\n  );\nbegin\n  -- The session must actually exist and belong to the caller.\n  if not exists (select 1 from auth.sessions where id = v_sid and user_id = auth.uid()) then\n    raise exception 'invalid session';\n  end if;\n  -- Invalidate every other session of this user.\n  delete from auth.sessions\n  where user_id = auth.uid()\n    and id <> v_sid;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.clearance_rows_json(p_form_id uuid)\n RETURNS jsonb\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select coalesce(jsonb_agg(j), '[]'::jsonb)\n  from (\n    select jsonb_build_object(\n      'id', r.id,\n      'form_id', r.form_id,\n      'dates', r.dates,\n      'concept', r.concept,\n      'hours', r.hours,\n      'agency', r.agency,\n      'cleared_at', r.cleared_at,\n      'remark', r.remark,\n      'demerit', r.demerit,\n      'days_extension', r.days_extension,\n      'merit', r.merit,\n      'recorded_by', r.recorded_by,\n      'recorded_by_name', rec.full_name,\n      'created_by', r.created_by,\n      'updated_by', r.updated_by,\n      'updated_by_name', up.full_name,\n      'created_at', r.created_at\n    ) j\n    from public.clearance_rows r\n    left join public.profiles rec on rec.id = r.recorded_by\n    left join public.profiles up on up.id = r.updated_by\n    where r.form_id = p_form_id\n    order by r.created_at, r.id\n  ) sub;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.create_member(p_email text, p_password text, p_full_name text, p_role text DEFAULT 'student'::text, p_positions text[] DEFAULT '{}'::text[], p_program text DEFAULT NULL::text, p_year_level text DEFAULT NULL::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'extensions'\nAS $function$\ndeclare\n  v_actor text;\n  v_id uuid;\n  v_profile public.profiles;\nbegin\n  -- Only console officers may create accounts; only a superadmin may\n  -- create another superadmin or a faculty member (same rule\n  -- change_role() enforces).\n  select role into v_actor from public.profiles where id = auth.uid();\n  if v_actor is null or not public.is_console_officer() then\n    raise exception 'insufficient privileges';\n  end if;\n  if v_actor is distinct from 'superadmin' then\n    -- Non-superadmins create plain student accounts only; role and\n    -- positions requests are ignored, mirroring change_role()/set_positions().\n    p_role := 'student';\n    p_positions := '{}';\n  end if;\n\n  if p_email is null or position('@' in p_email) = 0 then\n    raise exception 'invalid email';\n  end if;\n  if coalesce(char_length(p_password), 0) < 6 then\n    raise exception 'password must be at least 6 characters';\n  end if;\n  if p_role not in ('student', 'faculty', 'moderator', 'superadmin') then\n    raise exception 'invalid role';\n  end if;\n\n  -- Reject duplicate emails with a friendly error (auth.users is unique).\n  if exists (select 1 from auth.users where lower(email) = lower(p_email)) then\n    raise exception 'a member with that email already exists';\n  end if;\n\n  -- Create the auth user; handle_new_user() fires and inserts the profile.\n  v_id := gen_random_uuid();\n  insert into auth.users (\n    instance_id, id, aud, role, email, encrypted_password,\n    email_confirmed_at, raw_app_meta_data, raw_user_meta_data,\n    created_at, updated_at, confirmation_token, recovery_token,\n    email_change_token_new, email_change\n  ) values (\n    '00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated',\n    lower(p_email), crypt(p_password, gen_salt('bf')), now(),\n    '{\"provider\":\"email\",\"providers\":[\"email\"]}'::jsonb,\n    jsonb_build_object('full_name', p_full_name),\n    now(), now(), '', '', '', ''\n  );\n\n  -- Apply the requested role/positions/program as postgres (guard\n  -- trigger exempts the definer, exactly like change_role()).\n  update public.profiles\n  set role = p_role,\n      positions = array(select distinct unnest(p_positions)),\n      program = coalesce(p_program, program),\n      year_level = coalesce(p_year_level, year_level)\n  where id = v_id\n  returning * into v_profile;\n\n  return to_jsonb(v_profile);\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.create_notification(p_user_id uuid, p_kind text, p_title text, p_body text DEFAULT ''::text, p_link text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  insert into public.notifications (user_id, kind, title, body, link)\n  values (p_user_id, p_kind, p_title, p_body, p_link);\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_audit_logs(p_limit integer DEFAULT 100)\n RETURNS TABLE(id uuid, actor_id uuid, action text, entity text, entity_id text, meta jsonb, created_at timestamp with time zone)\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select l.id, l.actor_id, l.action, l.entity, l.entity_id, l.meta, l.created_at\n  from public.audit_logs l\n  where public.is_console_officer()\n  order by l.created_at desc\n  limit least(greatest(coalesce(p_limit, 100), 1), 500);\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_clearance_forms(p_student_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_out jsonb;\n  v_level text;\nbegin\n  if not coalesce(public.is_clearance_viewer() or auth.uid() = p_student_id, false) then\n    raise exception 'insufficient privileges';\n  end if;\n\n  select year_level into v_level from public.profiles where id = p_student_id;\n  if coalesce(v_level, '') = '1' then\n    raise exception 'First-year students are not eligible for rotational clearance';\n  end if;\n\n  select coalesce(jsonb_agg(j), '[]'::jsonb)\n  into v_out\n  from (\n    select jsonb_build_object(\n      'id', f.id,\n      'member_id', f.member_id,\n      'school_year', f.school_year,\n      'semester', f.semester,\n      'placement', f.placement,\n      'created_by', f.created_by,\n      'created_at', f.created_at,\n      'rows', public.clearance_rows_json(f.id)\n    ) j\n    from public.clearance_forms f\n    where f.member_id = p_student_id\n    order by f.school_year, f.semester\n  ) s;\n\n  return v_out;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_directory()\n RETURNS TABLE(id uuid, full_name text, program text, year_level text, role text, positions text[], avatar_url text, created_at timestamp with time zone)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if not public.is_directory_viewer() then\n    raise exception 'insufficient privileges';\n  end if;\n  return query\n    select p.id, p.full_name, p.program, p.year_level, p.role, p.positions, p.avatar_url, p.created_at\n    from public.profiles p\n    where p.role is distinct from 'superadmin'\n    order by p.full_name;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_event_tallies()\n RETURNS TABLE(event_id uuid, count bigint)\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select a.event_id, count(*)::bigint as count\n  from public.attendance a\n  group by a.event_id;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_faculty()\n RETURNS TABLE(id uuid, full_name text, program text, year_level text, role text, positions text[], avatar_url text, created_at timestamp with time zone)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  return query\n    select p.id, p.full_name, p.program, p.year_level, p.role, p.positions, p.avatar_url, p.created_at\n    from public.profiles p\n    where p.role = 'faculty'\n       or (p.role = 'superadmin' and p.program = 'Faculty')\n    order by p.full_name;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_maintenance_mode()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select coalesce((select maintenance_mode from public.app_settings where id = 1), false);\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_member_count()\n RETURNS bigint\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select count(*) from public.profiles where role is distinct from 'superadmin';\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_membership_fee_amount()\n RETURNS numeric\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select coalesce((select membership_fee_amount from public.app_settings where id = 1), 200);\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_my_class_attendance()\n RETURNS TABLE(session_id uuid, subject_id uuid, subject_name text, started_at timestamp with time zone, scanned_at timestamp with time zone)\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$ select ca.session_id, s.subject_id, fs.name, s.started_at, ca.scanned_at from public.class_attendance ca join public.class_sessions s on s.id = ca.session_id join public.faculty_subjects fs on fs.id = s.subject_id where ca.user_id = auth.uid() order by ca.scanned_at desc; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.guard_officer_privilege_columns()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if current_user <> 'postgres'\n     and (old.role is distinct from new.role\n          or old.positions is distinct from new.positions) then\n    raise exception 'role and positions can only change through change_role()/set_positions()';\n  end if;\n  return coalesce(new, old);\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.handle_new_user()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  insert into public.profiles (id, full_name, email, role, requested_role)\n  values (\n    new.id,\n    coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)),\n    new.email,\n    'student',\n    case when new.raw_user_meta_data ->> 'requested_role' = 'faculty' then 'faculty' else null end\n  )\n  on conflict (id) do nothing;\n  return new;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_announcer()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and (role = 'superadmin' or positions && array[\n        'governor', 'v-governor', 'pio', 'assoc-pio',\n        'v-gov-internal', 'v-gov-external',\n        'secretary', 'assoc-secretary'\n      ]::text[])\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_clearance_officer()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and role in ('faculty', 'superadmin')\n      and not coalesce(clearance_locked, false)\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_clearance_viewer()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and role in ('faculty', 'superadmin')\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_console_officer()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and (role = 'superadmin' or positions && array[\n        'governor', 'v-governor', 'secretary', 'treasurer',\n        'auditor', 'business-manager'\n      ]::text[])\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_directory_viewer()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and (role in ('moderator', 'superadmin') or positions && array[\n        'governor', 'v-governor', 'secretary', 'treasurer',\n        'auditor', 'business-manager'\n      ]::text[])\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_door_officer()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and (role in ('superadmin', 'moderator') or positions && array[\n        'governor', 'v-governor',\n        'v-gov-internal', 'v-gov-external',\n        'secretary', 'assoc-secretary',\n        'treasurer', 'assoc-treasurer',\n        'business-manager', 'assoc-business-manager'\n      ]::text[])\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_event_fee_manager()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and (role in ('moderator', 'superadmin') or positions && array[\n        'governor', 'v-governor', 'pio', 'v-gov-internal',\n        'v-gov-external', 'secretary', 'assoc-secretary',\n        'treasurer', 'business-manager'\n      ]::text[])\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_event_manager()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and (role = 'superadmin' or positions && array[\n        'governor', 'v-governor', 'pio', 'assoc-pio',\n        'v-gov-internal', 'v-gov-external',\n        'secretary', 'assoc-secretary',\n        'treasurer', 'assoc-treasurer',\n        'business-manager'\n      ]::text[])\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_fee_manager()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and (role in ('moderator', 'superadmin') or positions && array[\n        'treasurer', 'assoc-treasurer', 'auditor', 'business-manager'\n      ]::text[])\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_fee_viewer()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid()\n      and (role in ('moderator', 'superadmin') or positions && array[\n        'governor', 'v-governor', 'secretary', 'treasurer',\n        'assoc-treasurer', 'auditor', 'business-manager'\n      ]::text[])\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.is_latest_session()\n RETURNS boolean\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1\n    from auth.sessions s\n    where s.id = coalesce(\n      (current_setting('request.jwt.claims', true)::jsonb ->> 'session_id')::uuid,\n      '00000000-0000-0000-0000-000000000000'\n    )\n      and s.user_id = auth.uid()\n      and s.id = (\n        select t.id\n        from auth.sessions t\n        where t.user_id = auth.uid()\n        order by t.created_at desc, t.id desc\n        limit 1\n      )\n  );\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.log_audit(p_action text, p_entity text, p_entity_id text DEFAULT NULL::text, p_meta jsonb DEFAULT '{}'::jsonb)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  insert into public.audit_logs (actor_id, action, entity, entity_id, meta)\n  values (auth.uid(), p_action, p_entity, p_entity_id, coalesce(p_meta, '{}'::jsonb));\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.mark_my_class_attendance(p_session uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if not exists (\n    select 1 from public.class_sessions s\n    where s.id = p_session and s.ended_at is null\n  ) then\n    raise exception 'Class session not found or already ended';\n  end if;\n\n  insert into public.class_attendance (session_id, user_id, scanned_at)\n  values (p_session, auth.uid(), now())\n  on conflict (session_id, user_id) do nothing;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.notify_announcement()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if current_setting('app.event_announce', true) = 'true' then\n    return new;\n  end if;\n  insert into public.notifications (user_id, kind, title, body, link)\n  select id, 'announcement', new.title, '', '/app/feed#announcements'\n  from public.profiles;\n  return new;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.notify_attendance()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_title text;\nbegin\n  select title into v_title from public.events where id = new.event_id;\n  insert into public.notifications (user_id, kind, title, body, link)\n  values (new.user_id, 'attendance', 'Checked in!',\n          coalesce(v_title, 'Your event') || ' — attendance recorded.', '/app/events');\n  return new;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.notify_clearance()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_member uuid;\n  v_placement text;\nbegin\n  select f.member_id, f.placement into v_member, v_placement\n  from public.clearance_forms f\n  where f.id = new.form_id;\n\n  if TG_OP = 'INSERT' then\n    insert into public.notifications (user_id, kind, title, body, link)\n    values (v_member, 'clearance', 'New rotation row - ' || coalesce(v_placement, 'your rotation'),\n            coalesce(new.concept, '') || ' - ' || coalesce(new.dates, ''), '/app/idcard');\n  elsif TG_OP = 'UPDATE' and old.cleared_at is null and new.cleared_at is not null then\n    insert into public.notifications (user_id, kind, title, body, link)\n    values (v_member, 'clearance', 'Clearance signed - ' || coalesce(v_placement, 'your rotation'),\n            coalesce(new.concept, '') || ' - ' || coalesce(new.dates, ''), '/app/idcard');\n  end if;\n  return new;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.notify_comment()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\ndeclare\r\n  v_author uuid;\r\n  v_name text;\r\n  v_target uuid;\r\nbegin\r\n  -- notify the post author (skip self-comments)\r\n  select user_id into v_author from public.posts where id = new.post_id;\r\n  if v_author is not null and v_author <> new.user_id then\r\n    select full_name into v_name from public.profiles where id = new.user_id;\r\n    insert into public.notifications (user_id, kind, title, body, link)\r\n    values (v_author, 'mention', coalesce(v_name, 'A member') || ' commented on your post',\r\n            left(new.content, 120), '/app/feed');\r\n  end if;\r\n\r\n  -- notify the author of the comment being replied to\r\n  if new.parent_id is not null then\r\n    select user_id into v_target from public.comments where id = new.parent_id;\r\n    if v_target is not null and v_target <> new.user_id then\r\n      select full_name into v_name from public.profiles where id = new.user_id;\r\n      insert into public.notifications (user_id, kind, title, body, link)\r\n      values (v_target, 'mention', coalesce(v_name, 'A member') || ' replied to your comment',\r\n              left(new.content, 120), '/app/feed');\r\n    end if;\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.notify_event()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  insert into public.notifications (user_id, kind, title, body, link)\n  select id, 'event', 'New event: ' || new.title,\n         to_char(new.starts_at at time zone 'Asia/Manila', 'Mon DD at HH24:MI'),\n         '/app/events?open=' || new.id::text\n  from public.profiles\n  where id is distinct from new.created_by;\n  return new;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.notify_like()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_author uuid;\n  v_name text;\nbegin\n  select user_id into v_author from public.posts where id = new.post_id;\n  if v_author is null or v_author = new.user_id then\n    return new;\n  end if;\n  select full_name into v_name from public.profiles where id = new.user_id;\n  insert into public.notifications (user_id, kind, title, body, link)\n  values (v_author, 'mention', coalesce(v_name, 'A member') || ' liked your post',\n          '', '/app/feed');\n  return new;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.notify_poll()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  insert into public.notifications (user_id, kind, title, body, link)\n  select r.user_id, 'poll', 'New poll: ' || new.question, '', '/app/events'\n  from public.rsvps r\n  where r.event_id = new.event_id and r.status = 'going';\n  return new;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.population_breakdown()\n RETURNS jsonb\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select coalesce(jsonb_agg(jsonb_build_object(\n    'year_level', y.year_level,\n    'count', y.n\n  ) order by y.ord), '[]'::jsonb)\n  from (\n    select coalesce(p.year_level, '—') as year_level, count(*)::int as n,\n           case p.year_level when '1' then 1 when '2' then 2 when '3' then 3 when '4' then 4 else 5 end as ord\n    from public.profiles p\n    where p.role = 'student'\n    group by p.year_level\n  ) y;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.prevent_last_superadmin_demotion()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if old.role = 'superadmin' and (tg_op <> 'UPDATE' or new.role <> 'superadmin') then\n    if (select count(*) from public.profiles where role = 'superadmin') = 1 then\n      raise exception 'cannot demote or remove the last superadmin';\n    end if;\n  end if;\n  return coalesce(new, old);\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.report_sync_status()\n RETURNS TABLE(id uuid, kind text, label text, enabled boolean, last_synced_at timestamp with time zone, last_error text)\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select rc.id, rc.kind, rc.label, rc.enabled, rc.last_synced_at, rc.last_error\n  from public.report_connectors rc\n  where (select role from public.profiles where id = auth.uid()) = 'superadmin'\n     or public.is_console_officer()\n  order by rc.created_at;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.resolve_faculty_request(p_target uuid, p_approve boolean)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_actor text;\nbegin\n  select role into v_actor from public.profiles where id = auth.uid();\n  if v_actor is distinct from 'superadmin' then\n    raise exception 'insufficient privileges';\n  end if;\n  if p_approve then\n    update public.profiles\n    set role = 'faculty', requested_role = null\n    where id = p_target;\n  else\n    update public.profiles\n    set requested_role = null\n    where id = p_target;\n  end if;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.search_students(p_q text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_q text;\nbegin\n  if not coalesce(public.is_clearance_viewer(), false) then\n    raise exception 'insufficient privileges';\n  end if;\n  v_q := lower(coalesce(trim(p_q), ''));\n  if v_q = '' then\n    return '[]'::jsonb;\n  end if;\n  return coalesce((\n    select jsonb_agg(jsonb_build_object(\n      'id', p.id,\n      'full_name', p.full_name,\n      'id_no', p.id_no,\n      'program', p.program,\n      'year_level', p.year_level,\n      'section', p.section,\n      'avatar_url', p.avatar_url,\n      'role', p.role\n    ) order by p.full_name)\n    from public.profiles p\n    where p.role = 'student'\n      and coalesce(p.year_level, '') <> '1'\n      and (\n        lower(coalesce(p.full_name, '')) like '%' || v_q || '%'\n        or lower(coalesce(p.id_no, '')) like '%' || v_q || '%'\n        or lower(coalesce(p.email, '')) like '%' || v_q || '%'\n      )\n    limit 20\n  ), '[]'::jsonb);\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.set_maintenance_mode(p_on boolean)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if not public.is_console_officer() then\n    raise exception 'insufficient privileges';\n  end if;\n  update public.app_settings\n  set maintenance_mode = coalesce(p_on, false), updated_at = now(), updated_by = auth.uid()\n  where id = 1;\n  if not found then\n    insert into public.app_settings (id, maintenance_mode, updated_by)\n    values (1, coalesce(p_on, false), auth.uid());\n  end if;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.set_membership_fee_amount(p_amount numeric)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if not public.is_fee_manager() then\n    raise exception 'insufficient privileges';\n  end if;\n  update public.app_settings\n  set membership_fee_amount = greatest(coalesce(p_amount, 0), 0), updated_at = now(), updated_by = auth.uid()\n  where id = 1;\n  if not found then\n    insert into public.app_settings (id, membership_fee_amount, updated_by)\n    values (1, greatest(coalesce(p_amount, 0), 0), auth.uid());\n  end if;\nend;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.set_positions(p_target uuid, p_positions text[])\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_actor text;\n  p text;\nbegin\n  select role into v_actor from public.profiles where id = auth.uid();\n  if v_actor is distinct from 'superadmin' then\n    raise exception 'insufficient privileges';\n  end if;\n\n  if not exists (select 1 from public.profiles where id = p_target) then\n    raise exception 'member not found';\n  end if;\n\n  foreach p in array p_positions loop\n    if p not in (\n      'governor', 'v-governor', 'pio', 'assoc-pio',\n      'v-gov-internal', 'v-gov-external',\n      'secretary', 'assoc-secretary',\n      'treasurer', 'assoc-treasurer',\n      'auditor', 'assoc-auditor',\n      'business-manager', 'assoc-business-manager',\n      'committees'\n    ) then\n      raise exception 'invalid position: %', p;\n    end if;\n  end loop;\n\n  update public.profiles set positions = array(select distinct unnest(p_positions))\n  where id = p_target;\nend;\n$function$\n"
+  ],
+  "triggers": [
+    {
+      "def": "CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user()"
+    },
+    {
+      "def": "CREATE TRIGGER guard_officer_privilege_columns BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION guard_officer_privilege_columns()"
+    },
+    {
+      "def": "CREATE TRIGGER notify_announcement AFTER INSERT ON public.announcements FOR EACH ROW EXECUTE FUNCTION notify_announcement()"
+    },
+    {
+      "def": "CREATE TRIGGER notify_event AFTER INSERT ON public.events FOR EACH ROW EXECUTE FUNCTION notify_event()"
+    },
+    {
+      "def": "CREATE TRIGGER notify_attendance AFTER INSERT ON public.attendance FOR EACH ROW EXECUTE FUNCTION notify_attendance()"
+    },
+    {
+      "def": "CREATE TRIGGER notify_like AFTER INSERT ON public.post_likes FOR EACH ROW EXECUTE FUNCTION notify_like()"
+    },
+    {
+      "def": "CREATE TRIGGER guard_last_superadmin BEFORE DELETE OR UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION prevent_last_superadmin_demotion()"
+    },
+    {
+      "def": "CREATE TRIGGER notify_comment AFTER INSERT ON public.comments FOR EACH ROW EXECUTE FUNCTION notify_comment()"
+    },
+    {
+      "def": "CREATE TRIGGER announce_event AFTER INSERT ON public.events FOR EACH ROW EXECUTE FUNCTION announce_event()"
+    },
+    {
+      "def": "CREATE TRIGGER notify_clearance AFTER INSERT OR UPDATE ON public.clearance_rows FOR EACH ROW EXECUTE FUNCTION notify_clearance()"
+    },
+    {
+      "def": "CREATE TRIGGER block_freshman_clearance BEFORE INSERT OR UPDATE OF member_id ON public.clearance_forms FOR EACH ROW EXECUTE FUNCTION block_freshman_clearance()"
+    },
+    {
+      "def": "CREATE TRIGGER notify_poll AFTER INSERT ON public.event_polls FOR EACH ROW EXECUTE FUNCTION notify_poll()"
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "announcements",
+      "policyname": "announcements are readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "((auth.role() = 'authenticated'::text) AND (archived_at IS NULL))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "announcements",
+      "policyname": "announcers delete announcements",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "((author_id = auth.uid()) OR is_announcer())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "announcements",
+      "policyname": "announcers manage announcements",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "((author_id = auth.uid()) OR is_announcer())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "announcements",
+      "policyname": "announcers post announcements",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(is_announcer() AND (author_id = auth.uid()))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "app_settings",
+      "policyname": "settings readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance",
+      "policyname": "attendance visible to its owner or door officers",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "((auth.uid() = user_id) OR is_door_officer())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance",
+      "policyname": "door officers delete attendance",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "is_door_officer()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance",
+      "policyname": "door officers record attendance",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "is_door_officer()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance",
+      "policyname": "door officers update attendance",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "is_door_officer()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "chat_messages",
+      "policyname": "users read their chat history",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "chat_messages",
+      "policyname": "users write their chat history",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "class_attendance",
+      "policyname": "attendance_read_owner_or_self",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "((user_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM class_sessions s\n  WHERE ((s.id = class_attendance.session_id) AND (s.faculty_id = auth.uid())))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "class_attendance",
+      "policyname": "session_owner_deletes_attendance",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM class_sessions s\n  WHERE ((s.id = class_attendance.session_id) AND (s.faculty_id = auth.uid()))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "class_attendance",
+      "policyname": "session_owner_records_attendance",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM class_sessions s\n  WHERE ((s.id = class_attendance.session_id) AND (s.faculty_id = auth.uid()))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "class_attendance",
+      "policyname": "session_owner_updates_attendance",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM class_sessions s\n  WHERE ((s.id = class_attendance.session_id) AND (s.faculty_id = auth.uid()))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM class_sessions s\n  WHERE ((s.id = class_attendance.session_id) AND (s.faculty_id = auth.uid()))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "class_sessions",
+      "policyname": "faculty_owner_manages_own_sessions",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "qual": "(faculty_id = auth.uid())",
+      "with_check": "(faculty_id = auth.uid())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clearance_forms",
+      "policyname": "clearance forms - own or officer",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "((auth.uid() = member_id) OR is_clearance_viewer())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clearance_forms",
+      "policyname": "clearance officers create forms",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(is_clearance_officer() AND (created_by = auth.uid()))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clearance_forms",
+      "policyname": "clearance officers delete forms",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "is_clearance_officer()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clearance_forms",
+      "policyname": "clearance officers update forms",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "is_clearance_officer()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clearance_rows",
+      "policyname": "clearance officers create rows",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(is_clearance_officer() AND (created_by = auth.uid()))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clearance_rows",
+      "policyname": "clearance rows - own or officer",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(is_clearance_viewer() OR (EXISTS ( SELECT 1\n   FROM clearance_forms f\n  WHERE ((f.id = clearance_rows.form_id) AND (f.member_id = auth.uid())))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clearance_rows",
+      "policyname": "clearing CI or superadmin delete rows",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(is_clearance_officer() AND ((( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = 'superadmin'::text) OR (recorded_by = auth.uid()) OR (recorded_by IS NULL)))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clearance_rows",
+      "policyname": "clearing CI or superadmin update rows",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "(is_clearance_officer() AND ((( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = 'superadmin'::text) OR (recorded_by = auth.uid()) OR (recorded_by IS NULL)))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "comments",
+      "policyname": "authors can delete their comments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "comments",
+      "policyname": "authors or staff can delete comments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "((auth.uid() = user_id) OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['staff'::text, 'moderator'::text, 'superadmin'::text])))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "comments",
+      "policyname": "authors or staff can update comments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "((auth.uid() = user_id) OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['staff'::text, 'moderator'::text, 'superadmin'::text])))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "comments",
+      "policyname": "comments are publicly readable",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "comments",
+      "policyname": "comments are readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "comments",
+      "policyname": "members can comment",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "event_payments",
+      "policyname": "event managers record payments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "is_event_fee_manager()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "event_payments",
+      "policyname": "event managers update payments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "is_event_fee_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "event_payments",
+      "policyname": "event managers void payments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "is_event_fee_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "event_payments",
+      "policyname": "members see their own event payments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "((auth.uid() = member_id) OR is_event_fee_manager())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "event_polls",
+      "policyname": "event managers create polls",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(is_event_manager() AND (created_by = auth.uid()))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "event_polls",
+      "policyname": "event managers delete polls",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "is_event_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "event_polls",
+      "policyname": "event managers update polls",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "is_event_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "event_polls",
+      "policyname": "polls readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "events",
+      "policyname": "events are readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "events",
+      "policyname": "officers create events",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(is_event_manager() AND (auth.uid() = created_by))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "events",
+      "policyname": "officers delete events",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "is_event_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "events",
+      "policyname": "officers manage events",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "is_event_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_subjects",
+      "policyname": "faculty_owner_manages_own_subjects",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "qual": "(faculty_id = auth.uid())",
+      "with_check": "(faculty_id = auth.uid())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_payments",
+      "policyname": "fee managers record payments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "is_fee_manager()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_payments",
+      "policyname": "fee managers update payments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "is_fee_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_payments",
+      "policyname": "fee managers void payments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "is_fee_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_payments",
+      "policyname": "members see their own fee payments",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "((auth.uid() = member_id) OR is_fee_viewer())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "policyname": "users see their own notifications",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "policyname": "users update their own notifications",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "poll_options",
+      "policyname": "event managers delete options",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "is_event_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "poll_options",
+      "policyname": "event managers manage options",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "is_event_manager()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "poll_options",
+      "policyname": "event managers update options",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "is_event_manager()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "poll_options",
+      "policyname": "options readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "poll_votes",
+      "policyname": "members vote once",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "poll_votes",
+      "policyname": "votes readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "post_likes",
+      "policyname": "likes are publicly readable",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "post_likes",
+      "policyname": "likes are readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "post_likes",
+      "policyname": "members can like",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "post_likes",
+      "policyname": "users can unlike",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "posts",
+      "policyname": "authors can delete their posts",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "((auth.uid() = user_id) OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['staff'::text, 'superadmin'::text])))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "posts",
+      "policyname": "authors can update/archive their posts",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "((auth.uid() = user_id) OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['staff'::text, 'superadmin'::text])))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "posts",
+      "policyname": "authors or staff can delete posts",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "((auth.uid() = user_id) OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['staff'::text, 'moderator'::text, 'superadmin'::text])))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "posts",
+      "policyname": "authors or staff can update posts",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "((auth.uid() = user_id) OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['staff'::text, 'moderator'::text, 'superadmin'::text])))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "posts",
+      "policyname": "members can post",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "posts",
+      "policyname": "posts are publicly readable",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "posts",
+      "policyname": "posts are readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "profiles",
+      "policyname": "console officers manage member profiles",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "is_console_officer()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "profiles",
+      "policyname": "profiles are readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "profiles",
+      "policyname": "superadmin deletes member profiles",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "(( SELECT profiles_1.role\n   FROM profiles profiles_1\n  WHERE (profiles_1.id = auth.uid())) = 'superadmin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "profiles",
+      "policyname": "users can insert their own profile",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(auth.uid() = id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "profiles",
+      "policyname": "users can update their own profile",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = id)",
+      "with_check": "((auth.uid() = id) AND (role = ( SELECT profiles_1.role\n   FROM profiles profiles_1\n  WHERE (profiles_1.id = auth.uid()))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "report_connectors",
+      "policyname": "report_connectors_superadmin_all",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "qual": "(( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = 'superadmin'::text)",
+      "with_check": "(( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = 'superadmin'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "rsvps",
+      "policyname": "members can manage their rsvp",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "qual": "(auth.uid() = user_id)",
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "rsvps",
+      "policyname": "rsvps are publicly readable",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "rsvps",
+      "policyname": "rsvps are readable by members",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "with_check": null
+    }
+  ],
+  "rls": [
+    {
+      "relname": "announcements",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "event_polls",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "poll_options",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "news_cache",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "posts",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "profiles",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "post_likes",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "rsvps",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "attendance",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "events",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "notifications",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "poll_votes",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "chat_messages",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "rate_limits",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "comments",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "app_settings",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "fee_payments",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "audit_logs",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "event_payments",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "report_connectors",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "clearance_rows",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "clearance_forms",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "faculty_subjects",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "class_sessions",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "class_attendance",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    }
+  ],
+  "buckets": []
+}
