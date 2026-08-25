@@ -98,6 +98,12 @@ export default function AccountSheet({ onClose, onLogout }) {
 
   useEffect(() => () => clearTimeout(saveTimer.current), [])
 
+  // Latest committed form values — the debounced autosave reads this instead
+  // of the render-time `form`, which would re-save whatever was there BEFORE
+  // the change that scheduled it (e.g. an uploaded photo).
+  const formRef = useRef(form)
+  formRef.current = form
+
   useEffect(() => {
     if (user)
       setForm({
@@ -157,11 +163,12 @@ export default function AccountSheet({ onClose, onLogout }) {
   }
 
   const save = async () => {
-    if (!form.first_name?.trim() || !form.surname?.trim()) {
+    const f = formRef.current
+    if (!f.first_name?.trim() || !f.surname?.trim()) {
       toast('First name and surname are required', 'err')
       return
     }
-    const idNo = form.id_no?.trim() || ''
+    const idNo = f.id_no?.trim() || ''
     if (idNo && !/^\d{4}-\d{4}$/.test(idNo)) {
       toast('ID no. must look like 2024-0001 (4 digits, dash, 4 digits)', 'err')
       return
@@ -170,14 +177,14 @@ export default function AccountSheet({ onClose, onLogout }) {
     try {
       const updated = await api.upsertProfile({
         id: user.id,
-        first_name: form.first_name.trim(),
-        surname: form.surname.trim(),
-        middle_initial: form.middle_initial || null,
+        first_name: f.first_name.trim(),
+        surname: f.surname.trim(),
+        middle_initial: f.middle_initial || null,
         id_no: idNo || null,
-        program: form.program,
-        year_level: form.year_level,
-        section: form.section,
-        avatar_url: form.avatar_url || null,
+        program: f.program,
+        year_level: f.year_level,
+        section: f.section,
+        avatar_url: f.avatar_url || null,
       })
       if (updated) setUser({ ...user, ...updated })
       toast('Profile saved')

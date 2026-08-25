@@ -1277,6 +1277,7 @@ export const api = {
             throw new Error('That ID no. is already registered to another account — one account per member.')
           throw error
         }
+        invalidateMembersCache()
         return data
       }, async (p) => {
         const clean = { ...p, full_name: composeFullName(p) || sanitizeText(p.full_name, 120), avatar_url: sanitizeUrl(p.avatar_url) }
