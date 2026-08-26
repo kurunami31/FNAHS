@@ -142,6 +142,17 @@ export default function Feed() {
     }
   }
 
+  const onEditPost = async (id, content) => {
+    try {
+      await api.updatePost(id, { content })
+      toast('Post updated')
+      await load()
+    } catch (e) {
+      console.error(e)
+      toast('Could not update the post', 'err')
+    }
+  }
+
   return (
     <div className="page-c">
       <h1 className="page-title">FEED</h1>
@@ -210,6 +221,7 @@ export default function Feed() {
           onDeleteComment={onDeleteComment}
           onArchive={onArchive}
           onDelete={onDelete}
+          onEdit={onEditPost}
           onZoom={setLightbox}
         />
       ))}
@@ -231,7 +243,7 @@ export default function Feed() {
   )
 }
 
-function PostCard({ post, meId, canModerate, onLike, onComment, onEditComment, onDeleteComment, onArchive, onDelete, onZoom }) {
+function PostCard({ post, meId, canModerate, onLike, onComment, onEditComment, onDeleteComment, onArchive, onDelete, onZoom, onEdit }) {
   const { toast } = useApp()
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [comment, setComment] = useState('')
@@ -247,6 +259,23 @@ function PostCard({ post, meId, canModerate, onLike, onComment, onEditComment, o
   const editFileRef = useRef(null)
   const [replyingTo, setReplyingTo] = useState(null)
   const liked = post.likes?.includes(meId)
+  const isAuthor = post.user_id === meId
+
+  // ---- author editing for the top-level post ----
+  const [postEditing, setPostEditing] = useState(false)
+  const [postText, setPostText] = useState('')
+  const [savingPost, setSavingPost] = useState(false)
+
+  const savePostEdit = async () => {
+    if (!postText.trim() || savingPost) return
+    setSavingPost(true)
+    try {
+      await onEdit(post.id, postText.trim())
+      setPostEditing(false)
+    } finally {
+      setSavingPost(false)
+    }
+  }
 
   const commentName = (uid) => (uid === meId ? 'You' : 'Member')
 
@@ -388,19 +417,43 @@ function PostCard({ post, meId, canModerate, onLike, onComment, onEditComment, o
           <div className="post-author">{post.author?.full_name || 'FNAHS'}</div>
           <div className="post-time">{timeAgo(post.created_at)} · {post.author?.program || 'student'}</div>
         </div>
-        {canModerate && (
+        {(isAuthor || canModerate) && (
           <div style={{ display: 'flex', gap: 2 }}>
-            <button className="icon-btn" title="Archive" onClick={() => onArchive(post.id)}>
-              <Archive size={16} />
-            </button>
-            <button className="icon-btn" title="Delete" onClick={() => onDelete(post.id)}>
-              <Trash2 size={16} />
-            </button>
+            {isAuthor && !postEditing && (
+              <button className="icon-btn" title="Edit post" onClick={() => { setPostEditing(true); setPostText(post.content || '') }}>
+                <Pencil size={16} />
+              </button>
+            )}
+            {canModerate && (
+              <>
+                <button className="icon-btn" title="Archive" onClick={() => onArchive(post.id)}>
+                  <Archive size={16} />
+                </button>
+                <button className="icon-btn" title="Delete" onClick={() => onDelete(post.id)}>
+                  <Trash2 size={16} />
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
 
-      <p className="post-body">{post.content}</p>
+      {postEditing ? (
+        <div className="comment-edit">
+          <textarea value={postText} onChange={(e) => setPostText(e.target.value)} rows={3} autoFocus />
+          <div className="comment-edit-row">
+            <span style={{ flex: 1 }} />
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setPostEditing(false); setPostText('') }}>
+              Cancel
+            </button>
+            <button type="button" className="btn btn--primary btn--sm" disabled={savingPost || !postText.trim()} onClick={savePostEdit}>
+              Save
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="post-body">{post.content}</p>
+      )}
       {post.image_url && (
         <img className="post-img" src={post.image_url} alt="Post attachment" onClick={() => onZoom(post.image_url)} />
       )}
