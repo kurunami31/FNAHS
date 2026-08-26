@@ -116,7 +116,7 @@ export default function Announcements() {
         </div>
       )}
 
-      <div className="ann-list">
+      <div className={`ann-list${items.length >= 5 ? ' ann-list--scroll' : ''}`}>
         {items.map((a) => {
           const mine = a.author_id === user?.id
           return (
