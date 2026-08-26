@@ -115,10 +115,10 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
     'FNAHS PULSO — Attendance Log',
     `${event?.title || 'Event'} · ${event?.starts_at ? pht(event.starts_at) : ''}${event?.location ? ` · ${event.location}` : ''} · ${sorted.length} member(s) present${hasFee ? ` · contribution fee ₱${fee.toLocaleString('en-PH')}` : ''}`,
   )
-  const headers = ['#', 'Name', 'ID No', 'Program', 'Year Level', 'Section', 'Email', 'Scanned At (PHT)', 'Status']
+  const headers = ['#', 'Name', 'ID No', 'Program', 'Year Level', 'Section', 'Email', 'Time In (PHT)', 'Time Out (PHT)', 'Status']
   if (hasFee) headers.push('Contribution (₱)', 'Fee Status')
   styledHeader(ws.getRow(4), headers)
-  const widths = [5, 28, 12, 16, 12, 10, 26, 20, 10]
+  const widths = [5, 28, 12, 16, 12, 10, 26, 20, 20, 10]
   if (hasFee) widths.push(16, 12)
   styledBody(
     ws,
@@ -134,6 +134,7 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
         p.section || '',
         p.email || '',
         pht(a.scanned_at),
+        a.time_out ? pht(a.time_out) : '',
         'Present',
       ]
       if (hasFee) {
@@ -143,7 +144,7 @@ export async function attendanceWorkbook(event, attendance, eventPayments = []) 
       return row
     }),
     widths,
-    hasFee ? [null, null, null, null, null, null, null, null, PESO] : null,
+    hasFee ? [null, null, null, null, null, null, null, null, null, PESO] : null,
   )
 
   if (hasFee) {

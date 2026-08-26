@@ -182,8 +182,9 @@ export default function Staff() {
     lastScanRef.current = { id: userId, at: now }
     setLast({ id: userId, at: new Date().toISOString() })
     try {
-      await api.markAttendance(eventIdRef.current, userId)
-      toast(online ? 'Attendance recorded' : 'Attendance recorded — will sync when you’re back online')
+      const status = await api.markAttendance(eventIdRef.current, userId)
+      const msg = status === 'out' ? 'Time out recorded' : status === 'already-out' ? 'Already timed out for this event' : 'Time in recorded'
+      toast(online ? msg : `${msg} — will sync when you’re back online`)
       await loadAttendance()
       if (eventFee > 0) loadPayments()
       // show the member's fee status next to the scan (fee viewers only)
@@ -397,7 +398,7 @@ export default function Staff() {
                           {a.profiles?.program
                             ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}`
                             : ''}{' '}
-                          · scanned {timeAgo(a.scanned_at)}
+                          · in {timeAgo(a.scanned_at)}{a.time_out ? ` · out ${timeAgo(a.time_out)}` : ''}
                         </div>
                       </div>
                       <span className="badge badge--ok">present</span>

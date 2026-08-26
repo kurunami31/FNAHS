@@ -438,26 +438,42 @@ async function demoSetRsvp(eventId, status) {
 }
 
 async function demoGetAttendance(eventId) {
-  return Object.entries(db.attendance[eventId] || {}).map(([user_id, at]) => ({ user_id, scanned_at: at }))
+  return Object.entries(db.attendance[eventId] || {}).map(([user_id, v]) => {
+    const rec = typeof v === 'object' && v ? v : { at: v, out: null }
+    return { user_id, scanned_at: rec.at || null, time_out: rec.out || null }
+  })
 }
 
 async function demoMarkAttendance(eventId, userId) {
   db.attendance[eventId] = db.attendance[eventId] || {}
-  db.attendance[eventId][userId] = new Date().toISOString()
   const ev = db.events.find((e) => e.id === eventId)
-  demoNotify([
-    {
-      id: uid(),
-      user_id: userId,
-      kind: 'attendance',
-      title: 'Checked in!',
-      body: `${ev?.title || 'Your event'} — attendance recorded.`,
-      link: '/app/events',
-      read_at: null,
-      created_at: new Date().toISOString(),
-    },
-  ])
+  const cur = db.attendance[eventId][userId]
+  const prev = typeof cur === 'object' && cur ? cur : cur ? { at: cur, out: null } : null
+  let status = 'in'
+  if (!prev) {
+    db.attendance[eventId][userId] = { at: new Date().toISOString(), out: null }
+  } else if (!prev.out) {
+    db.attendance[eventId][userId] = { ...prev, out: new Date().toISOString() }
+    status = 'out'
+  } else {
+    status = 'already-out'
+  }
+  if (status === 'in') {
+    demoNotify([
+      {
+        id: uid(),
+        user_id: userId,
+        kind: 'attendance',
+        title: 'Checked in!',
+        body: `${ev?.title || 'Your event'} — attendance recorded.`,
+        link: '/app/events',
+        read_at: null,
+        created_at: new Date().toISOString(),
+      },
+    ])
+  }
   saveDb(db)
+  return status
 }
 
 async function demoRemoveAttendance(eventId, userId) {
@@ -1807,15 +1823,16 @@ export const api = {
       }, demoGetAttendance, (rows) => {
         for (const r of rows || []) {
           const ev = db.attendance[r.event_id] || (db.attendance[r.event_id] = {})
-          ev[r.user_id] = r.scanned_at
+          ev[r.user_id] = r.time_out ? { at: r.scanned_at, out: r.time_out } : r.scanned_at
           if (r.profiles) mirrorProfileInto(r.profiles)
         }
         saveDb(db)
       }),
 
   markAttendance: offlineWrite('markAttendance', async (eventId, userId) => {
-        const { error } = await supabase.from('attendance').upsert({ event_id: eventId, user_id: userId, scanned_at: new Date().toISOString() })
+        const { data, error } = await supabase.rpc('scan_attendance', { p_event: eventId, p_user: userId })
         if (error) throw error
+        return data || 'in'
       }, demoMarkAttendance),
 
   removeAttendance: offlineWrite('removeAttendance', async (eventId, userId) => {

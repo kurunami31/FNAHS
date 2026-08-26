@@ -798,7 +798,7 @@ const [feeFilter, setFeeFilter] = useState('all')
                         {a.profiles?.id_no ? `ID ${a.profiles.id_no} · ` : ''}
                         {a.profiles?.program ? `${a.profiles.program}${a.profiles.year_level ? ` (Yr ${a.profiles.year_level})` : ''}` : ''}
                         {' · '}
-                        {a.profiles?.email || 'no email'} · scanned {timeAgo(a.scanned_at)}
+                        {a.profiles?.email || 'no email'} · in {timeAgo(a.scanned_at)}{a.time_out ? ` · out ${timeAgo(a.time_out)}` : ''}
                       </div>
                     </div>
                     <span className="badge badge--ok">present</span>
