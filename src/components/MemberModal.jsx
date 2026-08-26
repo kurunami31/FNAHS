@@ -48,7 +48,7 @@ export default function MemberModal({ member, onClose }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             <h3 className="mm-name">{member.full_name}</h3>
             <div className="mm-role">
-              <span className="badge badge--done">{roleLabel(member.role)}</span>
+              <span className="badge badge--done">{roleLabel(member.role, member.positions)}</span>
               <span className="chip">{member.program || '—'}{member.role !== 'faculty' ? ` · YR ${member.year_level || '—'}` : ''}</span>
             </div>
             {!!member.positions?.length && (
@@ -74,7 +74,7 @@ export default function MemberModal({ member, onClose }) {
             <span>events going</span>
           </div>
           <div className="mm-stat">
-            <b>{roleLabel(member.role)}</b>
+            <b>{roleLabel(member.role, member.positions)}</b>
             <span>role</span>
           </div>
         </div>

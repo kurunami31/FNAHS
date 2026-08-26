@@ -15,6 +15,7 @@ export const ROLES = {
 }
 
 export const POSITION_LABELS = {
+  dev: 'DEV',
   governor: 'Governor',
   'v-governor': 'Vice Governor',
   pio: 'P.I.O',
@@ -170,6 +171,8 @@ export function positionLabel(position) {
   return POSITION_LABELS[position] || position
 }
 
-export function roleLabel(role) {
+export function roleLabel(role, positions) {
+  // A superadmin tagged with the 'dev' position is displayed as DEV
+  if (role === 'superadmin' && Array.isArray(positions) && positions.includes('dev')) return 'DEV'
   return ROLES[role] || role || 'Member'
 }

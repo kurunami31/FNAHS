@@ -239,9 +239,9 @@ export async function drawIdCanvas(c, { profile, avatarUrl, qr }) {
   if (profile?.program) rows.push(['PROGRAM', profile.program])
   if (profile?.year_level) rows.push(['YEAR', profile.year_level])
   if (profile?.section) rows.push(['SEC', profile.section])
-  if (profile?.role && profile.role !== 'student') rows.push(['ROLE', profile.role.replace(/^\w/, (ch) => ch.toUpperCase())])
-  if (profile?.positions?.length) rows.push(['POSITION', profile.positions.join(' · ')])
-
+  const isDev = Array.isArray(profile?.positions) && profile.positions.includes('dev')
+  if (profile?.role && profile.role !== 'student') rows.push(['ROLE', isDev ? 'DEV' : profile.role.replace(/^\w/, (ch) => ch.toUpperCase())])
+  if (profile?.positions?.length) rows.push(['POSITION', profile.positions.filter((p) => p !== 'dev').join(' · ')])
   ctx.font = `15px ${OCR}`
   rows.forEach(([k2, v], i) => {
     ctx.fillStyle = ROW

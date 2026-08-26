@@ -205,8 +205,8 @@ export default function AccountSheet({ onClose, onLogout }) {
         <div className="who">
           <h3>{user?.full_name || 'Member'}</h3>
           <span>
-            {user?.role || 'student'}
-            {user?.role !== 'student' ? '' : ` · ${user?.program || 'no program'}`}
+        {user ? roleLabel(user?.role, user?.positions) : 'student'}
+        {user?.role !== 'student' ? '' : ` · ${user?.program || 'no program'}`}
           </span>
         </div>
         <button className="icon-btn" onClick={onClose} aria-label="Close settings">
@@ -438,7 +438,7 @@ export default function AccountSheet({ onClose, onLogout }) {
         <div className="sheet-row">
           <div className="sr-txt">
             <h5>Role</h5>
-            <p>{roleLabel(user?.role)} — {accessText(user)}</p>
+            <p>{roleLabel(user?.role, user?.positions)} — {accessText(user)}</p>
           </div>
           <ShieldCheck size={16} style={{ color: 'var(--muted)' }} />
         </div>
