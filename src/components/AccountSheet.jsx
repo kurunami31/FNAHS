@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera, Archive, HeartPulse, Users, Settings2, KeyRound, Smartphone, ClipboardCheck, BookOpen } from 'lucide-react'
+import { Save, LogOut, X, AtSign, ShieldCheck, Loader2, Camera, Archive, HeartPulse, Users, Settings2, KeyRound, Smartphone, ClipboardCheck, BookOpen, Send } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { roleLabel, positionLabel, can } from '../rbac'
 import { api } from '../lib/api'
@@ -196,6 +196,26 @@ export default function AccountSheet({ onClose, onLogout }) {
     }
   }
 
+  // ---- one-time email change ----
+  const [emailOpen, setEmailOpen] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [emailBusy, setEmailBusy] = useState(false)
+  const [emailErr, setEmailErr] = useState('')
+
+  const submitEmailChange = async () => {
+    setEmailErr('')
+    try {
+      await api.changeEmail(newEmail)
+      toast(`Confirmation sent to ${newEmail} — your email updates after you confirm it.`)
+      setEmailOpen(false)
+      setNewEmail('')
+    } catch (e) {
+      setEmailErr(e.message || 'Could not request the change.')
+    } finally {
+      setEmailBusy(false)
+    }
+  }
+
   return (
     <div className="sheet" role="dialog" aria-label="Account settings">
       <div className="sheet-head">
@@ -316,6 +336,54 @@ export default function AccountSheet({ onClose, onLogout }) {
         <button className="btn btn--primary btn--block" onClick={save} disabled={saving}>
           {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Save profile
         </button>
+      </div>
+
+      <div className="sheet-sec">
+        <h4>Sign-in email</h4>
+        <div className="sheet-row">
+          <div className="sr-txt">
+            <h5>{user?.email || '—'}</h5>
+            <p>
+              {user?.email_changed_count > 0
+                ? 'Your one-time email change has been used.'
+                : emailOpen
+                  ? `A confirmation link will be sent to the new address.`
+                  : 'Fake or mistyped address? You can change this email once.'}
+            </p>
+          </div>
+        </div>
+        {!(user?.email_changed_count > 0) && !emailOpen && (
+          <button
+            className="btn btn--ghost btn--sm"
+            onClick={() => { setEmailOpen(true); setNewEmail(user?.email || ''); setEmailErr('') }}
+          >
+            <AtSign size={14} /> Change email
+          </button>
+        )}
+        {emailOpen && !(user?.email_changed_count > 0) && (
+          <>
+            <div className="field" style={{ marginTop: 10 }}>
+              <label>New email</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="new@email.com"
+                autoComplete="email"
+                autoFocus
+              />
+            </div>
+            {emailErr && <div className="form-error">{emailErr}</div>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <button className="btn btn--ghost btn--sm" onClick={() => { setEmailOpen(false); setNewEmail(''); setEmailErr('') }}>
+                Cancel
+              </button>
+              <button className="btn btn--primary btn--sm" onClick={submitEmailChange} disabled={emailBusy}>
+                {emailBusy ? <Loader2 size={13} className="spin" /> : <Send size={13} />} {emailBusy ? 'Sending…' : 'Send confirmation'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="sheet-sec">

@@ -1255,10 +1255,24 @@ export const api = {
   },
 
   /* profiles */
+  /** request an email change — GoTrue emails a confirmation to the new
+      address; the auth.users trigger enforces the one-change limit and
+      bumps profiles.email_changed_count once the change lands. */
+  async changeEmail(newEmail) {
+    if (!SUPABASE_ENABLED || !supabase) throw new Error('Email changes are only available in the live deployment.')
+    const email = String(newEmail || '').trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('That does not look like a valid email address.')
+    const { error } = await supabase.auth.updateUser({ email })
+    if (error) {
+      if (/same/i.test(error.message || '')) throw new Error('That is already your current email.')
+      throw error
+    }
+  },
+
   getProfile: offlineRead('getProfile', async (id) => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at, email_changed_count')
           .eq('id', id)
           .maybeSingle()
         if (error) {
@@ -1288,7 +1302,7 @@ export const api = {
           .from('profiles')
           .update(patch)
           .eq('id', p.id)
-          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select(',id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) {
           if (error.code === '23505')
