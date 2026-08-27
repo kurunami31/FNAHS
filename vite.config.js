@@ -2,10 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-/**
- * Production Content-Security-Policy.
- * Dev is excluded so Vite's hot-reload inline scripts keep working.
- */
 const CSP = [
   "default-src 'self'",
   "script-src 'self'",
@@ -53,10 +49,9 @@ export default defineConfig({
       includeAssets: ['FNAHS.png', 'favicon.ico'],
       manifest: {
         id: '/',
-        name: 'FNAHS · PULSO',
+        name: 'FNAHS Aﬁ PULSO',
         short_name: 'FNAHS PULSO',
-        description:
-          'FNAHS · PULSO — Proactive and United Legion of Student nurses Organization, the Faculty of Nursing and Allied Health Sciences community platform.',
+        description: 'FNAHS Aﬁ PULSO — Proactive and United Legion of Student nurses Organization, the Faculty of Nursing and Allied Health Sciences community platform.',
         start_url: '/',
         scope: '/',
         display: 'standalone',
@@ -81,6 +76,48 @@ export default defineConfig({
           { src: '/screenshots/wide.png', sizes: '1280x720', type: 'image/png', form_factor: 'wide', label: 'FNAHS PULSO home' },
           { src: '/screenshots/narrow.png', sizes: '750x1334', type: 'image/png', form_factor: 'narrow', label: 'FNAHS PULSO home' },
         ],
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json,webmanifest}'],
+          navigateFallback: null,
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-cache',
+                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'gstatic-fonts-cache',
+                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'supabase-api-cache',
+                networkTimeoutSeconds: 10,
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/api\.allorigins\.win\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'allorigins-cache',
+                networkTimeoutSeconds: 10,
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+          ],
+        },
       },
     }),
   ],

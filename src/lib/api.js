@@ -842,6 +842,10 @@ function mirrorEvents(events) {
     created_by: e.created_by,
     created_at: e.created_at,
     rsvps: e.rsvps || {},
+    morning_time_in: e.morning_time_in,
+    morning_time_out: e.morning_time_out,
+    afternoon_time_in: e.afternoon_time_in,
+    afternoon_time_out: e.afternoon_time_out,
   }))
   db.events = [...mapped, ...db.events.filter((d) => !mapped.some((m) => m.id === d.id))]
   saveDb(db)
@@ -1713,7 +1717,7 @@ export const api = {
         return evs.map((e) => ({ ...e, rsvps: e.rsvps || {} }))
       }, mirrorEvents),
 
-  createEvent: offlineWrite('createEvent', async (ev) => {
+createEvent: offlineWrite('createEvent', async (ev) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('You must be signed in.')
         // RLS requires auth.uid() = created_by, so the creator must be recorded.
@@ -1727,12 +1731,16 @@ export const api = {
             ends_at: ev.ends_at,
             fee_amount: Number(ev.fee_amount) || 0,
             created_by: user.id,
+            morning_time_in: ev.morning_time_in,
+            morning_time_out: ev.morning_time_out,
+            afternoon_time_in: ev.afternoon_time_in,
+            afternoon_time_out: ev.afternoon_time_out,
           })
           .select()
           .single()
         if (error) throw error
         // Announce the event on the community feed. A feed-post failure must
-        // not fail the event itself — the event is already created by now.
+        // not fail the event itself - the event is already created by now.
         try {
           await supabase
             .from('posts')

@@ -145,6 +145,23 @@ export default function EventModal({ event, onClose, onChanged }) {
           <span><Users size={14} /> {goingIds.length} going</span>
         </div>
 
+        {(event.morning_time_in || event.morning_time_out || event.afternoon_time_in || event.afternoon_time_out) && (
+          <div className="evm-meta" style={{ marginTop: 8, gap: 12 }}>
+            {(event.morning_time_in || event.morning_time_out) && (
+              <span>
+                <Clock size={14} />
+                <strong> Morning:</strong> {event.morning_time_in ? event.morning_time_in.slice(0, 5) : '—'} — {event.morning_time_out ? event.morning_time_out.slice(0, 5) : '—'}
+              </span>
+            )}
+            {(event.afternoon_time_in || event.afternoon_time_out) && (
+              <span>
+                <Clock size={14} />
+                <strong> Afternoon:</strong> {event.afternoon_time_in ? event.afternoon_time_in.slice(0, 5) : '—'} — {event.afternoon_time_out ? event.afternoon_time_out.slice(0, 5) : '—'}
+              </span>
+            )}
+          </div>
+        )}
+
         {event.description && <p className="event-desc" style={{ marginTop: 16 }}>{event.description}</p>}
 
         {polls && polls.length > 0 && (

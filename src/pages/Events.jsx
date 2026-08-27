@@ -165,6 +165,10 @@ function CreateEventModal({ onClose, onCreate }) {
     starts_at: '',
     ends_at: '',
     fee_amount: '',
+    morning_time_in: '',
+    morning_time_out: '',
+    afternoon_time_in: '',
+    afternoon_time_out: '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -188,6 +192,10 @@ function CreateEventModal({ onClose, onCreate }) {
         starts_at: new Date(form.starts_at).toISOString(),
         ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : new Date(new Date(form.starts_at).getTime() + 2 * 3600e3).toISOString(),
         fee_amount: form.fee_amount.trim() ? fee : 0,
+        morning_time_in: form.morning_time_in || null,
+        morning_time_out: form.morning_time_out || null,
+        afternoon_time_in: form.afternoon_time_in || null,
+        afternoon_time_out: form.afternoon_time_out || null,
       })
     } finally {
       setSaving(false)
@@ -214,6 +222,34 @@ function CreateEventModal({ onClose, onCreate }) {
         <div className="field">
           <label>Starts at</label>
           <input type="datetime-local" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} />
+        </div>
+        <div className="field">
+          <label>Morning time in</label>
+          <input type="time" value={form.morning_time_in} onChange={(e) => setForm({ ...form, morning_time_in: e.target.value })} />
+          <div className="field-note" style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--muted)' }}>
+            Morning session start time
+          </div>
+        </div>
+        <div className="field">
+          <label>Morning time out</label>
+          <input type="time" value={form.morning_time_out} onChange={(e) => setForm({ ...form, morning_time_out: e.target.value })} />
+          <div className="field-note" style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--muted)' }}>
+            Morning session end time
+          </div>
+        </div>
+        <div className="field">
+          <label>Afternoon time in</label>
+          <input type="time" value={form.afternoon_time_in} onChange={(e) => setForm({ ...form, afternoon_time_in: e.target.value })} />
+          <div className="field-note" style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--muted)' }}>
+            Afternoon session start time
+          </div>
+        </div>
+        <div className="field">
+          <label>Afternoon time out</label>
+          <input type="time" value={form.afternoon_time_out} onChange={(e) => setForm({ ...form, afternoon_time_out: e.target.value })} />
+          <div className="field-note" style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--muted)' }}>
+            Afternoon session end time
+          </div>
         </div>
         <div className="field">
           <label>Ends at <span className="hint">(optional)</span></label>
