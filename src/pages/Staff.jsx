@@ -445,7 +445,7 @@ export default function Staff() {
         {compliance.length === 0 ? (
           <p className="panel-muted">No scans recorded for this event yet.</p>
         ) : (
-          <div className="ledger">
+          <div className="ledger ledger-scroll">
             {compliance.map((c) => {
               const both = c.time_in && c.time_out
               return (
