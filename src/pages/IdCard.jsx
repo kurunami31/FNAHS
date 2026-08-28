@@ -357,7 +357,14 @@ export default function IdCard() {
                   <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{h.title}</div>
                   <div className="ledger-meta">{h.location || '—'} · scanned {timeAgo(h.scanned_at)}</div>
                 </div>
-                <span className="badge badge--ok">present</span>
+                <div className="compliance-chips">
+                  <span className="chip chip--sm chip--ok">{'\u2713'} In</span>
+                  {h.time_out ? (
+                    <span className="chip chip--sm chip--ok">{'\u2713'} Out</span>
+                  ) : (
+                    <span className="chip chip--sm chip--muted">{'\u2717'} Out</span>
+                  )}
+                </div>
               </div>
             ))}
           </div>

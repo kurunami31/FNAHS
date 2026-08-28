@@ -1862,6 +1862,62 @@ createEvent: offlineWrite('createEvent', async (ev) => {
         if (error) throw error
       }, demoRemoveAttendance),
 
+  /* manual scan: officer chooses time-in or time-out explicitly */
+  markAttendanceManual: SUPABASE_ENABLED
+    ? async (eventId, userId, scanType) => {
+        const { data, error } = await supabase.rpc('scan_attendance_manual', { p_event: eventId, p_user: userId, p_scan_type: scanType })
+        if (error) {
+          // Fallback: direct upsert if the RPC doesn't exist yet
+          const { data: existing } = await supabase
+            .from('attendance')
+            .select('scanned_at, time_out')
+            .eq('event_id', eventId)
+            .eq('user_id', userId)
+            .single()
+          if (!existing) {
+            await supabase.from('attendance').upsert({
+              event_id: eventId, user_id: userId,
+              scanned_at: new Date().toISOString(),
+              time_out: scanType === 'time_out' ? new Date().toISOString() : null,
+            })
+          } else if (scanType === 'time_out' && !existing.time_out) {
+            await supabase.from('attendance').update({ time_out: new Date().toISOString() })
+              .eq('event_id', eventId).eq('user_id', userId)
+          } else if (scanType === 'time_in' && !existing.scanned_at) {
+            await supabase.from('attendance').update({ scanned_at: new Date().toISOString() })
+              .eq('event_id', eventId).eq('user_id', userId)
+          }
+        }
+        return scanType === 'time_out' ? 'out' : 'in'
+      }
+    : async (eventId, userId, scanType) => {
+        db.attendance[eventId] = db.attendance[eventId] || {}
+        const cur = db.attendance[eventId][userId]
+        const prev = typeof cur === 'object' && cur ? cur : cur ? { at: cur, out: null } : null
+        if (!prev) {
+          db.attendance[eventId][userId] = scanType === 'time_out'
+            ? { at: new Date().toISOString(), out: new Date().toISOString() }
+            : { at: new Date().toISOString(), out: null }
+        } else if (scanType === 'time_out' && !prev.out) {
+          db.attendance[eventId][userId] = { ...prev, out: new Date().toISOString() }
+        }
+        saveDb(db)
+        return scanType === 'time_out' ? 'out' : 'in'
+      },
+
+  updateEventLocks: SUPABASE_ENABLED
+    ? async (eventId, patch) => {
+        const { data, error } = await supabase.from('events').update(patch).eq('id', eventId).select('id, time_in_locked, time_out_locked').single()
+        if (error) throw error
+        return data
+      }
+    : async (eventId, patch) => {
+        const ev = db.events.find((e) => e.id === eventId)
+        if (ev) Object.assign(ev, patch)
+        saveDb(db)
+        return ev
+      },
+
   /* ---------------- class attendance (faculty subjects & sessions) ---------------- */
   getMySubjects: offlineRead('getMySubjects', async () => {
         const { data, error } = await supabase.from('faculty_subjects').select('*').order('created_at', { ascending: false })
@@ -2123,19 +2179,23 @@ createEvent: offlineWrite('createEvent', async (ev) => {
         if (!user) return []
         const { data, error } = await supabase
           .from('attendance')
-          .select('event_id, scanned_at, events(title, starts_at, location)')
+          .select('event_id, scanned_at, time_out, events(title, starts_at, location)')
           .eq('user_id', user.id)
           .order('scanned_at', { ascending: false })
         if (error) throw error
-        return (data || []).map((r) => ({ event_id: r.event_id, scanned_at: r.scanned_at, ...(r.events || {}) }))
+        return (data || []).map((r) => ({
+          event_id: r.event_id, scanned_at: r.scanned_at, time_out: r.time_out || null,
+          ...(r.events || {}),
+        }))
       }, async () => {
         const me = demoCurrentUserId() || DEMO_USER_ID
         const rows = []
         for (const [event_id, m] of Object.entries(db.attendance || {})) {
-          for (const [user_id, scanned_at] of Object.entries(m || {})) {
+          for (const [user_id, v] of Object.entries(m || {})) {
             if (user_id === me) {
+              const rec = typeof v === 'object' && v ? v : { at: v, out: null }
               const ev = db.events.find((e) => e.id === event_id)
-              rows.push({ event_id, scanned_at, title: ev?.title || 'Event', starts_at: ev?.starts_at, location: ev?.location })
+              rows.push({ event_id, scanned_at: rec.at, time_out: rec.out || null, title: ev?.title || 'Event', starts_at: ev?.starts_at, location: ev?.location })
             }
           }
         }
