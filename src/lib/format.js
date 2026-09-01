@@ -64,3 +64,35 @@ export function fullDateTime(dateStr) {
 export function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4)
 }
+
+export function getDaysInMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+}
+
+export function getFirstDayOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+}
+
+export function getDaysInPrevMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 0).getDate()
+}
+
+export function formatMonthYear(date) {
+  return date.toLocaleString(undefined, { month: 'long', year: 'numeric' })
+}
+
+export function formatFullDate(date) {
+  return date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+export function isSameDay(d1, d2) {
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate()
+}
+
+export function startOfDay(date) {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  return d
+}

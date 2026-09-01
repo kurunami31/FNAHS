@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CalendarDays, MapPin, Clock, Plus, Check, X, Users, HandCoins, QrCode } from 'lucide-react'
+import { CalendarDays, MapPin, Clock, Plus, Check, X, Users, HandCoins, QrCode, ChevronLeft, ChevronRight, List } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
-import { fmtDateTime, monthDay } from '../lib/format'
+import { fmtDateTime, monthDay, getDaysInMonth, getFirstDayOfMonth, getDaysInPrevMonth, formatMonthYear, formatFullDate, isSameDay, startOfDay } from '../lib/format'
 import { fmtPeso } from '../lib/fees'
 import EventModal from '../components/EventModal'
 
@@ -16,6 +16,10 @@ export default function Events() {
   const [modal, setModal] = useState(false)
   const [selected, setSelected] = useState(null)
   const [params, setParams] = useSearchParams()
+
+  const [viewMode, setViewMode] = useState('calendar')
+  const [currentMonth, setCurrentMonth] = useState(() => new Date())
+  const [dayModal, setDayModal] = useState({ open: false, date: null, events: [] })
 
   const canCreate = can(user, 'events.manage')
 
@@ -37,7 +41,6 @@ export default function Events() {
     load()
   }, [load])
 
-  // Deep link from a notification (?open=<id>) — open that event's modal.
   const openId = params.get('open')
   useEffect(() => {
     if (!openId || !events.length) return
@@ -49,7 +52,7 @@ export default function Events() {
     try {
       await api.setRsvp(id, status)
       toast(status === 'none' ? 'RSVP cancelled' : 'Marked as going')
-await load()
+      await load()
     } catch {
       toast('RSVP failed', 'err')
     }
@@ -66,16 +69,61 @@ await load()
     }
   }
 
+  const prevMonth = () => {
+    const d = new Date(currentMonth)
+    d.setMonth(d.getMonth() - 1)
+    setCurrentMonth(d)
+  }
+
+  const nextMonth = () => {
+    const d = new Date(currentMonth)
+    d.setMonth(d.getMonth() + 1)
+    setCurrentMonth(d)
+  }
+
+  const getEventsForDay = (date) => {
+    const day = startOfDay(date)
+    return events.filter((e) => {
+      const evDate = startOfDay(new Date(e.starts_at))
+      return isSameDay(evDate, day)
+    })
+  }
+
+  const onDayClick = (date) => {
+    const dayEvents = getEventsForDay(date)
+    setDayModal({ open: true, date, events: dayEvents })
+  }
+
   return (
     <div className="page-c">
-      <div className="events-head">
-        <h1 className="page-title">EVENTS</h1>
-        <p className="page-sub">Org events — scan your ID QR at the door to log attendance.</p>
-        {canCreate && (
-          <button className="btn btn--primary" onClick={() => setModal(true)}>
-            <Plus size={16} /> Create event
-          </button>
-        )}
+      <div className="events-head" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1 className="page-title">EVENTS</h1>
+          <p className="page-sub">Org events — scan your ID QR at the door to log attendance.</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="view-toggle">
+            <button
+              className={`view-toggle-btn ${viewMode === 'calendar' ? 'view-toggle-btn--on' : ''}`}
+              onClick={() => setViewMode('calendar')}
+              title="Calendar view"
+            >
+              <CalendarDays size={16} />
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === 'list' ? 'view-toggle-btn--on' : ''}`}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <List size={16} />
+            </button>
+          </div>
+          {canCreate && (
+            <button className="btn btn--primary" onClick={() => setModal(true)}>
+              <Plus size={16} /> Create event
+            </button>
+          )}
+        </div>
       </div>
 
       {loading && <div className="empty-state"><div className="typing" style={{ justifyContent: 'center' }}><i /><i /><i /></div></div>}
@@ -88,7 +136,17 @@ await load()
         </div>
       )}
 
-      {events.map((e) => {
+      {!loading && events.length > 0 && viewMode === 'calendar' && (
+        <CalendarView
+          currentMonth={currentMonth}
+          events={events}
+          onPrevMonth={prevMonth}
+          onNextMonth={nextMonth}
+          onDayClick={onDayClick}
+        />
+      )}
+
+      {!loading && viewMode === 'list' && events.map((e) => {
         const mine = e.rsvps?.[user?.id]
         const going = Object.values(e.rsvps || {}).filter((s) => s === 'going').length
         return (
@@ -138,6 +196,18 @@ await load()
         )
       })}
 
+      {dayModal.open && (
+        <DayModal
+          date={dayModal.date}
+          events={dayModal.events}
+          onClose={() => setDayModal({ open: false, date: null, events: [] })}
+          onSelectEvent={(ev) => {
+            setDayModal({ open: false, date: null, events: [] })
+            setSelected(ev)
+          }}
+        />
+      )}
+
       {modal && <CreateEventModal onClose={() => setModal(false)} onCreate={created} />}
       {selected && (
         <EventModal
@@ -153,6 +223,108 @@ await load()
           onChanged={load}
         />
       )}
+    </div>
+  )
+}
+
+function CalendarView({ currentMonth, events, onPrevMonth, onNextMonth, onDayClick }) {
+  const today = startOfDay(new Date())
+  const year = currentMonth.getFullYear()
+  const month = currentMonth.getMonth()
+  const daysInMonth = getDaysInMonth(currentMonth)
+  const firstDay = getFirstDayOfMonth(currentMonth)
+  const daysInPrev = getDaysInPrevMonth(currentMonth)
+
+  const cells = []
+
+  for (let i = 0; i < firstDay; i++) {
+    const dayNum = daysInPrev - firstDay + 1 + i
+    const d = new Date(year, month - 1, dayNum)
+    cells.push({ date: d, dim: true, num: dayNum })
+  }
+
+  for (let i = 1; i <= daysInMonth; i++) {
+    const d = new Date(year, month, i)
+    const isToday = isSameDay(d, today)
+    const hasEvent = events.some((e) => isSameDay(startOfDay(new Date(e.starts_at)), d))
+    cells.push({ date: d, dim: false, num: i, today: isToday, hasEvent })
+  }
+
+  const remaining = 42 - cells.length
+  for (let i = 1; i <= remaining; i++) {
+    const d = new Date(year, month + 1, i)
+    cells.push({ date: d, dim: true, num: i })
+  }
+
+  return (
+    <div className="cal-wrap">
+      <div className="cal-nav">
+        <button className="btn btn--ghost btn--sm" onClick={onPrevMonth}>
+          <ChevronLeft size={18} />
+        </button>
+        <span className="cal-nav-label">{formatMonthYear(currentMonth)}</span>
+        <button className="btn btn--ghost btn--sm" onClick={onNextMonth}>
+          <ChevronRight size={18} />
+        </button>
+      </div>
+      <div className="cal-grid">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+          <div className="cal-dow" key={d}>{d}</div>
+        ))}
+        {cells.map((c, i) => (
+          <div
+            key={i}
+            className={`cal-day${c.dim ? ' cal-day--dim' : ''}${c.today ? ' cal-day--today' : ''}${c.hasEvent ? ' cal-day--has-event' : ''}`}
+            onClick={() => !c.dim && onDayClick(c.date)}
+          >
+            <span className="cal-day-num">{c.num}</span>
+            {c.hasEvent && <span className="cal-day-dot" />}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DayModal({ date, events, onClose, onSelectEvent }) {
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        <div className="day-modal-head">
+          <h3>{formatFullDate(date)}</h3>
+          <button className="icon-btn" onClick={onClose} aria-label="Close">
+            <X size={18} />
+          </button>
+        </div>
+        {events.length === 0 ? (
+          <div className="day-modal-empty">
+            <CalendarDays size={32} style={{ marginBottom: 8, opacity: 0.5 }} />
+            <p>No activities on this day.</p>
+          </div>
+        ) : (
+          <div className="day-modal-list">
+            {events.map((e) => {
+              const going = Object.values(e.rsvps || {}).filter((s) => s === 'going').length
+              return (
+                <div className="day-modal-event" key={e.id} onClick={() => onSelectEvent(e)}>
+                  <div className="day-modal-event-stub">
+                    <b>{monthDay(e.starts_at).day}</b>
+                    <span>{monthDay(e.starts_at).month}</span>
+                  </div>
+                  <div className="day-modal-event-body">
+                    <h4>{e.title}</h4>
+                    <div className="ev-meta">
+                      <span><Clock size={12} /> {fmtDateTime(e.starts_at)}</span>
+                      <span><MapPin size={12} /> {e.location}</span>
+                      <span><Users size={12} /> {going} going</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -279,4 +451,3 @@ function CreateEventModal({ onClose, onCreate }) {
     </div>
   )
 }
-
