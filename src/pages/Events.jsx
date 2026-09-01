@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CalendarDays, MapPin, Clock, Plus, Check, X, Users, HandCoins, QrCode, ChevronLeft, ChevronRight, List } from 'lucide-react'
+import { CalendarDays, MapPin, Clock, Plus, Check, X, Users, HandCoins, QrCode, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
@@ -17,7 +17,6 @@ export default function Events() {
   const [selected, setSelected] = useState(null)
   const [params, setParams] = useSearchParams()
 
-  const [viewMode, setViewMode] = useState('calendar')
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
   const [dayModal, setDayModal] = useState({ open: false, date: null, events: [] })
 
@@ -83,10 +82,7 @@ export default function Events() {
 
   const getEventsForDay = (date) => {
     const day = startOfDay(date)
-    return events.filter((e) => {
-      const evDate = startOfDay(new Date(e.starts_at))
-      return isSameDay(evDate, day)
-    })
+    return events.filter((e) => isSameDay(startOfDay(new Date(e.starts_at)), day))
   }
 
   const onDayClick = (date) => {
@@ -94,116 +90,90 @@ export default function Events() {
     setDayModal({ open: true, date, events: dayEvents })
   }
 
+  const today = startOfDay(new Date())
+  const upcomingEvents = events.filter((e) => new Date(e.ends_at) >= today)
+  const pastEvents = events.filter((e) => new Date(e.ends_at) < today)
+
   return (
     <div className="page-c">
-      <div className="events-head" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 className="page-title">EVENTS</h1>
-          <p className="page-sub">Org events — scan your ID QR at the door to log attendance.</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="view-toggle">
-            <button
-              className={`view-toggle-btn ${viewMode === 'calendar' ? 'view-toggle-btn--on' : ''}`}
-              onClick={() => setViewMode('calendar')}
-              title="Calendar view"
-            >
-              <CalendarDays size={16} />
-            </button>
-            <button
-              className={`view-toggle-btn ${viewMode === 'list' ? 'view-toggle-btn--on' : ''}`}
-              onClick={() => setViewMode('list')}
-              title="List view"
-            >
-              <List size={16} />
-            </button>
-          </div>
-          {canCreate && (
-            <button className="btn btn--primary" onClick={() => setModal(true)}>
-              <Plus size={16} /> Create event
-            </button>
-          )}
-        </div>
+      <div className="events-head">
+        <h1 className="page-title">CALENDAR OF ACTIVITIES</h1>
+        <p className="page-sub">Org events and activities — scan your ID QR at the door to log attendance.</p>
+        {canCreate && (
+          <button className="btn btn--primary" onClick={() => setModal(true)}>
+            <Plus size={16} /> Create event
+          </button>
+        )}
       </div>
 
       {loading && <div className="empty-state"><div className="typing" style={{ justifyContent: 'center' }}><i /><i /><i /></div></div>}
 
-      {!loading && events.length === 0 && (
-        <div className="empty-state">
-          <CalendarDays size={44} />
-          <h3>No events yet</h3>
-          <p>Create the first org event to get the ball rolling.</p>
+      {!loading && (
+        <div className="cal-wrap">
+          <div className="cal-nav">
+            <button className="btn btn--ghost btn--sm" onClick={prevMonth}>
+              <ChevronLeft size={18} />
+            </button>
+            <span className="cal-nav-label">{formatMonthYear(currentMonth)}</span>
+            <button className="btn btn--ghost btn--sm" onClick={nextMonth}>
+              <ChevronRight size={18} />
+            </button>
+          </div>
+          <CalendarGrid
+            currentMonth={currentMonth}
+            events={events}
+            onDayClick={onDayClick}
+          />
+          {canCreate && (
+            <p style={{ textAlign: 'center', marginTop: 12, fontSize: '0.8rem', color: 'var(--muted)' }}>
+              Click any day to add an activity
+            </p>
+          )}
         </div>
       )}
 
-      {!loading && events.length > 0 && viewMode === 'calendar' && (
-        <CalendarView
-          currentMonth={currentMonth}
-          events={events}
-          onPrevMonth={prevMonth}
-          onNextMonth={nextMonth}
-          onDayClick={onDayClick}
-        />
+      {!loading && (
+        <div style={{ marginTop: 28 }}>
+          <h2 style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.65rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 14 }}>
+            Upcoming Events
+          </h2>
+          {upcomingEvents.length === 0 ? (
+            <div className="empty-state" style={{ padding: '24px 16px' }}>
+              <CalendarDays size={36} style={{ opacity: 0.4 }} />
+              <p style={{ margin: '8px 0 0', color: 'var(--muted)', fontSize: '0.9rem' }}>No upcoming events.</p>
+            </div>
+          ) : (
+            upcomingEvents.map((e) => (
+              <EventTicket key={e.id} event={e} user={user} tally={tallies[e.id]} onRsvp={onRsvp} onSelect={() => setSelected(e)} />
+            ))
+          )}
+        </div>
       )}
 
-      {!loading && viewMode === 'list' && events.map((e) => {
-        const mine = e.rsvps?.[user?.id]
-        const going = Object.values(e.rsvps || {}).filter((s) => s === 'going').length
-        return (
-          <div className="event-ticket" key={e.id} onClick={() => setSelected(e)}>
-            <div className="event-stub">
-              <b>{monthDay(e.starts_at).day}</b>
-              <span>{monthDay(e.starts_at).month}</span>
-            </div>
-            <div className="event-body">
-              <h3>{e.title}</h3>
-              <div className="ev-meta">
-                <span><Clock size={14} /> {fmtDateTime(e.starts_at)}</span>
-                <span><MapPin size={14} /> {e.location}</span>
-                <span><Users size={14} /> {going} going</span>
-                <span><QrCode size={14} /> {tallies[e.id] || 0} attended</span>
-                {Number(e.fee_amount) > 0 && (
-                  <span className="chip chip--gold"><HandCoins size={12} /> ₱{fmtPeso(e.fee_amount)}</span>
-                )}
-              </div>
-              <p className="event-desc">{e.description}</p>
-            </div>
-            <div className="event-side">
-              {mine === 'going' ? (
-                <button
-                  className="btn btn--ghost btn--sm"
-                  onClick={(ev) => {
-                    ev.stopPropagation()
-                    onRsvp(e.id, 'none')
-                  }}
-                >
-                  <X size={14} /> Cancel RSVP
-                </button>
-              ) : (
-                <button
-                  className="btn btn--primary btn--sm"
-                  onClick={(ev) => {
-                    ev.stopPropagation()
-                    onRsvp(e.id, 'going')
-                  }}
-                >
-                  <Check size={14} /> Mark as going
-                </button>
-              )}
-              <span className="chip">{new Date(e.starts_at) < Date.now() ? 'happening now / past' : 'upcoming'}</span>
-            </div>
-          </div>
-        )
-      })}
+      {!loading && pastEvents.length > 0 && (
+        <div style={{ marginTop: 28 }}>
+          <h2 style={{ fontFamily: 'var(--f-ocr)', fontSize: '0.65rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 14 }}>
+            Past Events
+          </h2>
+          {pastEvents.map((e) => (
+            <EventTicket key={e.id} event={e} user={user} tally={tallies[e.id]} onRsvp={onRsvp} onSelect={() => setSelected(e)} />
+          ))}
+        </div>
+      )}
 
       {dayModal.open && (
         <DayModal
           date={dayModal.date}
           events={dayModal.events}
+          canCreate={canCreate}
           onClose={() => setDayModal({ open: false, date: null, events: [] })}
           onSelectEvent={(ev) => {
             setDayModal({ open: false, date: null, events: [] })
             setSelected(ev)
+          }}
+          onCreateOnDay={(date) => {
+            setDayModal({ open: false, date: null, events: [] })
+            setModal(true)
           }}
         />
       )}
@@ -227,7 +197,45 @@ export default function Events() {
   )
 }
 
-function CalendarView({ currentMonth, events, onPrevMonth, onNextMonth, onDayClick }) {
+function EventTicket({ event: e, user, tally, onRsvp, onSelect }) {
+  const mine = e.rsvps?.[user?.id]
+  const going = Object.values(e.rsvps || {}).filter((s) => s === 'going').length
+  return (
+    <div className="event-ticket" onClick={onSelect}>
+      <div className="event-stub">
+        <b>{monthDay(e.starts_at).day}</b>
+        <span>{monthDay(e.starts_at).month}</span>
+      </div>
+      <div className="event-body">
+        <h3>{e.title}</h3>
+        <div className="ev-meta">
+          <span><Clock size={14} /> {fmtDateTime(e.starts_at)}</span>
+          <span><MapPin size={14} /> {e.location}</span>
+          <span><Users size={14} /> {going} going</span>
+          <span><QrCode size={14} /> {tally || 0} attended</span>
+          {Number(e.fee_amount) > 0 && (
+            <span className="chip chip--gold"><HandCoins size={12} /> ₱{fmtPeso(e.fee_amount)}</span>
+          )}
+        </div>
+        <p className="event-desc">{e.description}</p>
+      </div>
+      <div className="event-side">
+        {mine === 'going' ? (
+          <button className="btn btn--ghost btn--sm" onClick={(ev) => { ev.stopPropagation(); onRsvp(e.id, 'none') }}>
+            <X size={14} /> Cancel RSVP
+          </button>
+        ) : (
+          <button className="btn btn--primary btn--sm" onClick={(ev) => { ev.stopPropagation(); onRsvp(e.id, 'going') }}>
+            <Check size={14} /> Mark as going
+          </button>
+        )}
+        <span className="chip">{new Date(e.starts_at) < Date.now() ? 'happening now / past' : 'upcoming'}</span>
+      </div>
+    </div>
+  )
+}
+
+function CalendarGrid({ currentMonth, events, onDayClick }) {
   const today = startOfDay(new Date())
   const year = currentMonth.getFullYear()
   const month = currentMonth.getMonth()
@@ -257,36 +265,25 @@ function CalendarView({ currentMonth, events, onPrevMonth, onNextMonth, onDayCli
   }
 
   return (
-    <div className="cal-wrap">
-      <div className="cal-nav">
-        <button className="btn btn--ghost btn--sm" onClick={onPrevMonth}>
-          <ChevronLeft size={18} />
-        </button>
-        <span className="cal-nav-label">{formatMonthYear(currentMonth)}</span>
-        <button className="btn btn--ghost btn--sm" onClick={onNextMonth}>
-          <ChevronRight size={18} />
-        </button>
-      </div>
-      <div className="cal-grid">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-          <div className="cal-dow" key={d}>{d}</div>
-        ))}
-        {cells.map((c, i) => (
-          <div
-            key={i}
-            className={`cal-day${c.dim ? ' cal-day--dim' : ''}${c.today ? ' cal-day--today' : ''}${c.hasEvent ? ' cal-day--has-event' : ''}`}
-            onClick={() => !c.dim && onDayClick(c.date)}
-          >
-            <span className="cal-day-num">{c.num}</span>
-            {c.hasEvent && <span className="cal-day-dot" />}
-          </div>
-        ))}
-      </div>
+    <div className="cal-grid">
+      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+        <div className="cal-dow" key={d}>{d}</div>
+      ))}
+      {cells.map((c, i) => (
+        <div
+          key={i}
+          className={`cal-day${c.dim ? ' cal-day--dim' : ''}${c.today ? ' cal-day--today' : ''}${c.hasEvent ? ' cal-day--has-event' : ''}`}
+          onClick={() => !c.dim && onDayClick(c.date)}
+        >
+          <span className="cal-day-num">{c.num}</span>
+          {c.hasEvent && <span className="cal-day-dot" />}
+        </div>
+      ))}
     </div>
   )
 }
 
-function DayModal({ date, events, onClose, onSelectEvent }) {
+function DayModal({ date, events, canCreate, onClose, onSelectEvent, onCreateOnDay }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
@@ -300,6 +297,11 @@ function DayModal({ date, events, onClose, onSelectEvent }) {
           <div className="day-modal-empty">
             <CalendarDays size={32} style={{ marginBottom: 8, opacity: 0.5 }} />
             <p>No activities on this day.</p>
+            {canCreate && (
+              <button className="btn btn--primary btn--sm" style={{ marginTop: 10 }} onClick={() => onCreateOnDay(date)}>
+                <Plus size={14} /> Add activity
+              </button>
+            )}
           </div>
         ) : (
           <div className="day-modal-list">
@@ -322,6 +324,11 @@ function DayModal({ date, events, onClose, onSelectEvent }) {
                 </div>
               )
             })}
+            {canCreate && (
+              <button className="btn btn--ghost btn--sm" style={{ alignSelf: 'flex-start', marginTop: 6 }} onClick={() => onCreateOnDay(date)}>
+                <Plus size={14} /> Add another
+              </button>
+            )}
           </div>
         )}
       </div>
