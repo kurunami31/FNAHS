@@ -279,12 +279,21 @@ export function offlineRead(method, supImpl, demoImpl, mirror) {
 export function offlineWrite(method, supImpl, demoImpl, opts = {}) {
   if (!SUPABASE_ENABLED || !supabase) return demoImpl
   registerSync(method, supImpl)
+  const timeout = opts.timeout || 60000
   return async (...args) => {
     try {
-      const r = await withTimeout(supImpl(...args), method)
+      const r = await withTimeout(supImpl(...args), method, timeout)
       setOnline(true)
       return r
     } catch (e) {
+      // Single retry before falling back to offline queue
+      try {
+        const r = await withTimeout(supImpl(...args), method, timeout)
+        setOnline(true)
+        return r
+      } catch (e2) {
+        /* fall through to offline queue */
+      }
       if (isOfflineError(e)) {
         setOnline(false)
         const local = await demoImpl(...args)

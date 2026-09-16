@@ -1855,7 +1855,7 @@ createEvent: offlineWrite('createEvent', async (ev) => {
         const { data, error } = await supabase.rpc('scan_attendance', { p_event: eventId, p_user: userId })
         if (error) throw error
         return data || 'in'
-      }, demoMarkAttendance),
+      }, demoMarkAttendance, { timeout: 120000 }),
 
   removeAttendance: offlineWrite('removeAttendance', async (eventId, userId) => {
         const { error } = await supabase.from('attendance').delete().eq('event_id', eventId).eq('user_id', userId)
@@ -1863,7 +1863,7 @@ createEvent: offlineWrite('createEvent', async (ev) => {
       }, demoRemoveAttendance),
 
   /* manual scan: officer chooses time-in or time-out explicitly */
-  markAttendanceManual: SUPABASE_ENABLED
+  markAttendanceManual: offlineWrite('markAttendanceManual', SUPABASE_ENABLED
     ? async (eventId, userId, scanType) => {
         const { data, error } = await supabase.rpc('scan_attendance_manual', { p_event: eventId, p_user: userId, p_scan_type: scanType })
         if (error) {
@@ -1903,7 +1903,7 @@ createEvent: offlineWrite('createEvent', async (ev) => {
         }
         saveDb(db)
         return scanType === 'time_out' ? 'out' : 'in'
-      },
+      }, { timeout: 120000 }),
 
   updateEventLocks: SUPABASE_ENABLED
     ? async (eventId, patch) => {
