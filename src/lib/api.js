@@ -1094,13 +1094,6 @@ export const api = {
       const session = data?.session
       if (!session?.user) return { user: null }
       try {
-        // An aal1 session left behind by an abandoned MFA sign-in must not
-        // restore as a login — sign out so the challenge step runs again.
-        const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-        if (aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2') {
-          await supabase.auth.signOut()
-          return { user: null }
-        }
         const profile = await api.getProfile(session.user.id)
         if (!profile) throw new Error('profile not found')
         const user = { ...profile, id: session.user.id, email: profile.email || session.user.email }
