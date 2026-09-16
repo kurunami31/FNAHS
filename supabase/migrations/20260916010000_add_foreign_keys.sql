@@ -1,6 +1,18 @@
 -- Add all missing foreign key constraints (PostgREST needs these for nested selects)
--- Safe to run multiple times: each block checks if the constraint already exists.
+-- First clean up orphaned rows, then add constraints.
 
+-- Clean orphans (tables populated but parents missing)
+DELETE FROM public.post_likes WHERE post_id NOT IN (SELECT id FROM public.posts);
+DELETE FROM public.comments WHERE post_id NOT IN (SELECT id FROM public.posts);
+DELETE FROM public.poll_votes WHERE option_id NOT IN (SELECT id FROM public.poll_options);
+DELETE FROM public.poll_options WHERE poll_id NOT IN (SELECT id FROM public.event_polls);
+DELETE FROM public.class_attendance WHERE session_id NOT IN (SELECT id FROM public.class_sessions);
+DELETE FROM public.class_sessions WHERE subject_id NOT IN (SELECT id FROM public.faculty_subjects);
+DELETE FROM public.clearance_rows WHERE form_id NOT IN (SELECT id FROM public.clearance_forms);
+DELETE FROM public.event_payments WHERE event_id NOT IN (SELECT id FROM public.events);
+DELETE FROM public.event_polls WHERE event_id NOT IN (SELECT id FROM public.events);
+
+-- Profiles FK (to auth.users — already created by schema, skip if exists)
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'posts_user_id_fkey') THEN
     ALTER TABLE public.posts ADD CONSTRAINT posts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
