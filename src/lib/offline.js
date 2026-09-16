@@ -233,7 +233,7 @@ export function clearSessionCache() {
 // call does not settle in time it rejects with a "timed out" error, which
 // isOfflineError() treats as an offline condition (fall through to the demo
 // twin / write queue) instead of leaving spinners stuck.
-function withTimeout(p, method, ms = 60000) {
+function withTimeout(p, method, ms = 120000) {
   return new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error(`${method} timed out`)), ms)
     p.then(
