@@ -25,20 +25,17 @@ DO $$ DECLARE r RECORD; BEGIN
   END LOOP;
 END $$;
 
--- Step 2: Null out references to missing profiles (safe columns only)
+-- Step 2: Null out ONLY nullable references to missing profiles
 UPDATE public.events SET created_by = NULL WHERE created_by IS NOT NULL AND created_by NOT IN (SELECT id FROM public.profiles);
 UPDATE public.announcements SET author_id = NULL WHERE author_id IS NOT NULL AND author_id NOT IN (SELECT id FROM public.profiles);
 UPDATE public.audit_logs SET actor_id = NULL WHERE actor_id IS NOT NULL AND actor_id NOT IN (SELECT id FROM public.profiles);
 UPDATE public.app_settings SET updated_by = NULL WHERE updated_by IS NOT NULL AND updated_by NOT IN (SELECT id FROM public.profiles);
-UPDATE public.clearance_forms SET created_by = NULL WHERE created_by IS NOT NULL AND created_by NOT IN (SELECT id FROM public.profiles);
-UPDATE public.clearance_rows SET recorded_by = NULL WHERE recorded_by IS NOT NULL AND recorded_by NOT IN (SELECT id FROM public.profiles);
-UPDATE public.clearance_rows SET created_by = NULL WHERE created_by IS NOT NULL AND created_by NOT IN (SELECT id FROM public.profiles);
-UPDATE public.clearance_rows SET updated_by = NULL WHERE updated_by IS NOT NULL AND updated_by NOT IN (SELECT id FROM public.profiles);
 UPDATE public.fee_payments SET recorded_by = NULL WHERE recorded_by IS NOT NULL AND recorded_by NOT IN (SELECT id FROM public.profiles);
 UPDATE public.event_payments SET recorded_by = NULL WHERE recorded_by IS NOT NULL AND recorded_by NOT IN (SELECT id FROM public.profiles);
 UPDATE public.report_connectors SET updated_by = NULL WHERE updated_by IS NOT NULL AND updated_by NOT IN (SELECT id FROM public.profiles);
-UPDATE public.class_sessions SET faculty_id = NULL WHERE faculty_id IS NOT NULL AND faculty_id NOT IN (SELECT id FROM public.profiles);
-UPDATE public.faculty_subjects SET faculty_id = NULL WHERE faculty_id IS NOT NULL AND faculty_id NOT IN (SELECT id FROM public.profiles);
+UPDATE public.clearance_rows SET recorded_by = NULL WHERE recorded_by IS NOT NULL AND recorded_by NOT IN (SELECT id FROM public.profiles);
+UPDATE public.clearance_rows SET created_by = NULL WHERE created_by IS NOT NULL AND created_by NOT IN (SELECT id FROM public.profiles);
+UPDATE public.clearance_rows SET updated_by = NULL WHERE updated_by IS NOT NULL AND updated_by NOT IN (SELECT id FROM public.profiles);
 
 -- Step 3: Add FK constraints
 -- Table-to-table FKs (data is clean, add normally)
@@ -68,6 +65,7 @@ ALTER TABLE public.class_attendance ADD CONSTRAINT class_attendance_user_id_fkey
 ALTER TABLE public.fee_payments ADD CONSTRAINT fee_payments_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.profiles(id) ON DELETE CASCADE NOT VALID;
 ALTER TABLE public.event_payments ADD CONSTRAINT event_payments_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.profiles(id) ON DELETE CASCADE NOT VALID;
 ALTER TABLE public.clearance_forms ADD CONSTRAINT clearance_forms_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.profiles(id) ON DELETE CASCADE NOT VALID;
+ALTER TABLE public.clearance_forms ADD CONSTRAINT clearance_forms_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON DELETE SET NULL NOT VALID;
 ALTER TABLE public.faculty_subjects ADD CONSTRAINT faculty_subjects_faculty_id_fkey FOREIGN KEY (faculty_id) REFERENCES public.profiles(id) ON DELETE CASCADE NOT VALID;
 ALTER TABLE public.class_sessions ADD CONSTRAINT class_sessions_faculty_id_fkey FOREIGN KEY (faculty_id) REFERENCES public.profiles(id) ON DELETE CASCADE NOT VALID;
 ALTER TABLE public.poll_votes ADD CONSTRAINT poll_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE NOT VALID;
