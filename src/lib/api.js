@@ -1085,6 +1085,16 @@ export const api = {
       },
 
   /* auth */
+  async migrateOldProfile() {
+    if (!SUPABASE_ENABLED) return
+    try {
+      const { error } = await supabase.rpc('migrate_old_profile')
+      if (error) console.warn('migrateOldProfile:', error.message)
+    } catch (e) {
+      console.warn('migrateOldProfile failed:', e)
+    }
+  },
+
   getSession() {
     if (!SUPABASE_ENABLED) {
       const id = demoCurrentUserId()

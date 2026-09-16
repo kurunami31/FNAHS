@@ -112,6 +112,7 @@ export function AppProvider({ children }) {
       const res = await api.signIn(email, password)
       if (res?.mfa) return res
       setUser(res.user)
+      api.migrateOldProfile().catch(() => {})
       return res.user
     },
     []
@@ -125,7 +126,10 @@ export function AppProvider({ children }) {
 
   const signup = useCallback(async (name, email, password, role) => {
     const res = await api.signUp(name, email, password, role)
-    if (!res.needsConfirmation) setUser(res.user)
+    if (!res.needsConfirmation) {
+      setUser(res.user)
+      api.migrateOldProfile().catch(() => {})
+    }
     return res
   }, [])
 
