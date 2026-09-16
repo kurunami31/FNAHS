@@ -15,6 +15,8 @@ const LS_SESSION = 'fnahs-session-cache'
 
 let online = typeof navigator !== 'undefined' ? navigator.onLine : true
 const listeners = new Set()
+let consecutiveFailures = 0
+const OFFLINE_THRESHOLD = 3
 
 function emit() {
   const payload = { online, pending: queueCount() }
@@ -22,9 +24,16 @@ function emit() {
 }
 
 function setOnline(v) {
-  if (online === v) return
-  online = v
-  emit()
+  if (v) {
+    consecutiveFailures = 0
+    if (!online) { online = true; emit() }
+  } else {
+    consecutiveFailures++
+    if (consecutiveFailures >= OFFLINE_THRESHOLD && online) {
+      online = false
+      emit()
+    }
+  }
 }
 
 /** subscribe to connectivity/pending-count changes — returns unsubscribe */
@@ -45,10 +54,13 @@ export function initOffline() {
     emit()
   })
   window.addEventListener('online', () => {
-    setOnline(true)
+    consecutiveFailures = 0
+    if (!online) { online = true; emit() }
     flushQueue()
   })
-  window.addEventListener('offline', () => setOnline(false))
+  window.addEventListener('offline', () => {
+    if (online) { online = false; emit() }
+  })
 }
 
 /** network-failure detection — real errors (RLS, constraints) rethrow */
@@ -221,7 +233,7 @@ export function clearSessionCache() {
 // call does not settle in time it rejects with a "timed out" error, which
 // isOfflineError() treats as an offline condition (fall through to the demo
 // twin / write queue) instead of leaving spinners stuck.
-function withTimeout(p, method, ms = 45000) {
+function withTimeout(p, method, ms = 60000) {
   return new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error(`${method} timed out`)), ms)
     p.then(
