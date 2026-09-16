@@ -17,8 +17,7 @@ DO $$ DECLARE r RECORD; BEGIN
       'class_attendance_session_id_fkey','class_attendance_user_id_fkey',
       'notifications_user_id_fkey','chat_messages_user_id_fkey',
       'announcements_author_id_fkey','app_settings_updated_by_fkey',
-      'event_polls_event_id_fkey','poll_options_poll_id_fkey','poll_votes_option_id_fkey','poll_votes_user_id_fkey',
-      'report_connectors_updated_by_fkey'
+      'event_polls_event_id_fkey','poll_options_poll_id_fkey','poll_votes_option_id_fkey','poll_votes_user_id_fkey'
     )
   LOOP
     EXECUTE 'ALTER TABLE ' || r.tbl || ' DROP CONSTRAINT IF EXISTS ' || r.conname;
@@ -32,7 +31,6 @@ UPDATE public.audit_logs SET actor_id = NULL WHERE actor_id IS NOT NULL AND acto
 UPDATE public.app_settings SET updated_by = NULL WHERE updated_by IS NOT NULL AND updated_by NOT IN (SELECT id FROM public.profiles);
 UPDATE public.fee_payments SET recorded_by = NULL WHERE recorded_by IS NOT NULL AND recorded_by NOT IN (SELECT id FROM public.profiles);
 UPDATE public.event_payments SET recorded_by = NULL WHERE recorded_by IS NOT NULL AND recorded_by NOT IN (SELECT id FROM public.profiles);
-UPDATE public.report_connectors SET updated_by = NULL WHERE updated_by IS NOT NULL AND updated_by NOT IN (SELECT id FROM public.profiles);
 UPDATE public.clearance_rows SET recorded_by = NULL WHERE recorded_by IS NOT NULL AND recorded_by NOT IN (SELECT id FROM public.profiles);
 UPDATE public.clearance_rows SET created_by = NULL WHERE created_by IS NOT NULL AND created_by NOT IN (SELECT id FROM public.profiles);
 UPDATE public.clearance_rows SET updated_by = NULL WHERE updated_by IS NOT NULL AND updated_by NOT IN (SELECT id FROM public.profiles);
@@ -80,7 +78,6 @@ ALTER TABLE public.clearance_forms ADD CONSTRAINT clearance_forms_created_by_fke
 ALTER TABLE public.audit_logs ADD CONSTRAINT audit_logs_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES public.profiles(id) ON DELETE SET NULL NOT VALID;
 ALTER TABLE public.announcements ADD CONSTRAINT announcements_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.profiles(id) ON DELETE SET NULL NOT VALID;
 ALTER TABLE public.app_settings ADD CONSTRAINT app_settings_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.profiles(id) ON DELETE SET NULL NOT VALID;
-ALTER TABLE public.report_connectors ADD CONSTRAINT report_connectors_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.profiles(id) ON DELETE SET NULL NOT VALID;
 
 -- Force PostgREST schema cache reload
 SELECT pg_notify('pgrst', 'reload schema');
