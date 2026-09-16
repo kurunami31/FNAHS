@@ -1597,9 +1597,21 @@ html[data-theme='dark'] .id-card {
   color: var(--muted);
   margin-bottom: 6px;
 }
-.clearance-scan-history button {
-  display: block;
-  width: 100%;
+.clearance-scan-history-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 210px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.clearance-scan-history-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.clearance-scan-history-btn {
+  flex: 1;
+  min-width: 0;
   text-align: left;
   background: transparent;
   border: none;
@@ -1609,8 +1621,30 @@ html[data-theme='dark'] .id-card {
   font-size: 0.85rem;
   color: var(--ink);
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.clearance-scan-history button:hover { background: var(--accent-glow-soft); }
+.clearance-scan-history-btn:hover { background: var(--accent-glow-soft); }
+.clearance-scan-history-note { color: var(--muted); font-style: italic; }
+.clearance-scan-history-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  padding: 4px 0;
+}
+.clearance-scan-history-note-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  font: inherit;
+  font-size: 0.82rem;
+  background: var(--bg);
+  color: var(--ink);
+}
 .form-error {
   background: color-mix(in srgb, var(--danger) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);

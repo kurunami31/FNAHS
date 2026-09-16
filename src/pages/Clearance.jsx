@@ -71,14 +71,15 @@ export default function Clearance() {
       const raw =
         localStorage.getItem('fnahs-clearance-last-scans') || localStorage.getItem('fnahs-clearance-last-scan')
       const val = JSON.parse(raw || '[]')
-      // migrate the old single-scan object format into the list
-      if (Array.isArray(val)) return val.slice(0, 5)
+      if (Array.isArray(val)) return val
       if (val && val.id) return [val]
       return []
     } catch {
       return []
     }
   })
+  const [editingScanId, setEditingScanId] = useState(null)
+  const [scanNoteDraft, setScanNoteDraft] = useState('')
 
   const isOfficer = can(user, 'clearance.scan')
   const canEdit = can(user, 'clearance.edit')
@@ -211,9 +212,9 @@ export default function Clearance() {
     try {
       const p = await api.getProfile(userId)
       if (!p) throw new Error('No member found for that ID')
-      const record = { id: p.id, id_no: p.id_no || null, name: p.full_name || null, at: Date.now() }
+      const record = { id: p.id, id_no: p.id_no || null, name: p.full_name || null, at: Date.now(), note: '' }
       setLastScanned((prev) => {
-        const next = [record, ...(prev || []).filter((s) => s.id !== record.id)].slice(0, 5)
+        const next = [record, ...(prev || []).filter((s) => s.id !== record.id)].slice(0, 100)
         try {
           localStorage.setItem('fnahs-clearance-last-scans', JSON.stringify(next))
         } catch {
@@ -499,13 +500,75 @@ export default function Clearance() {
               Scan a student's ID QR to keep a quick list of who you've checked — it stays here for this device.
             </p>
           ) : (
-            lastScanned.map((s) => (
-              <button key={s.id} type="button" title="Reopen this student's clearance" onClick={() => reopenScanned(s)}>
-                <b>ID {s.id_no || s.id?.slice(0, 8)}</b>
-                {s.name ? ` — ${s.name}` : ''}
-                {s.at ? ` · ${timeAgo(s.at)}` : ''}
-              </button>
-            ))
+            <div className="clearance-scan-history-list">
+              {lastScanned.map((s) => (
+                <div key={s.id} className="clearance-scan-history-item">
+                  {editingScanId === s.id ? (
+                    <div className="clearance-scan-history-edit">
+                      <input
+                        autoFocus
+                        className="clearance-scan-history-note-input"
+                        value={scanNoteDraft}
+                        onChange={(e) => setScanNoteDraft(e.target.value)}
+                        placeholder="Add a note…"
+                        maxLength={100}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            setLastScanned((prev) => {
+                              const next = prev.map((x) => x.id === s.id ? { ...x, note: scanNoteDraft.trim() } : x)
+                              try { localStorage.setItem('fnahs-clearance-last-scans', JSON.stringify(next)) } catch {}
+                              return next
+                            })
+                            setEditingScanId(null)
+                          }
+                          if (e.key === 'Escape') setEditingScanId(null)
+                        }}
+                      />
+                      <button
+                        className="btn btn--tiny btn--primary"
+                        onClick={() => {
+                          setLastScanned((prev) => {
+                            const next = prev.map((x) => x.id === s.id ? { ...x, note: scanNoteDraft.trim() } : x)
+                            try { localStorage.setItem('fnahs-clearance-last-scans', JSON.stringify(next)) } catch {}
+                            return next
+                          })
+                          setEditingScanId(null)
+                        }}
+                      >
+                        <Check size={11} />
+                      </button>
+                      <button className="btn btn--tiny btn--ghost" onClick={() => setEditingScanId(null)}>
+                        <X size={11} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        title="Reopen this student's clearance"
+                        className="clearance-scan-history-btn"
+                        onClick={() => reopenScanned(s)}
+                      >
+                        <b>ID {s.id_no || s.id?.slice(0, 8)}</b>
+                        {s.name ? ` — ${s.name}` : ''}
+                        {s.at ? ` · ${timeAgo(s.at)}` : ''}
+                        {s.note ? <span className="clearance-scan-history-note"> — {s.note}</span> : ''}
+                      </button>
+                      <button
+                        className="btn btn--tiny btn--ghost"
+                        title={s.note ? 'Edit note' : 'Add note'}
+                        onClick={() => {
+                          setEditingScanId(s.id)
+                          setScanNoteDraft(s.note || '')
+                        }}
+                      >
+                        <Pencil size={11} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </section>
