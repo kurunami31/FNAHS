@@ -9,3 +9,12 @@ dist/
 supabase/.temp/
 
 Reports/
+
+_dump.json
+_rest-dump.mjs
+_restore-data.mjs
+_verify.mjs
+_critical-dump.mjs
+_dump-schema.mjs
+_dump-schema2.mjs
+_gen-sql.mjs
