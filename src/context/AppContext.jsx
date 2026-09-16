@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
-import { onStatus, flushQueue } from '../lib/offline'
+import { onStatus, flushQueue, restoreSession } from '../lib/offline'
 import { ORG_FULL } from '../lib/mock'
 
 const AppContext = createContext(null)
@@ -86,14 +86,25 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     let alive = true
-    api
-      .getSession()
-      .then(({ user: u }) => alive && setUser(u))
-      .catch(() => {})
-      .finally(() => alive && setAuthLoading(false))
-    return () => {
-      alive = false
-    }
+    // Restore cached session instantly so the UI renders immediately.
+    // The real session is validated in the background — if invalid the
+    // user will be bounced to the login screen after validation finishes.
+    restoreSession()
+      .then((cached) => {
+        if (!alive) return
+        if (cached) setUser(cached)
+        setAuthLoading(false)
+        // Now validate in background — no UI blocking.
+        api.getSession().then(({ user: u }) => {
+          if (!alive) return
+          if (u) setUser(u)
+        }).catch(() => {})
+      })
+      .catch(() => {
+        if (!alive) return
+        setAuthLoading(false)
+      })
+    return () => { alive = false }
   }, [])
 
   const login = useCallback(
