@@ -61,12 +61,16 @@ FORMATTING RULES — IMPORTANT:
 - Never use markdown syntax: no asterisks, no bold, no italics, no bullet dashes, no headers, no backticks.
 - For lists, use numbered steps written as plain sentences ("1. ...", "2. ...") or short lines separated by newlines.
 - Do not use arrows (-> or →) or emoji unless asked.
-- Keep answers focused and teach clearly rather than being exhaustive. Offer to go deeper on any part.`
+- Keep answers focused and teach clearly rather than being exhaustive. Lead with the answer, then explain why. Offer to go deeper on any part.`
 
 // The chat bubble renders plain text, but the model still emits markdown
 // emphasis despite the prompt. Strip it here rather than showing literal
 // asterisks/backticks to the student. Horizontal runs are collapsed; line
 // breaks are preserved so paragraphs and numbered steps keep their shape.
+// Soft ceiling on reply length. Above this we trim at a sentence boundary and
+// tell the student the answer was shortened, rather than stopping mid-word.
+const MAX_REPLY_CHARS = 8000
+
 const stripMarkdown = (s: string) =>
   s
     .replace(/^\s{0,3}#{1,6}\s+/gm, '')
@@ -164,7 +168,9 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model,
         messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...clean],
-        max_tokens: 700,
+        // 700 tokens truncated mid-sentence on clinical explanations; ~2000
+        // tokens lets a full answer finish before the char cap trims the tail
+        max_tokens: 2000,
         // low temperature keeps clinical facts stable across retries instead of
         // sampling plausible-sounding but different answers each time
         temperature: 0.2,
@@ -178,7 +184,17 @@ Deno.serve(async (req) => {
     }
 
     const out = await upstream.json()
-    const reply = stripMarkdown(out.choices?.[0]?.message?.content || '').slice(0, 2000) || '…'
+    const raw = out.choices?.[0]?.message?.content || ''
+    const finish = out.choices?.[0]?.finish_reason
+    // keep the visible ceiling generous, but never end mid-sentence
+    let reply = stripMarkdown(raw)
+    if (reply.length > MAX_REPLY_CHARS) {
+      const cut = reply.slice(0, MAX_REPLY_CHARS)
+      const lastStop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('\n'))
+      reply = lastStop > MAX_REPLY_CHARS * 0.5 ? cut.slice(0, lastStop + 1).trim() : cut
+    }
+    if (!reply) reply = '…'
+    if (finish === 'length') reply += '\n\n(Answer shortened — ask me to continue for the rest.)'
 
     return json({ reply }, 200, origin)
   } catch (err) {
