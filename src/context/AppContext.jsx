@@ -74,7 +74,12 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     refreshMaintenance()
-    const id = setInterval(refreshMaintenance, 60_000)
+    // 10 min is plenty for an admin-toggled flag, and hidden tabs don't need
+    // to poll at all — together this is ~10x less egress than a 60s tick.
+    const tick = () => {
+      if (document.visibilityState === 'visible') refreshMaintenance()
+    }
+    const id = setInterval(tick, 600_000)
     return () => clearInterval(id)
   }, [refreshMaintenance])
 
@@ -154,6 +159,9 @@ export function AppProvider({ children }) {
       // never run the guard on the password-reset page — a recovery session
       // hasn't been claimed yet, so the check would sign the user out mid-reset
       if (window.location.pathname === '/reset-password') return
+      // a background tab can't act on a sign-out anyway, and polling it burns
+      // egress; the visibilitychange listener below covers the real case
+      if (document.visibilityState !== 'visible') return
       try {
         const latest = await api.isLatestSession()
         if (!alive || latest) return
@@ -169,7 +177,7 @@ export function AppProvider({ children }) {
       if (document.visibilityState === 'visible') check()
     }
     document.addEventListener('visibilitychange', onVisible)
-    const t = setInterval(check, 30_000)
+    const t = setInterval(check, 300_000)
     return () => {
       alive = false
       document.removeEventListener('visibilitychange', onVisible)

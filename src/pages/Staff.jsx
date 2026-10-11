@@ -66,9 +66,14 @@ export default function Staff() {
     loadEvents()
   }, [loadEvents])
 
-  // Poll events every 30s so new events appear in the dropdown
+  // Poll events so new ones appear in the dropdown. 5 min + only while the tab
+  // is visible: this query returns every event with its RSVPs and their profile
+  // avatars, so a 30s tick dominated egress.
   useEffect(() => {
-    eventPollRef.current = setInterval(loadEvents, 30_000)
+    const tick = () => {
+      if (document.visibilityState === 'visible') loadEvents()
+    }
+    eventPollRef.current = setInterval(tick, 300_000)
     return () => clearInterval(eventPollRef.current)
   }, [loadEvents])
 

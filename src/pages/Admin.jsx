@@ -147,7 +147,10 @@ const [feeFilter, setFeeFilter] = useState('all')
       if (document.visibilityState === 'visible') refreshLive()
     }
     document.addEventListener('visibilitychange', onVisible)
-    const t = setInterval(refreshLive, 30000)
+    const tick = () => {
+      if (document.visibilityState === 'visible') refreshLive()
+    }
+    const t = setInterval(tick, 300000)
     return () => {
       document.removeEventListener('visibilitychange', onVisible)
       clearInterval(t)

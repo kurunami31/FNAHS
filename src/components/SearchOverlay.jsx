@@ -12,6 +12,8 @@ export default function SearchOverlay({ onClose }) {
   const isSuperAdmin = user?.role === 'superadmin'
   const [q, setQ] = useState('')
   const [results, setResults] = useState({ posts: [], members: [] })
+  const [ready, setReady] = useState(false)
+  const corpusRef = useRef({ posts: [], members: [] })
   const inputRef = useRef(null)
   const navigate = useNavigate()
 
@@ -19,41 +21,48 @@ export default function SearchOverlay({ onClose }) {
     inputRef.current?.focus()
   }, [])
 
+  // Pull the searchable corpus once when the overlay opens. Previously this ran
+  // on every keystroke, re-downloading the whole feed + directory per character.
+  useEffect(() => {
+    let alive = true
+    setReady(false)
+    Promise.all([
+      api.getPosts().catch(() => []),
+      canDirectory ? api.getMembers().catch(() => []) : Promise.resolve([]),
+      // Superadmins may also find faculty-flagged superadmin accounts
+      // (e.g. Lendell Kelly B. Ytac) that are hidden from the public directory.
+      canDirectory && isSuperAdmin ? api.getFaculty().catch(() => []) : Promise.resolve([]),
+    ]).then(([posts, members, faculty]) => {
+      if (!alive) return
+      const allMembers = [...members]
+      for (const f of faculty || []) {
+        if (!allMembers.some((m) => m.id === f.id)) allMembers.push(f)
+      }
+      corpusRef.current = { posts, members: allMembers }
+      setReady(true)
+    })
+    return () => {
+      alive = false
+    }
+  }, [canDirectory, isSuperAdmin])
+
+  // Filtering is pure client-side work against the cached corpus.
   useEffect(() => {
     const needle = q.trim().toLowerCase()
-    if (!needle) {
+    if (!needle || !ready) {
       setResults({ posts: [], members: [] })
       return
     }
-    let alive = true
-    const timer = setTimeout(() => {
-      Promise.all([
-        api.getPosts().catch(() => []),
-        canDirectory ? api.getMembers().catch(() => []) : Promise.resolve([]),
-        // Superadmins may also find faculty-flagged superadmin accounts
-        // (e.g. Lendell Kelly B. Ytac) that are hidden from the public directory.
-        canDirectory && isSuperAdmin ? api.getFaculty().catch(() => []) : Promise.resolve([]),
-      ]).then(([posts, members, faculty]) => {
-        if (!alive) return
-        const allMembers = [...members]
-        for (const f of faculty || []) {
-          if (!allMembers.some((m) => m.id === f.id)) allMembers.push(f)
-        }
-        setResults({
-          posts: posts
-            .filter((p) => p.content?.toLowerCase().includes(needle) || p.author?.full_name?.toLowerCase().includes(needle))
-            .slice(0, 4),
-          members: allMembers
-            .filter((m) => m.full_name?.toLowerCase().includes(needle) || m.program?.toLowerCase().includes(needle))
-            .slice(0, 4),
-        })
-      })
-    }, 250)
-    return () => {
-      alive = false
-      clearTimeout(timer)
-    }
-  }, [q, canDirectory, isSuperAdmin])
+    const { posts, members } = corpusRef.current
+    setResults({
+      posts: posts
+        .filter((p) => p.content?.toLowerCase().includes(needle) || p.author?.full_name?.toLowerCase().includes(needle))
+        .slice(0, 4),
+      members: members
+        .filter((m) => m.full_name?.toLowerCase().includes(needle) || m.program?.toLowerCase().includes(needle))
+        .slice(0, 4),
+    })
+  }, [q, ready])
 
   const go = (to) => {
     onClose()
