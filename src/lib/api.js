@@ -1000,6 +1000,26 @@ async function getFeeds() {
 
 /* ---------------- AI chat ---------------- */
 
+/* Emails can no longer be selected straight off profiles (column-level grants
+   keep them from plain students), so rosters fetch them separately through
+   get_member_emails(), which is gated server-side. If the caller isn't allowed,
+   the embed simply keeps no email instead of failing the whole query. */
+async function attachEmails(rows, idOf, apply) {
+  const ids = Array.from(new Set((rows || []).map(idOf).filter(Boolean)))
+  if (!ids.length) return rows
+  try {
+    const { data } = await supabase.rpc('get_member_emails', { p_ids: ids })
+    const map = new Map((data || []).map((x) => [x.id, x.email]))
+    for (const r of rows) {
+      const email = map.get(idOf(r))
+      if (email) apply(r, email)
+    }
+  } catch {
+    /* not permitted for this role — leave email absent */
+  }
+  return rows
+}
+
 async function aiChat({ messages, onChunk }) {
   if (!SUPABASE_ENABLED || !supabase) {
     const last = [...messages].reverse().find((m) => m.role === 'user')
@@ -1790,12 +1810,14 @@ createEvent: offlineWrite('createEvent', async (ev) => {
   getEventPayments: offlineRead('getEventPayments', async (eventId) => {
         let q = supabase
           .from('event_payments')
-          .select('*, profiles!member_id(full_name, id_no, program, year_level, section, email)')
+          .select('*, profiles!member_id(full_name, id_no, program, year_level, section)')
           .order('paid_at', { ascending: false })
         if (eventId) q = q.eq('event_id', eventId)
         const { data, error } = await q
         if (error) throw error
-        return data || []
+        return attachEmails(data || [], (r) => r.member_id, (r, addr) => {
+          if (r.profiles) r.profiles.email = addr
+        })
       }, async (eventId) => {
         const rows = (db.eventPayments || [])
           .filter((p) => !eventId || p.event_id === eventId)
@@ -1863,10 +1885,12 @@ createEvent: offlineWrite('createEvent', async (ev) => {
   getAttendance: offlineRead('getAttendance', async (eventId) => {
         const { data, error } = await supabase
           .from('attendance')
-          .select('*, profiles(full_name, program, year_level, section, email, id_no)')
+          .select('*, profiles(full_name, program, year_level, section, id_no)')
           .eq('event_id', eventId)
         if (error) throw error
-        return data || []
+        return attachEmails(data || [], (r) => r.user_id, (r, addr) => {
+          if (r.profiles) r.profiles.email = addr
+        })
       }, demoGetAttendance, (rows) => {
         for (const r of rows || []) {
           const ev = db.attendance[r.event_id] || (db.attendance[r.event_id] = {})
@@ -2027,11 +2051,13 @@ createEvent: offlineWrite('createEvent', async (ev) => {
   getSessionAttendance: offlineRead('getSessionAttendance', async (sessionId) => {
         const { data, error } = await supabase
           .from('class_attendance')
-          .select('*, profiles(full_name, program, year_level, section, email, id_no)')
+          .select('*, profiles(full_name, program, year_level, section, id_no)')
           .eq('session_id', sessionId)
           .order('scanned_at', { ascending: true })
         if (error) throw error
-        return data || []
+        return attachEmails(data || [], (r) => r.user_id, (r, addr) => {
+          if (r.profiles) r.profiles.email = addr
+        })
       }, async (sessionId) => demoGetSessionAttendance(sessionId), (rows) => {
         for (const r of rows || []) {
           const m = db.classAttendance[r.session_id] || (db.classAttendance[r.session_id] = {})
