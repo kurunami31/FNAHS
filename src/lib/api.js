@@ -1923,7 +1923,17 @@ createEvent: offlineWrite('createEvent', async (ev) => {
 
   /* ---------------- class attendance (faculty subjects & sessions) ---------------- */
   getMySubjects: offlineRead('getMySubjects', async () => {
-        const { data, error } = await supabase.from('faculty_subjects').select('*').order('created_at', { ascending: false })
+        // Scope to the signed-in faculty explicitly. RLS already enforces this,
+        // but the filter keeps the client correct on its own and avoids pulling
+        // other instructors' rows if the policy is ever missing.
+        const { data: { session } } = await supabase.auth.getSession()
+        const uid = session?.user?.id
+        if (!uid) return []
+        const { data, error } = await supabase
+          .from('faculty_subjects')
+          .select('*')
+          .eq('faculty_id', uid)
+          .order('created_at', { ascending: false })
         if (error) throw error
         return data || []
       }, demoGetMySubjects, (rows) => {
@@ -1967,9 +1977,14 @@ createEvent: offlineWrite('createEvent', async (ev) => {
       }, async (sessionId) => demoEndSession(sessionId)),
 
   getSessions: offlineRead('getSessions', async () => {
+        // Own sessions only — mirrors the class_sessions RLS policy.
+        const { data: { session } } = await supabase.auth.getSession()
+        const uid = session?.user?.id
+        if (!uid) return []
         const { data, error } = await supabase
           .from('class_sessions')
           .select('*, subject:subject_id(name), attendance_count:class_attendance(count)')
+          .eq('faculty_id', uid)
           .order('started_at', { ascending: false })
           .limit(60)
         if (error) throw error
