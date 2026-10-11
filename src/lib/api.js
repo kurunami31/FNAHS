@@ -1000,22 +1000,23 @@ async function getFeeds() {
 
 /* ---------------- AI chat ---------------- */
 
-/* Emails can no longer be selected straight off profiles (column-level grants
-   keep them from plain students), so rosters fetch them separately through
-   get_member_emails(), which is gated server-side. If the caller isn't allowed,
-   the embed simply keeps no email instead of failing the whole query. */
-async function attachEmails(rows, idOf, apply) {
+/* Emails and student ID numbers can no longer be selected straight off profiles
+   (column-level grants keep them from plain students), so rosters fetch them
+   separately through get_member_details(), which is gated server-side. If the
+   caller isn't allowed, the embed simply keeps no email/id_no instead of
+   failing the whole query. */
+async function attachMemberDetails(rows, idOf, apply) {
   const ids = Array.from(new Set((rows || []).map(idOf).filter(Boolean)))
   if (!ids.length) return rows
   try {
-    const { data } = await supabase.rpc('get_member_emails', { p_ids: ids })
-    const map = new Map((data || []).map((x) => [x.id, x.email]))
+    const { data } = await supabase.rpc('get_member_details', { p_ids: ids })
+    const map = new Map((data || []).map((x) => [x.id, x]))
     for (const r of rows) {
-      const email = map.get(idOf(r))
-      if (email) apply(r, email)
+      const d = map.get(idOf(r))
+      if (d) apply(r, d)
     }
   } catch {
-    /* not permitted for this role — leave email absent */
+    /* not permitted for this role — leave the protected fields absent */
   }
   return rows
 }
@@ -1318,7 +1319,7 @@ export const api = {
   getProfile: offlineRead('getProfile', async (id) => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at, email_changed_count')
+          .select('id, full_name, surname, first_name, middle_initial, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at, email_changed_count')
           .eq('id', id)
           .maybeSingle()
         if (error) {
@@ -1326,7 +1327,13 @@ export const api = {
           markDbError(error)
           return null
         }
-        return data
+        if (!data) return data
+        // id_no is column-protected; the RPC returns it for yourself or, for
+        // officers/faculty, for any member (CI clearance scanning).
+        const [withId] = await attachMemberDetails([data], (r) => r.id, (r, d) => {
+          if (d.id_no) r.id_no = d.id_no
+        })
+        return withId
       }, demoGetProfile, mirrorProfileInto),
 
   upsertProfile: offlineWrite('upsertProfile', async (p) => {
@@ -1348,7 +1355,7 @@ export const api = {
           .from('profiles')
           .update(patch)
           .eq('id', p.id)
-          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) {
           if (error.code === '23505')
@@ -1356,6 +1363,11 @@ export const api = {
           throw error
         }
         invalidateMembersCache()
+        if (data) {
+          await attachMemberDetails([data], (r) => r.id, (r, d) => {
+            if (d.id_no) r.id_no = d.id_no
+          })
+        }
         return data
       }, async (p) => {
         const clean = { ...p, full_name: composeFullName(p) || sanitizeText(p.full_name, 120), avatar_url: sanitizeUrl(p.avatar_url) }
@@ -1622,9 +1634,14 @@ export const api = {
           .from('profiles')
           .update(clean)
           .eq('id', id)
-          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, program, year_level, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) throw error
+        if (data) {
+          await attachMemberDetails([data], (r) => r.id, (r, d) => {
+            if (d.id_no) r.id_no = d.id_no
+          })
+        }
         return data
       }, async (id, patch) => {
         db.profiles[id] = { ...db.profiles[id], ...patch }
@@ -1810,13 +1827,16 @@ createEvent: offlineWrite('createEvent', async (ev) => {
   getEventPayments: offlineRead('getEventPayments', async (eventId) => {
         let q = supabase
           .from('event_payments')
-          .select('*, profiles!member_id(full_name, id_no, program, year_level, section)')
+          .select('*, profiles!member_id(full_name, program, year_level, section)')
           .order('paid_at', { ascending: false })
         if (eventId) q = q.eq('event_id', eventId)
         const { data, error } = await q
         if (error) throw error
-        return attachEmails(data || [], (r) => r.member_id, (r, addr) => {
-          if (r.profiles) r.profiles.email = addr
+        return attachMemberDetails(data || [], (r) => r.member_id, (r, d) => {
+          if (r.profiles) {
+            r.profiles.email = d.email
+            if (d.id_no) r.profiles.id_no = d.id_no
+          }
         })
       }, async (eventId) => {
         const rows = (db.eventPayments || [])
@@ -1885,11 +1905,14 @@ createEvent: offlineWrite('createEvent', async (ev) => {
   getAttendance: offlineRead('getAttendance', async (eventId) => {
         const { data, error } = await supabase
           .from('attendance')
-          .select('*, profiles(full_name, program, year_level, section, id_no)')
+          .select('*, profiles(full_name, program, year_level, section)')
           .eq('event_id', eventId)
         if (error) throw error
-        return attachEmails(data || [], (r) => r.user_id, (r, addr) => {
-          if (r.profiles) r.profiles.email = addr
+        return attachMemberDetails(data || [], (r) => r.user_id, (r, d) => {
+          if (r.profiles) {
+            r.profiles.email = d.email
+            if (d.id_no) r.profiles.id_no = d.id_no
+          }
         })
       }, demoGetAttendance, (rows) => {
         for (const r of rows || []) {
@@ -2051,12 +2074,15 @@ createEvent: offlineWrite('createEvent', async (ev) => {
   getSessionAttendance: offlineRead('getSessionAttendance', async (sessionId) => {
         const { data, error } = await supabase
           .from('class_attendance')
-          .select('*, profiles(full_name, program, year_level, section, id_no)')
+          .select('*, profiles(full_name, program, year_level, section)')
           .eq('session_id', sessionId)
           .order('scanned_at', { ascending: true })
         if (error) throw error
-        return attachEmails(data || [], (r) => r.user_id, (r, addr) => {
-          if (r.profiles) r.profiles.email = addr
+        return attachMemberDetails(data || [], (r) => r.user_id, (r, d) => {
+          if (r.profiles) {
+            r.profiles.email = d.email
+            if (d.id_no) r.profiles.id_no = d.id_no
+          }
         })
       }, async (sessionId) => demoGetSessionAttendance(sessionId), (rows) => {
         for (const r of rows || []) {
@@ -2312,12 +2338,14 @@ createEvent: offlineWrite('createEvent', async (ev) => {
   getFeePayments: offlineRead('getFeePayments', async (schoolYear) => {
         let q = supabase
           .from('fee_payments')
-          .select('*, profiles!member_id(full_name, program, year_level, email)')
+          .select('*, profiles!member_id(full_name, program, year_level)')
           .order('paid_at', { ascending: false })
         if (schoolYear) q = q.eq('school_year', schoolYear)
         const { data, error } = await q
         if (error) throw error
-        return data || []
+        return attachMemberDetails(data || [], (r) => r.member_id, (r, d) => {
+          if (r.profiles && d.email) r.profiles.email = d.email
+        })
       }, async (schoolYear) => {
         const rows = (db.feePayments || [])
           .filter((p) => !schoolYear || p.school_year === schoolYear)
