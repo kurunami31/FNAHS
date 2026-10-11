@@ -13,7 +13,7 @@ export default function ResetPassword() {
   // boot: figure out how we can establish a session
   //   1. implicit link already exchanged -> session exists
   //   2. ?token=...&email=... (OTP link) -> verifyOtp
-  //   3. neither -> manual 6-digit code entry
+  //   3. neither -> manual code entry
   const [phase, setPhase] = useState('boot') // boot | ready | code | mfa
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -105,7 +105,7 @@ export default function ResetPassword() {
         setVerifying(false)
         if (silentBoot) {
           setPhase('code')
-          setError(`The link could not be verified (${e.message}). Enter the 6-digit code from the email instead.`)
+          setError(`The link could not be verified (${e.message}). Enter the code from the email instead.`)
         } else {
           setError(e.message || 'That code did not work.')
         }
@@ -152,7 +152,7 @@ export default function ResetPassword() {
     e.preventDefault()
     setError('')
     if (!email.trim()) { setError('Enter your account email.'); return }
-    if (!code.trim()) { setError('Enter the 6-digit code from the email.'); return }
+    if (!code.trim()) { setError('Enter the code from the email.'); return }
     setVerifying(true)
     try {
       const { data, error } = await supabase.auth.verifyOtp({ type: 'recovery', email: email.trim(), token: code.trim().replace(/\s/g, '') })
@@ -229,7 +229,7 @@ export default function ResetPassword() {
             <p className="auth-sub">
               {phase === 'ready'
                 ? 'Choose a new password for your account.'
-                : 'Open the newest reset email and enter its 6-digit code below.'}
+                : 'Open the newest reset email and enter the code from it below.'}
             </p>
             <Ecg className="auth-ecg" />
 
@@ -266,11 +266,11 @@ export default function ResetPassword() {
                   <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@fnahs.edu.ph" autoComplete="email" />
                 </div>
                 <div className="field">
-                  <label>6-digit code</label>
+                  <label>Code from the email</label>
                   <input
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/[^\w]/g, ''))}
-                    placeholder="e.g. 482913"
+                    placeholder="the code from your email"
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     autoFocus
@@ -280,7 +280,7 @@ export default function ResetPassword() {
                   {verifying ? <Loader2 size={16} className="spin" /> : <KeyRound size={17} />} {verifying ? 'Verifying…' : 'Verify code'}
                 </button>
                 <p className="auth-note" style={{ marginTop: 10 }}>
-                  Tip: the newest email shows a 6-digit code near “Set new password”. Requesting a new email invalidates older codes.
+                  Tip: the newest email shows the code near “Set new password”. Requesting a new email invalidates older codes.
                 </p>
               </form>
             )}
