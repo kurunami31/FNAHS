@@ -41,9 +41,10 @@ npm run build      # production build
 
 1. `npx supabase init && npx supabase functions deploy florence-ai`
 2. Set the LLM provider key:
-   - **Groq** (recommended — fast, free tier): `npx supabase secrets set OPENAI_API_KEY=gsk_...` — a `gsk_` key is auto-routed to Groq with `llama-3.3-70b-versatile`.
+   - **Groq** (recommended — fast, free tier): `npx supabase secrets set OPENAI_API_KEY=gsk_...` — a `gsk_` key is auto-routed to Groq.
    - **OpenAI**: `npx supabase secrets set OPENAI_API_KEY=sk-...` (default model `gpt-4o-mini`).
    - Optional overrides: `OPENAI_BASE_URL` and `OPENAI_MODEL` for any other OpenAI-compatible API.
+   - **Always set `OPENAI_MODEL` explicitly.** Model availability varies per Groq account — `llama-3.3-70b-versatile` is not served to every key and returns `404` if you cannot access it. Check yours with `curl https://api.groq.com/openai/v1/models -H "Authorization: Bearer $KEY"`, then set e.g. `OPENAI_MODEL=openai/gpt-oss-120b`.
 3. Restrict CORS to your site (comma-separated): `npx supabase secrets set FLORENCE_ORIGINS=https://your-site.example`
 4. Until the function is deployed, the chat falls back to built-in demo replies so the UI always works.
 
