@@ -2,12 +2,11 @@
 //
 // Deploy:
 //   supabase functions deploy who-news
-//   supabase secrets set APITUBE_KEY=api_live_...          (APITube News API)
-//   supabase secrets set WHO_NEWS_ORIGINS=https://fnahs.vercel.app,http://localhost:5173
+//   supabase secrets set WHO_NEWS_ORIGINS=https://your-site.example   (comma-separated)
 //
-// Proxies the APITube News API (top headlines, health category) so the API key
-// never ships to the browser. Callers must be authenticated FNAHS users (JWT);
-// requests are rate-limited (bump_rate) and CORS is restricted to WHO_NEWS_ORIGINS.
+// Serves WHO's own public news feed (no API key, no third-party provider).
+// Callers must be authenticated FNAHS users (JWT); requests are rate-limited
+// (bump_rate) and CORS is restricted to WHO_NEWS_ORIGINS.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
@@ -22,6 +21,13 @@ const ALLOWED_ORIGINS = new Set(
     .map((s) => s.trim())
     .filter(Boolean)
 )
+
+// Vercel preview deployments get a fresh hostname per build.
+const PREVIEW_ORIGIN = /^https:\/\/fnahs-[a-z0-9]+-kurunami31s-projects\.vercel\.app$/
+const originAllowed = (origin: string) =>
+  ALLOWED_ORIGINS.has(origin) || PREVIEW_ORIGIN.test(origin)
+
+const FEED = 'https://www.who.int/rss-feeds/news-english.xml'
 
 const baseHeaders = (origin: string) => ({
   'Access-Control-Allow-Origin': origin || 'null',
@@ -39,6 +45,24 @@ const json = (body: unknown, status = 200, origin = '') =>
     headers: { ...baseHeaders(origin), 'Content-Type': 'application/json' },
   })
 
+const decode = (s: string) =>
+  s
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&amp;/g, '&')
+
+const strip = (s: string) => decode(String(s || '').replace(/<!\[CDATA\[|\]\]>/g, '')).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+
+const tag = (item: string, name: string) => {
+  const m = new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`).exec(item)
+  return m ? strip(m[1]) : ''
+}
+
 const domainOf = (url: string) => {
   try {
     return new URL(url).hostname.replace(/^www\./, '')
@@ -50,7 +74,7 @@ const domainOf = (url: string) => {
 Deno.serve(async (req) => {
   const origin = req.headers.get('Origin') || ''
   const browserRequest = origin !== ''
-  if (browserRequest && !ALLOWED_ORIGINS.has(origin)) {
+  if (browserRequest && !originAllowed(origin)) {
     return json({ error: 'origin not allowed' }, 403, origin)
   }
   if (req.method === 'OPTIONS') {
@@ -75,34 +99,32 @@ Deno.serve(async (req) => {
       return json({ error: 'rate limited — slow down' }, 429, origin)
     }
 
-    const apiKey = Deno.env.get('APITUBE_KEY')
-    if (!apiKey) {
-      return json({ error: 'APITUBE_KEY not set' }, 503, origin)
-    }
-
-    const upstream = await fetch(
-      'https://api.apitube.io/v1/news/top-headlines?category=health&language=en&per_page=12',
-      { headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(12000) }
-    )
+    const upstream = await fetch(FEED, {
+      headers: { 'User-Agent': 'FNAHS-PULSO/1.0 (+https://fnahs.vercel.app)' },
+      signal: AbortSignal.timeout(12000),
+    })
 
     if (!upstream.ok) {
-      const detail = await upstream.text()
-      console.error('apitube error', upstream.status, detail.slice(0, 300))
+      console.error('who feed error', upstream.status)
       return json({ error: 'upstream failed' }, 502, origin)
     }
 
-    const body = await upstream.json()
-    const articles = (body.results || [])
-      .map((a: Record<string, unknown>) => {
-        const title = String(a.title || '').replace(/<[^>]+>/g, '').trim().slice(0, 180)
-        const url = String(a.href || '').trim()
+    const xml = await upstream.text()
+    const items = xml.split('<item>').slice(1, 13)
+
+    const articles = items
+      .map((it) => {
+        const title = tag(it, 'title').slice(0, 180)
+        const url = tag(it, 'link')
         if (!title || !url) return null
+        const published = tag(it, 'pubDate')
+        const parsed = published ? new Date(published) : null
         return {
           title,
           url,
-          image: a.image ? String(a.image) : null,
-          source: domainOf(url),
-          published_at: a.published_at ? String(a.published_at) : null,
+          image: null,
+          source: domainOf(url) || 'who.int',
+          published_at: parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : null,
         }
       })
       .filter(Boolean)

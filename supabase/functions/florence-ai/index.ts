@@ -31,6 +31,13 @@ const ALLOWED_ORIGINS = new Set(
     .filter(Boolean)
 )
 
+// Vercel preview deployments get a fresh hostname per build, so exact matching
+// would 403 every preview. Accept only this project's own previews.
+const PREVIEW_ORIGIN = /^https:\/\/fnahs-[a-z0-9]+-kurunami31s-projects\.vercel\.app$/
+
+const originAllowed = (origin: string) =>
+  ALLOWED_ORIGINS.has(origin) || PREVIEW_ORIGIN.test(origin)
+
 const SYSTEM_PROMPT = `You are Florence, the AI tutor of FNAHS — the Faculty of Nursing and Allied Health Sciences student community platform. You are named after Florence Nightingale, founder of modern nursing. Your audience is Philippine nursing and allied health students.
 
 HOW TO BE ACCURATE — this matters more than being confident:
@@ -99,7 +106,7 @@ const json = (body: unknown, status = 200, origin = '') =>
 Deno.serve(async (req) => {
   const origin = req.headers.get('Origin') || ''
   const browserRequest = origin !== ''
-  if (browserRequest && !ALLOWED_ORIGINS.has(origin)) {
+  if (browserRequest && !originAllowed(origin)) {
     return json({ error: 'origin not allowed' }, 403, origin)
   }
   if (req.method === 'OPTIONS') {
@@ -140,7 +147,27 @@ Deno.serve(async (req) => {
     if (clean.length === 0) {
       return json({ error: 'no usable messages' }, 400, origin)
     }
-    const totalChars = clean.reduce((n, m) => n + m.content.length, 0)
+
+    // Groq's free tier allows 8000 tokens per MINUTE across input + max_tokens,
+    // and the account is shared by every student. A conversation that replays
+    // long earlier replies blows that budget within 3-4 questions, so keep only
+    // the most recent turns and trim the oldest content until it fits.
+    const HISTORY_CHAR_BUDGET = 4000
+    const trimmed = (() => {
+      const out = []
+      let used = 0
+      for (let i = clean.length - 1; i >= 0; i--) {
+        const m = clean[i]
+        // always keep the newest message, even if it alone exceeds budget
+        const remaining = out.length === 0 ? m.content.length : HISTORY_CHAR_BUDGET - used
+        if (remaining <= 0) break
+        const content = m.content.length > remaining ? m.content.slice(-remaining) : m.content
+        out.unshift({ role: m.role, content })
+        used += content.length
+      }
+      return out
+    })()
+    const totalChars = trimmed.reduce((n, m) => n + m.content.length, 0)
     if (totalChars > 16000) {
       return json({ error: 'payload too large' }, 413, origin)
     }
@@ -159,23 +186,39 @@ Deno.serve(async (req) => {
     const base = Deno.env.get('OPENAI_BASE_URL') || (isGroq ? 'https://api.groq.com/openai/v1' : 'https://api.openai.com/v1')
     const model = Deno.env.get('OPENAI_MODEL') || (isGroq ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini')
 
-    const upstream = await fetch(`${base}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const buildBody = (msgs: unknown[]) =>
+      JSON.stringify({
         model,
-        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...clean],
-        // 700 tokens truncated mid-sentence on clinical explanations; ~2000
-        // tokens lets a full answer finish before the char cap trims the tail
-        max_tokens: 2000,
-        // low temperature keeps clinical facts stable across retries instead of
-        // sampling plausible-sounding but different answers each time
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...msgs],
+        // 2000 reserved too much of the 8000 TPM budget; 1200 still fits a
+        // full clinical explanation (~900 words) while allowing more turns/min
+        max_tokens: 1200,
         temperature: 0.2,
-      }),
-    })
+      })
+
+    const callUpstream = (msgs: unknown[]) =>
+      fetch(`${base}/chat/completions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: buildBody(msgs),
+      })
+
+    let upstream = await callUpstream(trimmed)
+    // Groq throttles on tokens-per-minute; one short retry recovers most of the
+    // time instead of surfacing a failure to the student.
+    if (upstream.status === 429) {
+      const retryAfter = Number(upstream.headers.get('retry-after')) || 6
+      await new Promise((s) => setTimeout(s, Math.min(retryAfter, 12) * 1000))
+      upstream = await callUpstream(trimmed)
+    }
+
+    if (upstream.status === 429) {
+      return json(
+        { reply: 'I am handling a lot of questions right now. Please send that again in a few seconds.' },
+        200,
+        origin
+      )
+    }
 
     if (!upstream.ok) {
       const detail = await upstream.text()

@@ -3,5 +3,5 @@ project_id = "fnahs"
 [functions.florence-ai]
 verify_jwt = true
 
-[functions.sync-reports]
+[functions.who-news]
 verify_jwt = true

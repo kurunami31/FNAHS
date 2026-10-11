@@ -1006,22 +1006,38 @@ async function aiChat({ messages, onChunk }) {
     await streamMockReply(last?.content || '', onChunk)
     return
   }
-  try {
-    const { data, error } = await supabase.functions.invoke('florence-ai', {
-      body: { messages: messages.slice(-10) },
-    })
-    if (error) throw error
-    const text = typeof data === 'string' ? data : data?.reply || JSON.stringify(data)
-    // Not streamed — emit in chunks for a natural feel.
+  const emit = async (text) => {
     for (const chunk of text.match(/.{1,4}/gs) || [text]) {
       onChunk(chunk)
       await new Promise((r) => setTimeout(r, 12))
     }
+  }
+  try {
+    // Send a recent slice; the function also trims to fit the model's
+    // tokens-per-minute budget, so long conversations keep working.
+    const { data, error } = await supabase.functions.invoke('florence-ai', {
+      body: { messages: messages.slice(-8) },
+    })
+    if (error) throw error
+    const text = typeof data === 'string' ? data : data?.reply || JSON.stringify(data)
+    await emit(text)
   } catch (e) {
-    // Fall back to demo answers if the edge function isn't deployed yet.
-    const last = [...messages].reverse().find((m) => m.role === 'user')
-    await streamMockReply(last?.content || '', onChunk)
-    console.warn('florence-ai unavailable, using demo reply:', e)
+    console.warn('florence-ai call failed:', e)
+    // The function is deployed, so a failure is a real error (rate limit,
+    // offline, cold start) — do not disguise it as a canned demo answer.
+    // Only fall back to demo replies when the function genuinely isn't there.
+    const status = e?.context?.status || e?.status
+    const missing = status === 404
+    if (missing) {
+      const last = [...messages].reverse().find((m) => m.role === 'user')
+      await streamMockReply(last?.content || '', onChunk)
+      return
+    }
+    await emit(
+      status === 429
+        ? 'I am handling a lot of questions right now. Please send that again in a few seconds.'
+        : 'Sorry, I could not reach my knowledge base just now. Please check your connection and try again.'
+    )
   }
 }
 
