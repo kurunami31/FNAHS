@@ -63,6 +63,19 @@ FORMATTING RULES — IMPORTANT:
 - Do not use arrows (-> or →) or emoji unless asked.
 - Keep answers focused and teach clearly rather than being exhaustive. Offer to go deeper on any part.`
 
+// The chat bubble renders plain text, but the model still emits markdown
+// emphasis despite the prompt. Strip it here rather than showing literal
+// asterisks/backticks to the student. Horizontal runs are collapsed; line
+// breaks are preserved so paragraphs and numbered steps keep their shape.
+const stripMarkdown = (s: string) =>
+  s
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/g, '$1$2')
+    .replace(/`{1,3}([^`]+?)`{1,3}/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim()
+
 const baseHeaders = (origin: string) => ({
   'Access-Control-Allow-Origin': origin || 'null',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -165,7 +178,7 @@ Deno.serve(async (req) => {
     }
 
     const out = await upstream.json()
-    const reply = out.choices?.[0]?.message?.content?.trim()?.slice(0, 2000) || '…'
+    const reply = stripMarkdown(out.choices?.[0]?.message?.content || '').slice(0, 2000) || '…'
 
     return json({ reply }, 200, origin)
   } catch (err) {
