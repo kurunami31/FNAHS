@@ -1328,7 +1328,7 @@ export const api = {
           .from('profiles')
           .update(patch)
           .eq('id', p.id)
-          .select(',id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
+          .select('id, full_name, surname, first_name, middle_initial, id_no, program, year_level, section, role, positions, avatar_url, created_at, privacy_policy_accepted_at')
           .maybeSingle()
         if (error) {
           if (error.code === '23505')
@@ -1723,8 +1723,11 @@ export const api = {
   getAllEvents: offlineRead('getAllEvents', async () => {
         const { data, error } = await supabase
           .from('events')
-          .select('*, rsvps(*)')
+          // only the two rsvp fields the caller maps; rsvps(*) pulled every
+          // column of every RSVP ever, unbounded
+          .select('*, rsvps(user_id, status)')
           .order('starts_at', { ascending: true })
+          .limit(500)
         if (error) {
           markDbError(error)
           throw error
@@ -2241,15 +2244,11 @@ createEvent: offlineWrite('createEvent', async (ev) => {
 
   /* attendance tallies per event */
   getAttendanceSummary: offlineRead('getAttendanceSummary', async () => {
-        const { data, error } = await supabase.from('attendance').select('event_id, events(title)')
+        // Was: select every attendance row and count in JS. That grew without
+        // bound (5.2k rows and counting). Now one aggregate row per event.
+        const { data, error } = await supabase.rpc('get_attendance_summary')
         if (error) throw error
-        const counts = {}
-        const titles = {}
-        for (const r of data || []) {
-          counts[r.event_id] = (counts[r.event_id] || 0) + 1
-          titles[r.event_id] = r.events?.title
-        }
-        return Object.entries(counts).map(([event_id, count]) => ({ event_id, count, title: titles[event_id] || 'Event' }))
+        return Array.isArray(data) ? data : []
       }, async () =>
         db.events
           .map((e) => ({ event_id: e.id, count: Object.keys(db.attendance[e.id] || {}).length, title: e.title }))
