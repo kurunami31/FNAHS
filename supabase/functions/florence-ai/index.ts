@@ -89,8 +89,10 @@ const stripMarkdown = (s: string) =>
 
 const baseHeaders = (origin: string) => ({
   'Access-Control-Allow-Origin': origin || 'null',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Max-Age': '86400',
+  'Vary': 'Origin',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
   'Cache-Control': 'no-store',
@@ -107,10 +109,14 @@ Deno.serve(async (req) => {
   const origin = req.headers.get('Origin') || ''
   const browserRequest = origin !== ''
   if (browserRequest && !originAllowed(origin)) {
-    return json({ error: 'origin not allowed' }, 403, origin)
+    // do not echo a disallowed origin back in Access-Control-Allow-Origin
+    return json({ error: 'origin not allowed' }, 403, '')
   }
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: baseHeaders(origin) })
+    // 204 is a null-body status: passing a body here throws a TypeError, which
+    // (being outside the try/catch) 500s the preflight and blocks the browser
+    // with a CORS error before the real POST is ever sent.
+    return new Response(null, { status: 204, headers: baseHeaders(origin) })
   }
 
   try {
