@@ -627,16 +627,19 @@ async function demoSearchStudents(q) {
   const needle = (q || '').trim().toLowerCase()
   if (!needle) return []
   return Object.values(db.profiles)
-    .filter((p) => p.role === 'student' && p.year_level !== '1')
+    // mirrors search_students(): officers are stored as 'moderator' but are
+    // nursing students, so they belong in clearance search
+    .filter((p) => (p.role === 'student' || p.role === 'moderator') && p.year_level !== '1')
     .filter((p) => [p.full_name, p.id_no, p.email].some((v) => (v ? String(v).toLowerCase().includes(needle) : false)))
     .slice(0, 20)
-    .map((p) => ({ id: p.id, full_name: p.full_name, id_no: p.id_no, program: p.program, year_level: p.year_level, section: p.section, avatar_url: p.avatar_url, role: p.role }))
+    .map((p) => ({ id: p.id, full_name: p.full_name, id_no: p.id_no, program: p.program, year_level: p.year_level, section: p.section, avatar_url: p.avatar_url, role: p.role, positions: p.positions }))
 }
 
 async function demoGetPopulationBreakdown() {
   const counts = {}
   for (const p of Object.values(db.profiles)) {
-    if (p.role !== 'student') continue
+    // mirrors population_breakdown(): officers are nursing students
+    if (p.role !== 'student' && p.role !== 'moderator') continue
     const y = p.year_level || '—'
     counts[y] = (counts[y] || 0) + 1
   }

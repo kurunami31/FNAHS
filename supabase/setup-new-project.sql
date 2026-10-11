@@ -1206,7 +1206,9 @@ AS $function$
     select coalesce(p.year_level, '—') as year_level, count(*)::int as n,
            case p.year_level when '1' then 1 when '2' then 2 when '3' then 3 when '4' then 4 else 5 end as ord
     from public.profiles p
-    where p.role = 'student'
+    -- officers carry role='moderator' but are nursing students, so the
+    -- population by year level must count them
+    where p.role in ('student', 'moderator')
     group by p.year_level
   ) y;
 $function$
@@ -1361,10 +1363,13 @@ begin
       'year_level', p.year_level,
       'section', p.section,
       'avatar_url', p.avatar_url,
-      'role', p.role
+      'role', p.role,
+      'positions', p.positions
     ) order by p.full_name)
     from public.profiles p
-    where p.role = 'student'
+    -- officers (governor, secretary, ...) carry role='moderator' but are
+    -- nursing students, so they must be searchable for rotational clearance
+    where p.role in ('student', 'moderator')
       and coalesce(p.year_level, '') <> '1'
       and (
         lower(coalesce(p.full_name, '')) like '%' || v_q || '%'
