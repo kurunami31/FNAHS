@@ -20,6 +20,7 @@ export default function Staff() {
   const scannerRef = useRef(null)
   const [last, setLast] = useState(null)
   const [tallies, setTallies] = useState([])
+  const [eventsLoaded, setEventsLoaded] = useState(false)
   const [payments, setPayments] = useState([])
   const [attQ, setAttQ] = useState('')
   const [scanType, setScanType] = useState('auto')
@@ -59,6 +60,9 @@ export default function Staff() {
       })
     } catch {
       toast('Could not load events', 'err')
+    } finally {
+      // so the ledger can tell "still loading" apart from "genuinely empty"
+      setEventsLoaded(true)
     }
   }, [toast])
 
@@ -374,7 +378,7 @@ export default function Staff() {
             })}
           </div>
         )}
-        {events.length === 0 && (
+        {eventsLoaded && events.length === 0 && (
           <p className="panel-muted" style={{ marginTop: 12, marginBottom: 0 }}>
             No events yet — create one to start taking attendance.
           </p>
