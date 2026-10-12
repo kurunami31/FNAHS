@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2, Download, HandCoins, Search, RefreshCw, Lock, Unlock } from 'lucide-react'
+import { ShieldCheck, Camera, CameraOff, Users, QrCode, Trash2, Download, HandCoins, Search, RefreshCw, Lock, Unlock, CalendarDays } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { enumerateCameras, cameraConstraints } from '../lib/scanner'
 import { useApp } from '../context/AppContext'
 import { can } from '../rbac'
 import { api } from '../lib/api'
-import { timeAgo } from '../lib/format'
+import { timeAgo, fullDate } from '../lib/format'
 import PopulationBreakdown from '../components/PopulationBreakdown'
 import { attendanceWorkbook, downloadWorkbook } from '../lib/exportXlsx'
 import { currentSchoolYear, feeSummary, fmtPeso } from '../lib/fees'
@@ -111,6 +111,10 @@ export default function Staff() {
   const eventFee = Number(activeEvent?.fee_amount) || 0
   const canManagePayments = can(user, 'events.manage')
   const canManageLocks = can(user, 'events.manage')
+
+  // attendance counts keyed by event, so the event ledger can show a figure for
+  // every event (0 for ones with no scans yet) rather than only those with rows
+  const tallyByEvent = useMemo(() => new Map(tallies.map((t) => [t.event_id, t.count])), [tallies])
 
   const isLocked = (type) => activeEvent?.[`${type}_locked`] || false
 
@@ -348,14 +352,32 @@ export default function Staff() {
             </button>
           </div>
         )}
-        {tallies.length > 0 && (
-          <div className="tally-strip">
-            {tallies.map((t) => (
-              <span key={t.event_id} className={`chip${t.event_id === eventId ? ' chip--ok' : ''}`}>
-                <b style={{ marginRight: 5 }}>{t.count}</b> {t.title}
-              </span>
-            ))}
+        {events.length > 0 && (
+          <div className="ledger ledger-scroll ledger-scroll--events">
+            {events.map((e) => {
+              const isActive = e.id === eventId
+              return (
+                <div className={`ledger-row${isActive ? ' ledger-row--on' : ''}`} key={e.id}>
+                  <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                    <CalendarDays size={16} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.93rem' }}>{e.title}</div>
+                    <div className="ledger-meta">
+                      {fullDate(e.starts_at)}
+                      {tallyByEvent.get(e.id) ? ` · ${tallyByEvent.get(e.id)} attended` : ' · no scans yet'}
+                    </div>
+                  </div>
+                  {isActive && <span className="chip chip--ok">On duty</span>}
+                </div>
+              )
+            })}
           </div>
+        )}
+        {events.length === 0 && (
+          <p className="panel-muted" style={{ marginTop: 12, marginBottom: 0 }}>
+            No events yet — create one to start taking attendance.
+          </p>
         )}
         {!online && (
           <div className="form-ok" style={{ marginTop: 12, marginBottom: 0 }}>

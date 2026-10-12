@@ -1221,6 +1221,10 @@ html[data-theme='dark'] .id-card {
 .ledger-row:first-child { border-top: none; }
 .ledger-row:hover { background: var(--accent-glow-soft); }
 .ledger-meta { font-family: var(--f-ocr); font-size: 0.56rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+/* event ledger on the attendance page — shorter than the 65vh default so the
+   picker never crowds the scanner and logs below it */
+.ledger-scroll--events { max-height: min(38vh, 320px); margin-top: 14px; }
+.ledger-row--on { background: var(--accent-glow-soft); box-shadow: inset 3px 0 0 var(--gold); }
 
 .scan-stage {
   position: relative;
